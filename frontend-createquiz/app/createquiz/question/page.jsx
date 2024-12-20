@@ -436,8 +436,8 @@ export default function CreateQuiz() {
     <div className="min-h-screen bg-gray-100 py-8">
       <CoverPage />
       {sections.map((section) => (
-        // <Section
-        <SectionQuiz
+        <Section
+        // <SectionQuiz
           key={section.id}
           section={section}
           questionTypes={questionTypes}

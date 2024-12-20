@@ -1,0 +1,22 @@
+/* TextEditor.module.css */
+.textEditorContainer {
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+  }
+  
+  .textEditorHeader button {
+    margin-right: 10px;
+  }
+  
+  .textAlignmentContainer,
+  .fontSizeContainer,
+  .colorPickerContainer,
+  .backgroundColorContainer {
+    margin-top: 20px;
+  }
+  
+  .active {
+    background-color: #ddd;
+  }
+  

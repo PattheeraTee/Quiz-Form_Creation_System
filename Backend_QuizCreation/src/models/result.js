@@ -6,7 +6,6 @@ const resultSchema = new Schema({
     result_id: {
         type: String,
         required: true,
-        unique: true,
         default: uuidv4,
 
     },

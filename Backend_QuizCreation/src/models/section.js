@@ -13,7 +13,6 @@ const sectionSchema = new Schema({
     number: {
         type: Number,
         required: true,
-        unique: true,
         default: 1,
     },
     title: {

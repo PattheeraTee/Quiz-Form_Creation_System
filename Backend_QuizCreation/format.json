@@ -1,5 +1,6 @@
 // 1. สร้าง form
 // - request
+//endpoint: /form/create
 {
   "user_id": "12345",
   "form_type": "survey"

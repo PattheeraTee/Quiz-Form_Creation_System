@@ -1,24 +1,18 @@
 import React, { useState } from "react";
-import TextPopup from "../popup/textpopup/page";
 import ButtonPopup from "../popup/buttonpopup/page"; // Import the buttonpopup component
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
 
 const CoverPage = () => {
-  const [showTextPopup, setShowTextPopup] = useState(false);
   const [showButtonPopup, setShowButtonPopup] = useState(false); // State for buttonpopup
 
-  const handleIconClick = () => {
-    setShowTextPopup((prev) => !prev);
-  };
+  // const handleIconClick = () => {
+  //   setShowTextPopup((prev) => !prev);
+  // };
 
-  const handleInputClick = () => {
-    setShowTextPopup(true);
-  };
-
-  const handleCloseTextPopup = () => {
-    setShowTextPopup(false);
-  };
+  // const handleInputClick = () => {
+  //   setShowTextPopup(true);
+  // };
 
   const handleButtonClick = () => {
     setShowButtonPopup((prev) => !prev); // Toggle buttonpopup on click
@@ -26,7 +20,6 @@ const CoverPage = () => {
 
   return (
     <div className="cover-page max-w-2xl mx-auto bg-white p-6 rounded-xl shadow">
-      {showTextPopup && <TextPopup onClose={handleCloseTextPopup} />}
       {showButtonPopup && <ButtonPopup />} {/* Show buttonpopup when state is true */}
       
       <h2 className="text-2xl font-semibold mb-4 text-black">หน้าปก</h2>
@@ -42,19 +35,19 @@ const CoverPage = () => {
             type="text"
             placeholder="ชื่อแบบสอบถาม"
             className="w-full px-4 py-2 border border-gray-300 rounded text-black"
-            onClick={handleInputClick}
+            // onClick={handleInputClick}
           />
           <FontAwesomeIcon
             icon={faPenToSquare}
             className="ml-2 cursor-pointer text-gray-600 w-5 h-5"
-            onClick={handleIconClick}
+            // onClick={handleIconClick}
           />
         </div>
         <input
           type="text"
           placeholder="อธิบายแบบสอบถาม"
           className="w-full px-4 py-2 mb-4 border border-gray-300 rounded text-black"
-          onClick={handleInputClick}
+          // onClick={handleInputClick}
         />
         <button
           className="px-6 py-2 bg-[#03A9F4] text-white rounded-full"

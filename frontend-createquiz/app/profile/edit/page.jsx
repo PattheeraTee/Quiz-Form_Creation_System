@@ -4,9 +4,9 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencil } from "@fortawesome/free-solid-svg-icons";
-import taeyeon from '../components/images/taeyeon.png';
+import taeyeon from '../../components/images/taeyeon.png';
 import Link from 'next/link';
-import Header from '../components/menu/header';
+import Header from '../../components/menu/header';
 
 export default function EditProfile() {
   const [username, setUsername] = useState('ty_kim');

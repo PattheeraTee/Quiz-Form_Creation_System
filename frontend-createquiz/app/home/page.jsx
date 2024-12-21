@@ -8,12 +8,17 @@ import MyQuiz from "../components/myquiz/page";
 import Template from "../components/template/page";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faTimes ,faQuestion, faClipboardList, faBrain} from "@fortawesome/free-solid-svg-icons";
-import Link from "next/link";
-import ProfileMenu from "../components/menu/profile-menu";
+import { useRouter } from "next/navigation"; 
 
 export default function Page() {
   const [selectedComponent, setSelectedComponent] = useState("myquiz"); // default to "myquiz"
   const [isPopupOpen, setIsPopupOpen] = useState(false); // Popup state
+  const router = useRouter();
+
+  const handleCreateQuiz = (type) => {
+    // Redirect to CreateQuiz page with the selected type as a query parameter
+    router.push(`/createquiz?type=${type}`);
+  };
 
   // Function to conditionally render components based on selectedComponent
   const renderComponent = () => {
@@ -60,27 +65,29 @@ export default function Page() {
       {isPopupOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white rounded-lg w-96 p-6 relative">
-            <button
-              className="absolute top-3 right-3 text-black"
-              onClick={() => setIsPopupOpen(false)} // Close popup
-            >
+            <button className="absolute top-3 right-3 text-black" onClick={() => setIsPopupOpen(false)}>
               <FontAwesomeIcon icon={faTimes} />
             </button>
-            <h2 className="text-start text-xl font-semibold mb-4">
-              เลือกประเภทที่ต้องการจะสร้าง
-            </h2>
+            <h2 className="text-start text-xl font-semibold mb-4">เลือกประเภทที่ต้องการจะสร้าง</h2>
             <div className="flex flex-col gap-4">
-              <button className="flex items-center gap-2 px-4 py-2 border border-black rounded-full hover:bg-gray-100">
+              <button
+                className="flex items-center gap-2 px-4 py-2 border border-black rounded-full hover:bg-gray-100"
+                onClick={() => handleCreateQuiz("quiz")}
+              >
                 <FontAwesomeIcon icon={faQuestion} className="text-lg" />
                 สร้างแบบทดสอบ
               </button>
-              <Link href="/createquiz" className=" px-4 py-2 border border-black rounded-full hover:bg-gray-100">
-                <button className="flex items-center gap-2 ">
-                  <FontAwesomeIcon icon={faClipboardList} className="text-lg" />
-                  สร้างแบบสำรวจ
-                </button>
-              </Link>
-              <button className="flex items-center gap-2 px-4 py-2 border border-black rounded-full hover:bg-gray-100">
+              <button
+                className="flex items-center gap-2 px-4 py-2 border border-black rounded-full hover:bg-gray-100"
+                onClick={() => handleCreateQuiz("survey")}
+              >
+                <FontAwesomeIcon icon={faClipboardList} className="text-lg" />
+                สร้างแบบสำรวจ
+              </button>
+              <button
+                className="flex items-center gap-2 px-4 py-2 border border-black rounded-full hover:bg-gray-100"
+                onClick={() => handleCreateQuiz("psychology")}
+              >
                 <FontAwesomeIcon icon={faBrain} className="text-lg" />
                 สร้างแบบทดสอบจิตวิทยา
               </button>

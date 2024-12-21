@@ -39,8 +39,6 @@ export default function Header() {
         console.error("Error fetching user data:", error);
       }
     };
-    
-
     fetchUserData();
   }, []);
 

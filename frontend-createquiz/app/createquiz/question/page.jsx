@@ -1,12 +1,14 @@
 // pages/create-quiz.js
 "use client";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import CoverPage from "./coverpage/page";
-import Section from "./section/page";
 import SectionQuiz from "./section-quiz/page";
-import { v4 as uuidv4 } from "uuid";
+import SectionForm from "./section-form/page";
 
 export default function CreateQuiz() {
+  const searchParams = useSearchParams();
+  const type = searchParams.get("type");
   const questionTypes = [
     { label: "คำถามเลือกตอบ", icon: "⭕", value: "multiple_choice" },
     { label: "ช่องกาเครื่องหมาย", icon: "✔️", value: "checkbox" },
@@ -320,9 +322,9 @@ export default function CreateQuiz() {
     setSections(updatedSections);
   };
 
-  const toggleAddQuestionVisibility = (sectionId) => {
-    setShowAddQuestion((prev) => ({ ...prev, [sectionId]: !prev[sectionId] }));
-  };
+  // const toggleAddQuestionVisibility = (sectionId) => {
+  //   setShowAddQuestion((prev) => ({ ...prev, [sectionId]: !prev[sectionId] }));
+  // };
 
   const toggleQuestionTypesVisibility = (sectionId) => {
     const updatedSections = sections.map((section) => {
@@ -332,64 +334,6 @@ export default function CreateQuiz() {
       return section;
     });
     setSections(updatedSections);
-  };
-
-  const createQuiz = () => {
-    const quizId = uuidv4();
-    const payload = {
-      id: uuidv4(),
-      quizId: quizId,
-      userId: "user2",
-      type: "แบบสำรวจ",
-      coverPage: {
-        id: uuidv4(),
-        quizId: quizId,
-        quizTitle: "ชื่อแบบทดสอบที่ผู้ใช้กรอก",
-        description: "คำอธิบายที่ผู้ใช้กรอก",
-        buttonText: "เริ่มต้น",
-        imagePath: null,
-      },
-      sections: sections.map((section, index) => ({
-        id: uuidv4(),
-        sectionId: uuidv4(),
-        sectionNumber: index + 1,
-        sectionTitle: section.title,
-        sectionDescription: section.description,
-        quizId: quizId,
-        questions: section.questions.map((question) => ({
-          id: uuidv4(),
-          questionId: uuidv4(),
-          type: question.type,
-          text: question.text,
-          imagePath: null,
-          required: question.isRequired,
-          points: 0,
-          sectionId: uuidv4(),
-          options: question.options.map((option) => ({
-            id: uuidv4(),
-            optionId: uuidv4(),
-            text: option,
-            imagePath: null,
-            weight: null,
-          })),
-        })),
-      })),
-    };
-
-    fetch("http://localhost:3001/quiz", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Quiz created:", data);
-      })
-      .catch((error) => {
-        console.error("Error creating quiz:", error);
-      });
   };
 
   const handleUploadImage = (e, sectionId, questionId, optionIdx = null) => {
@@ -431,13 +375,109 @@ export default function CreateQuiz() {
     }
   };
   
+  const renderSectionComponent = () => {
+    switch (type) {
+      case "quiz":
+        return sections.map((section) => (
+          <SectionQuiz
+            key={section.id}
+            section={section}
+            questionTypes={questionTypes}
+            addQuestion={addQuestion}
+            updateOption={updateOption}
+            updateRatingLevel={updateRatingLevel}
+            addOption={addOption}
+            removeOption={removeOption}
+            updateMaxSelect={updateMaxSelect}
+            toggleRequired={toggleRequired}
+            deleteQuestion={deleteQuestion}
+            deleteSection={deleteSection}
+            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
+            addSection={addSection}
+            toggleCorrectOption={toggleCorrectOption}
+            setCorrectOption={setCorrectOption}
+            addCorrectAnswer={addCorrectAnswer}
+            removeCorrectAnswer={removeCorrectAnswer}
+            updateCorrectAnswer={updateCorrectAnswer}
+            updatePoints={updatePoints}
+            handleUploadImage={handleUploadImage}
+          />
+        ));
+      case "survey":
+        return sections.map((section) => (
+          <SectionForm
+            key={section.id}
+            section={section}
+            questionTypes={questionTypes}
+            addQuestion={addQuestion}
+            updateOption={updateOption}
+            updateRatingLevel={updateRatingLevel}
+            addOption={addOption}
+            removeOption={removeOption}
+            updateMaxSelect={updateMaxSelect}
+            toggleRequired={toggleRequired}
+            deleteQuestion={deleteQuestion}
+            deleteSection={deleteSection}
+            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
+            addSection={addSection}
+            handleUploadImage={handleUploadImage}
+          />
+        ));
+      case "psychology":
+        return sections.map((section) => (
+          <SectionPsychology
+            key={section.id}
+            section={section}
+            questionTypes={questionTypes}
+            addQuestion={addQuestion}
+            updateOption={updateOption}
+            updateRatingLevel={updateRatingLevel}
+            addOption={addOption}
+            removeOption={removeOption}
+            updateMaxSelect={updateMaxSelect}
+            toggleRequired={toggleRequired}
+            deleteQuestion={deleteQuestion}
+            deleteSection={deleteSection}
+            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
+            addSection={addSection}
+          />
+        ));
+      default:
+        return sections.map((section) => (
+          <SectionQuiz
+            key={section.id}
+            section={section}
+            questionTypes={questionTypes}
+            addQuestion={addQuestion}
+            updateOption={updateOption}
+            updateRatingLevel={updateRatingLevel}
+            addOption={addOption}
+            removeOption={removeOption}
+            updateMaxSelect={updateMaxSelect}
+            toggleRequired={toggleRequired}
+            deleteQuestion={deleteQuestion}
+            deleteSection={deleteSection}
+            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
+            addSection={addSection}
+            toggleCorrectOption={toggleCorrectOption}
+            setCorrectOption={setCorrectOption}
+            addCorrectAnswer={addCorrectAnswer}
+            removeCorrectAnswer={removeCorrectAnswer}
+            updateCorrectAnswer={updateCorrectAnswer}
+            updatePoints={updatePoints}
+            handleUploadImage={handleUploadImage}
+          />
+        ));
+    }
+  };
+  
   
   return (
     <div className="min-h-screen bg-gray-100 py-8">
       <CoverPage />
-      {sections.map((section) => (
-        <Section
-        // <SectionQuiz
+      {/* {sections.map((section) => (
+        // <Section
+        <SectionQuiz
           key={section.id}
           section={section}
           questionTypes={questionTypes}
@@ -460,11 +500,12 @@ export default function CreateQuiz() {
           updatePoints={updatePoints} // Pass updatePoints
           handleUploadImage={handleUploadImage} // Pass handle
         />
-      ))}
+      ))} */}
+            {renderSectionComponent()}
+
       <div className="max-w-2xl mx-auto mt-8">
         <button
           className="w-full mt-2 px-4 py-2 bg-[#03A9F4] text-white rounded-full"
-          onClick={createQuiz} // เพิ่มฟังก์ชันที่ต้องการให้ทำงานเมื่อกดปุ่ม
         >
           สร้างแบบทดสอบ
         </button>

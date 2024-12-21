@@ -68,7 +68,7 @@ export default function ProfilePage() {
               &larr; Back
             </Link>
             <Link
-              href={"/edit-profile"}
+              href={"/profile/edit"}
               className="border border-[#03A9F4] text-[#03A9F4] text-sm px-4 py-1 rounded-full"
             >
               แก้ไขข้อมูลผู้ใช้

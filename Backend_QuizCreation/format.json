@@ -1,0 +1,46 @@
+// 1. สร้าง form
+// - request
+{
+  "user_id": "12345",
+  "form_type": "survey"
+}
+// - response
+{
+    "form": {
+        "form_id": "2649726d-a52e-477a-8d3b-1559303e4d63",
+        "form_type": "survey",
+        "is_form_open": true,
+        "cover_page_id": "ca7fce65-8af3-4d9a-8233-9d735a7eb649",
+        "section_id": [
+            "5a6ccec4-9c87-4ff6-9fbf-792a7b4c7769"
+        ],
+        "result_id": [
+            "872d94dc-94c2-4dd4-bcaa-223b29452b2d"
+        ],
+        "user_id": "12345",
+        "theme_id": "293ded63-f724-4fdf-aa4f-6c685d86f166", //default theme
+        "response": [],
+        "_id": "6767413046c5278388f5ca51"
+    },
+    "coverPage": {
+        "cover_page_id": "ca7fce65-8af3-4d9a-8233-9d735a7eb649",
+        "title": "Untitled Form",
+        "text_button": "เริ่มทำ",
+        "form_id": "2649726d-a52e-477a-8d3b-1559303e4d63",
+        "_id": "6767413046c5278388f5ca52"
+    },
+    "theme": {
+        "theme_id": "293ded63-f724-4fdf-aa4f-6c685d86f166",
+        "primary_color": "#FFFFFF",
+        "form_id": "2649726d-a52e-477a-8d3b-1559303e4d63",
+        "_id": "6767413046c5278388f5ca54"
+    },
+    "section": {
+        "section_id": "5a6ccec4-9c87-4ff6-9fbf-792a7b4c7769",
+        "number": 1,
+        "title": "Section 1",
+        "form_id": "2649726d-a52e-477a-8d3b-1559303e4d63",
+        "questions": [],
+        "_id": "6767413046c5278388f5ca57"
+    }
+}

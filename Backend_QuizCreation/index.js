@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const quizRouter = require("./src/routes/quiz");
 const userRouter = require("./src/routes/user");
+const testForm = require("./src/routes/formRoutes");
 const port = 3001;
 
 mongoose
@@ -24,5 +25,6 @@ app.use(
 );
 
 app.use(express.json());
+app.use("/", testForm);
 app.use("/", quizRouter);
 app.use("/",userRouter);

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 export function middleware(request) {
     const token = request.cookies.get('token');
-    console.log('Token from cookie in middleware:', token);
+    // console.log('Token from cookie in middleware:', token);
     if (token) {
         // ถ้ามีคุกกี้ชื่อ 'token'
     } else {

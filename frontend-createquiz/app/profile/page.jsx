@@ -1,45 +1,41 @@
 "use client";
+
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencil } from "@fortawesome/free-solid-svg-icons";
-import taeyeon from "../components/images/taeyeon.png";
 import Header from "../components/menu/header";
-import Cookies from "js-cookie";
 import axios from "axios";
 
 export default function ProfilePage() {
-  const [userData, setUserData] = useState({ username: "", email: "" });
+  const [userData, setUserData] = useState({ email: "", profileImage: "" });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const token = await Cookies.get("token");
-      console.log("Token from cookie:", token);
-
-      const userId = decodeToken(token); // ถอดรหัส token เพื่อดึง userId
-      console.log("userId", userId);
-
-      if (!userId) {
-        console.error("User ID not found in token");
-        setLoading(false);
-        return;
-      }
-
       try {
-        console.log("Fetching user data...========");
-        const response = await axios.get(`http://localhost:3001/user/${userId}`, {
+        // ดึง userId จาก API
+        const cookieResponse = await axios.get("http://localhost:3000/api/getCookie", {
+          withCredentials: true,
+        });
+        console.log("cookieResponse : ", cookieResponse.data.userId);
+        const userId = cookieResponse.data.userId;
+
+        if (!userId) {
+          console.error("User ID not found");
+          setLoading(false);
+          return;
+        }
+
+        // ดึงข้อมูลผู้ใช้จาก API
+        const response = await axios.get(`http://localhost:3001/users/${userId}`, {
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
+          withCredentials: true,
         });
-        const {username,email} = response.data.user;
-        setUserData({ username, email }); // เก็บเฉพาะ username และ email
-        console.log("User data:", { username, email });
-        // console.log("User data:", response.data);
-        // console.log("user",response.data.user.username)
+        console.log("response : ", response.data);
+
+        const { email, profileImage } = response.data;
+        setUserData({ email, profileImage: profileImage || null });
       } catch (error) {
         console.error("Error fetching user data:", error);
       } finally {
@@ -50,20 +46,9 @@ export default function ProfilePage() {
     fetchUserData();
   }, []);
 
-  const decodeToken = (token) => {
-    try {
-      const base64Url = token.split(".")[1];
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split("")
-          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-          .join("")
-      );
-      return JSON.parse(jsonPayload).userId; // Assuming `userId` is in the token payload
-    } catch (e) {
-      return null;
-    }
+  const getInitials = (email) => {
+    if (!email) return "";
+    return email.charAt(0).toUpperCase();
   };
 
   if (loading) {
@@ -95,24 +80,21 @@ export default function ProfilePage() {
           </h2>
 
           <div className="flex flex-col items-center mb-6">
-            <div className="relative w-24 h-24">
-              <Image
-                src={taeyeon}
-                alt="Profile Image"
-                className="rounded-full"
-                width={96}
-                height={96}
-              />
-              <button className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow-md">
-                <FontAwesomeIcon icon={faPencil} />
-              </button>
-            </div>
+            {userData.profileImage ? (
+              <div className="relative w-24 h-24">
+                <img
+                  src={userData.profileImage}
+                  alt="Profile Image"
+                  className="rounded-full w-24 h-24 object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                {getInitials(userData.email)}
+              </div>
+            )}
 
             <div className="space-y-4 mt-4 w-full">
-              <div className="flex">
-                <p className="text-black">ชื่อผู้ใช้ :</p>
-                <p className="text-black font-medium ml-2">{userData.username}</p>
-              </div>
               <div className="flex">
                 <p className="text-black">อีเมล :</p>
                 <p className="text-black font-medium ml-2">{userData.email}</p>

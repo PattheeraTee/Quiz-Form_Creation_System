@@ -1,10 +1,11 @@
 require("dotenv").config();
 const express = require("express");
-const app = express();
 const mongoose = require("mongoose");
+const cookieParser = require('cookie-parser');
+const app = express();
 const cors = require("cors");
 const quizRouter = require("./src/routes/quiz");
-const userRouter = require("./src/routes/user");
+const userRouter = require("./src/routes/userRoute");
 const port = 3001;
 
 mongoose
@@ -20,9 +21,10 @@ mongoose
 app.use(
   cors({
     origin: "http://localhost:3000", // ระบุโดเมนที่อนุญาต
+    credentials: true,
   })
 );
-
+app.use(cookieParser());
 app.use(express.json());
 app.use("/", quizRouter);
 app.use("/",userRouter);

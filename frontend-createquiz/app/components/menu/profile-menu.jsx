@@ -1,7 +1,25 @@
 // components/ProfileMenu.js
 import Link from 'next/link';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 export default function ProfileMenu() {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      // เรียก API เพื่อ remove cookie
+      await axios.get('http://localhost:3000/api/removeCookie', {
+        withCredentials: true, // เพื่อส่ง cookie ไปด้วย
+      });
+
+      // เปลี่ยนเส้นทางไปยังหน้าแรก
+      router.push('/');
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+  };
+
   return (
     <div className="absolute right-2 mt-44 w-40 bg-white rounded-lg shadow-lg border border-gray-300">
       <div className="flex flex-col text-start">
@@ -17,12 +35,12 @@ export default function ProfileMenu() {
         >
           เปลี่ยนรหัสผ่าน
         </Link>
-        <Link
-          href="/"
-          className="px-4 py-2 text-gray-700 hover:bg-gray-100"
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 text-gray-700 hover:bg-gray-100 text-left"
         >
-          Log out
-        </Link>
+          ออกจากระบบ
+        </button>
       </div>
     </div>
   );

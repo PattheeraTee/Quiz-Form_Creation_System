@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 
 export default function Register() {
   const [formData, setFormData] = useState({
-    username: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -20,18 +19,7 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { username, email, password, confirmPassword } = formData;
-
-    // ตรวจสอบว่ารหัสผ่านและยืนยันรหัสผ่านตรงกัน
-    if (password !== confirmPassword) {
-      Swal.fire({
-        icon: 'error',
-        title: 'ข้อผิดพลาด',
-        text: 'รหัสผ่านไม่ตรงกัน กรุณากรอกใหม่',
-        showConfirmButton: true,
-      });
-      return;
-    }
+    const { email, password, confirmPassword } = formData;
 
     try {
       const response = await fetch("http://localhost:3001/register", {
@@ -39,7 +27,7 @@ export default function Register() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, username, password }),
+        body: JSON.stringify({ email, password, confirm_password: confirmPassword }),
       });
 
       if (response.ok) {
@@ -50,11 +38,12 @@ export default function Register() {
           showConfirmButton: true,
         });
         router.push('/'); // กลับไปยังหน้า Login
-      } else if (response.status === 409) { // 409: Conflict
+      } else if (response.status === 400) { // 409: Conflict
+        const errorData = await response.json();
         Swal.fire({
           icon: 'error',
           title: 'ข้อผิดพลาด',
-          text: 'อีเมลนี้ถูกใช้ลงทะเบียนแล้ว',
+          text: errorData.message || 'ไม่สามารถลงทะเบียนได้ กรุณาลองใหม่',
           showConfirmButton: true,
         });
       } else {
@@ -85,21 +74,6 @@ export default function Register() {
           <h2 className="text-center text-2xl font-semibold">ลงทะเบียน</h2>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-              ชื่อผู้ใช้
-            </label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              required
-              placeholder="กรอกชื่อผู้ใช้"
-              value={formData.username}
-              onChange={handleChange}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               อีเมล

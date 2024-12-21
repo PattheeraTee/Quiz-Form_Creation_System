@@ -1,14 +1,56 @@
 import Image from "next/image";
-import taeyeon from "../images/taeyeon.png";
 import Link from "next/link";
 import ProfileMenu from "./profile-menu";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function Header() {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [userData, setUserData] = useState({ email: "", profileImage: "" });
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        // ดึง userId จาก API
+        const cookieResponse = await axios.get("http://localhost:3000/api/getCookie", {
+          withCredentials: true,
+        });
+        const userId = cookieResponse.data.userId;
+    
+        if (!userId) {
+          console.error("User ID not found");
+          return;
+        }
+    
+        // ดึงข้อมูลผู้ใช้จาก API
+        const response = await axios.get(`http://localhost:3001/users/${userId}`, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        });
+    
+        console.log("response.data:", response.data);
+    
+        // ตรวจสอบโครงสร้างของ response.data
+        const { email = "", profileImage = "" } = response.data || {};
+        setUserData({ email, profileImage });
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+    
+
+    fetchUserData();
+  }, []);
 
   const toggleProfileMenu = () => {
     setIsProfileMenuOpen(!isProfileMenuOpen);
+  };
+
+  const getInitials = (email) => {
+    if (!email) return "";
+    return email.charAt(0).toUpperCase();
   };
 
   return (
@@ -26,15 +68,26 @@ export default function Header() {
           <p className="text-xl font-semibold text-black">HOME</p>
         </Link>
 
-        {/* Profile Image */}
-        <Image
-          src={taeyeon}  // ใช้ตัวแปรที่นำเข้าโดยไม่ใช้เครื่องหมายคำพูด
-          alt="Profile"
-          width={40}    // ปรับขนาดภาพให้ชัดเจน
-          height={40}
-          className="w-10 h-10 rounded-full object-cover border border-black"
+        {/* Profile Image or Initials */}
+        <div
           onClick={toggleProfileMenu}
-        />
+          className="cursor-pointer relative flex items-center justify-center w-10 h-10 rounded-full "
+          style={{
+            backgroundColor: userData.profileImage ? "transparent" : "#D1D5DB", // พื้นหลังสีเทาเมื่อไม่มีรูป
+          }}
+        >
+          {userData.profileImage ? (
+            <Image
+              src={userData.profileImage}
+              alt="Profile"
+              width={40}
+              height={40}
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <span className="text-white text-xl font-bold">{getInitials(userData.email)}</span>
+          )}
+        </div>
         {isProfileMenuOpen && <ProfileMenu />}
       </div>
     </header>

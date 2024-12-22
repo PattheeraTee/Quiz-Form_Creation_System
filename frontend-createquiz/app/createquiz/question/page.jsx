@@ -23,7 +23,8 @@ export default function Question({quizData}) {
   useEffect(() => {
     if(quizData?.section) setSections(quizData?.section);
     console.log(sections);
-  }, [sections]);
+    console.log(quizData);
+  }, [sections,quizData]);
 
 
   const addSection = () => {
@@ -469,7 +470,9 @@ export default function Question({quizData}) {
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
-      <CoverPage coverPageData={quizData?.coverPage}/>
+      <CoverPage coverPageData={quizData?.coverPage}
+                  theme={quizData?.theme}
+      />
       {renderSectionComponent()}
 
       <div className="max-w-2xl mx-auto mt-8">

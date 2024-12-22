@@ -14,7 +14,7 @@ const themeSchema = new Schema({
     primary_color: {
         type: String,
         required: true,
-        default: '#FFFFFF',
+        default: '#03A9F4',
     },
     form_id: { // ใช้ user_id เพื่ออ้างอิง
         type: String,

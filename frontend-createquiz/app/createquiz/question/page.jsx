@@ -1,14 +1,13 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 import CoverPage from "./coverpage/page";
 import SectionQuiz from "./section-quiz/page";
 import SectionForm from "./section-form/page";
 import SectionPsychology from "./section-psychology/page";
 import axios from "axios";
 
-export default function Question({quizData}) {
-  
+export default function Question({ quizData }) {
   const searchParams = useSearchParams();
   const type = searchParams.get("type");
   const questionTypes = [
@@ -19,14 +18,24 @@ export default function Question({quizData}) {
     { label: "เติมคำตอบ", icon: "✍️", value: "text_input" },
     { label: "วันที่", icon: "📅", value: "date" },
   ];
-  const [sections, setSections] = useState(quizData?.section || []);
+  const [sections, setSections] = useState(quizData?.sections || []);
 
   useEffect(() => {
-    if(quizData?.section) setSections(quizData?.section);
-    console.log(sections);
-    console.log(quizData);
-  }, [sections,quizData]);
-
+    if (quizData?.sections) {
+      // ตรวจสอบว่า `sections` เป็นอาร์เรย์
+      if (Array.isArray(quizData.sections)) {
+        setSections(quizData.sections);
+      } else {
+        console.warn(
+          "Expected sections to be an array, wrapping it into an array:",
+          quizData.sections
+        );
+        setSections([quizData.sections]); // แปลงเป็นอาร์เรย์ถ้าไม่ใช่
+      }
+    } else {
+      console.warn("No sections found in quizData");
+    }
+  }, [quizData]);
 
   const addSection = async () => {
     const newSection = {
@@ -36,7 +45,7 @@ export default function Question({quizData}) {
       questions: [],
       showQuestionTypes: false,
     };
-  
+
     try {
       const formId = quizData?.form?.form_id; // ดึง formId จาก quizData
       if (!formId) {
@@ -44,7 +53,7 @@ export default function Question({quizData}) {
         return;
       }
       console.log("Form ID:", formId);
-  
+
       const response = await axios.post(
         `http://localhost:3001/form/${formId}/sections`,
         {
@@ -53,10 +62,10 @@ export default function Question({quizData}) {
           questions: newSection.questions,
         }
       );
-  
+
       if (response.status === 201) {
         console.log("Section added successfully:", response.data);
-  
+
         // เพิ่ม Section ใหม่ใน State
         setSections((prevSections) => [
           ...prevSections,
@@ -341,13 +350,34 @@ export default function Question({quizData}) {
     setSections(updatedSections);
   };
 
-  const deleteSection = (sectionId) => {
-    if (sectionId === 1) return;
-    const updatedSections = sections
-      .filter((section) => section.id !== sectionId)
-      .map((section, index) => ({ ...section, id: index + 1 }));
-    setSections(updatedSections);
+  const deleteSection = async (sectionId) => {
+    const formId = quizData?.form?.form_id; // ดึง formId จาก quizData
+    if (!formId) {
+      console.error("Form ID not found!");
+      return;
+    }
+  
+    try {
+      // ส่งคำขอลบ section ไปยัง API
+      const response = await axios.delete(
+        `http://localhost:3001/form/${formId}/sections/${sectionId}`
+      );
+  
+      if (response.status === 200) {
+        console.log("Section deleted successfully:", response.data);
+  
+        // อัปเดต state เพื่อเอา section ที่ลบออก
+        setSections((prevSections) =>
+          prevSections.filter((section) => section.section_id !== sectionId)
+        );
+      } else {
+        console.error("Failed to delete section:", response.data);
+      }
+    } catch (error) {
+      console.error("Error deleting section:", error);
+    }
   };
+  
 
   // const toggleAddQuestionVisibility = (sectionId) => {
   //   setShowAddQuestion((prev) => ({ ...prev, [sectionId]: !prev[sectionId] }));
@@ -408,7 +438,7 @@ export default function Question({quizData}) {
     );
     setSections(updatedSections);
   };
-  
+
   const updateSectionDescription = (sectionId, newDescription) => {
     const updatedSections = sections.map((sec) =>
       sec.id === sectionId ? { ...sec, description: newDescription } : sec
@@ -417,106 +447,110 @@ export default function Question({quizData}) {
   };
 
   const renderSectionComponent = () => {
-    switch (type) {
-      case "quiz":
-        return sections.map((section) => (
-          <SectionQuiz
-            key={section.section_id}
-            section={section}
-            questionTypes={questionTypes}
-            addQuestion={addQuestion}
-            updateOption={updateOption}
-            updateRatingLevel={updateRatingLevel}
-            addOption={addOption}
-            removeOption={removeOption}
-            updateMaxSelect={updateMaxSelect}
-            toggleRequired={toggleRequired}
-            deleteQuestion={deleteQuestion}
-            deleteSection={deleteSection}
-            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
-            addSection={addSection}
-            toggleCorrectOption={toggleCorrectOption}
-            setCorrectOption={setCorrectOption}
-            addCorrectAnswer={addCorrectAnswer}
-            removeCorrectAnswer={removeCorrectAnswer}
-            updateCorrectAnswer={updateCorrectAnswer}
-            updatePoints={updatePoints}
-            handleUploadImage={handleUploadImage}
-          />
-        ));
-      case "survey":
-        return sections.map((section) => (
-          <SectionForm
-            key={section.section_id}
-            section={section}
-            questionTypes={questionTypes}
-            addQuestion={addQuestion}
-            updateOption={updateOption}
-            updateRatingLevel={updateRatingLevel}
-            addOption={addOption}
-            removeOption={removeOption}
-            updateMaxSelect={updateMaxSelect}
-            toggleRequired={toggleRequired}
-            deleteQuestion={deleteQuestion}
-            deleteSection={deleteSection}
-            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
-            addSection={addSection}
-            handleUploadImage={handleUploadImage}
-          />
-        ));
-      case "psychology":
-        return sections.map((section) => (
-          <SectionPsychology
-            key={section.section_id}
-            section={section} /* other props */
-            questionTypes={questionTypes}
-            addQuestion={addQuestion}
-            updateOption={updateOption}
-            updateRatingLevel={updateRatingLevel}
-            addOption={addOption}
-            removeOption={removeOption}
-            updateMaxSelect={updateMaxSelect}
-            toggleRequired={toggleRequired}
-            deleteQuestion={deleteQuestion}
-            deleteSection={deleteSection}
-            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
-            addSection={addSection}
-          />
-        ));
-      default:
-        return sections.map((section) => (
-          <SectionQuiz
-            key={section.id}
-            section={section}
-            questionTypes={questionTypes}
-            addQuestion={addQuestion}
-            updateOption={updateOption}
-            updateRatingLevel={updateRatingLevel}
-            addOption={addOption}
-            removeOption={removeOption}
-            updateMaxSelect={updateMaxSelect}
-            toggleRequired={toggleRequired}
-            deleteQuestion={deleteQuestion}
-            deleteSection={deleteSection}
-            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
-            addSection={addSection}
-            toggleCorrectOption={toggleCorrectOption}
-            setCorrectOption={setCorrectOption}
-            addCorrectAnswer={addCorrectAnswer}
-            removeCorrectAnswer={removeCorrectAnswer}
-            updateCorrectAnswer={updateCorrectAnswer}
-            updatePoints={updatePoints}
-            handleUploadImage={handleUploadImage}
-          />
-        ));
+    if (!Array.isArray(sections) || sections.length === 0) {
+      // console.error("No valid sections available");
+      return <div className="text-center mt-5">No valid sections available</div>;
     }
+    return sections.map((section) => {
+      switch (type) {
+        case "quiz":
+          return (
+            <SectionQuiz
+              key={section.section_id}
+              section={section}
+              questionTypes={questionTypes}
+              addQuestion={addQuestion}
+              updateOption={updateOption}
+              updateRatingLevel={updateRatingLevel}
+              addOption={addOption}
+              removeOption={removeOption}
+              updateMaxSelect={updateMaxSelect}
+              toggleRequired={toggleRequired}
+              deleteQuestion={deleteQuestion}
+              deleteSection={deleteSection}
+              toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
+              addSection={addSection}
+              toggleCorrectOption={toggleCorrectOption}
+              setCorrectOption={setCorrectOption}
+              addCorrectAnswer={addCorrectAnswer}
+              removeCorrectAnswer={removeCorrectAnswer}
+              updateCorrectAnswer={updateCorrectAnswer}
+              updatePoints={updatePoints}
+              handleUploadImage={handleUploadImage}
+            />
+          );
+        case "survey":
+          return (
+            <SectionForm
+              key={section.section_id}
+              section={section}
+              questionTypes={questionTypes}
+              addQuestion={addQuestion}
+              updateOption={updateOption}
+              updateRatingLevel={updateRatingLevel}
+              addOption={addOption}
+              removeOption={removeOption}
+              updateMaxSelect={updateMaxSelect}
+              toggleRequired={toggleRequired}
+              deleteQuestion={deleteQuestion}
+              deleteSection={deleteSection}
+              toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
+              addSection={addSection}
+              handleUploadImage={handleUploadImage}
+            />
+          );
+        case "psychology":
+          return (
+            <SectionPsychology
+              key={section.section_id}
+              section={section} /* other props */
+              questionTypes={questionTypes}
+              addQuestion={addQuestion}
+              updateOption={updateOption}
+              updateRatingLevel={updateRatingLevel}
+              addOption={addOption}
+              removeOption={removeOption}
+              updateMaxSelect={updateMaxSelect}
+              toggleRequired={toggleRequired}
+              deleteQuestion={deleteQuestion}
+              deleteSection={deleteSection}
+              toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
+              addSection={addSection}
+            />
+          );
+        default:
+          return (
+            <SectionQuiz
+              key={section.id}
+              section={section}
+              questionTypes={questionTypes}
+              addQuestion={addQuestion}
+              updateOption={updateOption}
+              updateRatingLevel={updateRatingLevel}
+              addOption={addOption}
+              removeOption={removeOption}
+              updateMaxSelect={updateMaxSelect}
+              toggleRequired={toggleRequired}
+              deleteQuestion={deleteQuestion}
+              deleteSection={deleteSection}
+              toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
+              addSection={addSection}
+              toggleCorrectOption={toggleCorrectOption}
+              setCorrectOption={setCorrectOption}
+              addCorrectAnswer={addCorrectAnswer}
+              removeCorrectAnswer={removeCorrectAnswer}
+              updateCorrectAnswer={updateCorrectAnswer}
+              updatePoints={updatePoints}
+              handleUploadImage={handleUploadImage}
+            />
+          );
+      }
+    });
   };
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
-      <CoverPage coverPageData={quizData?.coverPage}
-                  theme={quizData?.theme}
-      />
+      <CoverPage coverPageData={quizData?.coverPage} theme={quizData?.theme} />
       {renderSectionComponent()}
 
       <div className="max-w-2xl mx-auto mt-8">

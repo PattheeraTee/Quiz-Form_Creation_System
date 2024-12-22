@@ -24,7 +24,7 @@ const Section = ({
   addSection,
   handleUploadImage,
   updateSectionTitle,
-  updateSectionDescription
+  updateSectionDescription,
 }) => {
   return (
     <div className="max-w-2xl mx-auto mt-8 bg-white p-6 rounded-xl shadow relative">
@@ -636,9 +636,9 @@ const Section = ({
         >
           + เพิ่มส่วนใหม่
         </button>
-        {section.id !== 1 && (
+        {section.number !== 1 && (
           <button
-            onClick={() => deleteSection(section.id)}
+            onClick={() => deleteSection(section.section_id)}
             className="w-1/8 mt-2 px-4 py-2 bg-red-500 rounded text-white"
           >
             <FontAwesomeIcon icon={faTrash} />

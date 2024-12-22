@@ -19,8 +19,6 @@ export default function CoverPage({ coverPageData, theme }) {
       setDescription(coverPageData.description || "");
       setButtonText(coverPageData.text_button || "");
       setPrimaryColor(theme.primary_color || "#000000");
-      console.log("Cover page data:", coverPageData);
-      console.log("Theme:", theme);
     }
   }, [coverPageData, theme]);
 

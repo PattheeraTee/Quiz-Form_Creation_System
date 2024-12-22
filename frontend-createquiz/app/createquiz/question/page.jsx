@@ -5,6 +5,7 @@ import CoverPage from "./coverpage/page";
 import SectionQuiz from "./section-quiz/page";
 import SectionForm from "./section-form/page";
 import SectionPsychology from "./section-psychology/page";
+import axios from "axios";
 
 export default function Question({ quizData }) {
   const searchParams = useSearchParams();
@@ -36,7 +37,7 @@ export default function Question({ quizData }) {
     console.log(("QQuiz Data", quizData));
   }, [quizData]);
 
-  const addSection = () => {
+  const addSection = async () => {
     const newSection = {
       id: sections.length + 1,
       title: "",
@@ -44,7 +45,36 @@ export default function Question({ quizData }) {
       questions: [],
       showQuestionTypes: false,
     };
-    setSections([...sections, newSection]);
+  
+    try {
+      const formId = quizData?.form?.form_id; // ดึง formId จาก quizData
+      if (!formId) {
+        console.error("Form ID not found!");
+        return;
+      }
+      console.log("Form ID:", formId);
+  
+      const response = await axios.post(
+        `http://localhost:3001/form/${formId}/sections`,
+        {
+          title: newSection.title,
+          description: newSection.description,
+          questions: newSection.questions,
+        }
+      );
+  
+      if (response.status === 201) {
+        console.log("Section added successfully:", response.data);
+  
+        // เพิ่ม Section ใหม่ใน State
+        setSections((prevSections) => [
+          ...prevSections,
+          { ...newSection, ...response.data }, // ใช้ข้อมูลจาก response เพื่ออัปเดต
+        ]);
+      }
+    } catch (error) {
+      console.error("Failed to add section:", error);
+    }
   };
 
   const addQuestion = (sectionId, type) => {
@@ -381,6 +411,20 @@ export default function Question({ quizData }) {
     }
   };
 
+  const updateSectionTitle = (sectionId, newTitle) => {
+    const updatedSections = sections.map((sec) =>
+      sec.id === sectionId ? { ...sec, title: newTitle } : sec
+    );
+    setSections(updatedSections);
+  };
+  
+  const updateSectionDescription = (sectionId, newDescription) => {
+    const updatedSections = sections.map((sec) =>
+      sec.id === sectionId ? { ...sec, description: newDescription } : sec
+    );
+    setSections(updatedSections);
+  };
+
   const renderSectionComponent = () => {
     if (!Array.isArray(sections)) {
       console.error("Sections is not an array:", sections);
@@ -392,14 +436,46 @@ export default function Question({ quizData }) {
         return sections.map((section) => (
           <SectionQuiz
             key={section.section_id}
-            section={section} /* other props */
+            section={section}
+            questionTypes={questionTypes}
+            addQuestion={addQuestion}
+            updateOption={updateOption}
+            updateRatingLevel={updateRatingLevel}
+            addOption={addOption}
+            removeOption={removeOption}
+            updateMaxSelect={updateMaxSelect}
+            toggleRequired={toggleRequired}
+            deleteQuestion={deleteQuestion}
+            deleteSection={deleteSection}
+            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
+            addSection={addSection}
+            toggleCorrectOption={toggleCorrectOption}
+            setCorrectOption={setCorrectOption}
+            addCorrectAnswer={addCorrectAnswer}
+            removeCorrectAnswer={removeCorrectAnswer}
+            updateCorrectAnswer={updateCorrectAnswer}
+            updatePoints={updatePoints}
+            handleUploadImage={handleUploadImage}
           />
         ));
       case "survey":
         return sections.map((section) => (
           <SectionForm
             key={section.section_id}
-            section={section} /* other props */
+            section={section}
+            questionTypes={questionTypes}
+            addQuestion={addQuestion}
+            updateOption={updateOption}
+            updateRatingLevel={updateRatingLevel}
+            addOption={addOption}
+            removeOption={removeOption}
+            updateMaxSelect={updateMaxSelect}
+            toggleRequired={toggleRequired}
+            deleteQuestion={deleteQuestion}
+            deleteSection={deleteSection}
+            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
+            addSection={addSection}
+            handleUploadImage={handleUploadImage}
           />
         ));
       case "psychology":
@@ -407,6 +483,18 @@ export default function Question({ quizData }) {
           <SectionPsychology
             key={section.section_id}
             section={section} /* other props */
+            questionTypes={questionTypes}
+            addQuestion={addQuestion}
+            updateOption={updateOption}
+            updateRatingLevel={updateRatingLevel}
+            addOption={addOption}
+            removeOption={removeOption}
+            updateMaxSelect={updateMaxSelect}
+            toggleRequired={toggleRequired}
+            deleteQuestion={deleteQuestion}
+            deleteSection={deleteSection}
+            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
+            addSection={addSection}
           />
         ));
       default:

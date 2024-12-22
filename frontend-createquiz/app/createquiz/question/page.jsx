@@ -1,12 +1,13 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect} from "react";
 import CoverPage from "./coverpage/page";
 import SectionQuiz from "./section-quiz/page";
 import SectionForm from "./section-form/page";
 import SectionPsychology from "./section-psychology/page";
 
-export default function Question({ quizData }) {
+export default function Question({quizData}) {
+  
   const searchParams = useSearchParams();
   const type = searchParams.get("type");
   const questionTypes = [
@@ -17,24 +18,13 @@ export default function Question({ quizData }) {
     { label: "เติมคำตอบ", icon: "✍️", value: "text_input" },
     { label: "วันที่", icon: "📅", value: "date" },
   ];
-  const [sections, setSections] = useState(
-    quizData?.section ? [quizData.section] : []
-  );
+  const [sections, setSections] = useState(quizData?.section || []);
 
   useEffect(() => {
-    if (quizData?.section) {
-      if (Array.isArray(quizData.section)) {
-        setSections(quizData.section);
-      } else {
-        console.warn(
-          "Expected section to be an array, wrapping it into an array:",
-          quizData.section
-        );
-        setSections([quizData.section]); // แปลง object เป็น array
-      }
-    }
-    console.log(("QQuiz Data", quizData));
-  }, [quizData]);
+    if(quizData?.section) setSections(quizData?.section);
+    console.log(sections);
+  }, [sections]);
+
 
   const addSection = () => {
     const newSection = {
@@ -382,38 +372,96 @@ export default function Question({ quizData }) {
   };
 
   const renderSectionComponent = () => {
-    if (!Array.isArray(sections)) {
-      console.error("Sections is not an array:", sections);
-      return <div>No valid sections available</div>;
-    }
-
     switch (type) {
       case "quiz":
         return sections.map((section) => (
           <SectionQuiz
-            key={section.section_id}
-            section={section} /* other props */
+            key={section.id}
+            section={section}
+            questionTypes={questionTypes}
+            addQuestion={addQuestion}
+            updateOption={updateOption}
+            updateRatingLevel={updateRatingLevel}
+            addOption={addOption}
+            removeOption={removeOption}
+            updateMaxSelect={updateMaxSelect}
+            toggleRequired={toggleRequired}
+            deleteQuestion={deleteQuestion}
+            deleteSection={deleteSection}
+            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
+            addSection={addSection}
+            toggleCorrectOption={toggleCorrectOption}
+            setCorrectOption={setCorrectOption}
+            addCorrectAnswer={addCorrectAnswer}
+            removeCorrectAnswer={removeCorrectAnswer}
+            updateCorrectAnswer={updateCorrectAnswer}
+            updatePoints={updatePoints}
+            handleUploadImage={handleUploadImage}
           />
         ));
       case "survey":
         return sections.map((section) => (
           <SectionForm
-            key={section.section_id}
-            section={section} /* other props */
+            key={section.id}
+            section={section}
+            questionTypes={questionTypes}
+            addQuestion={addQuestion}
+            updateOption={updateOption}
+            updateRatingLevel={updateRatingLevel}
+            addOption={addOption}
+            removeOption={removeOption}
+            updateMaxSelect={updateMaxSelect}
+            toggleRequired={toggleRequired}
+            deleteQuestion={deleteQuestion}
+            deleteSection={deleteSection}
+            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
+            addSection={addSection}
+            handleUploadImage={handleUploadImage}
           />
         ));
       case "psychology":
         return sections.map((section) => (
           <SectionPsychology
-            key={section.section_id}
-            section={section} /* other props */
+            key={section.id}
+            section={section}
+            questionTypes={questionTypes}
+            addQuestion={addQuestion}
+            updateOption={updateOption}
+            updateRatingLevel={updateRatingLevel}
+            addOption={addOption}
+            removeOption={removeOption}
+            updateMaxSelect={updateMaxSelect}
+            toggleRequired={toggleRequired}
+            deleteQuestion={deleteQuestion}
+            deleteSection={deleteSection}
+            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
+            addSection={addSection}
           />
         ));
       default:
         return sections.map((section) => (
           <SectionQuiz
-            key={section.section_id}
-            section={section} /* other props */
+            key={section.id}
+            section={section}
+            questionTypes={questionTypes}
+            addQuestion={addQuestion}
+            updateOption={updateOption}
+            updateRatingLevel={updateRatingLevel}
+            addOption={addOption}
+            removeOption={removeOption}
+            updateMaxSelect={updateMaxSelect}
+            toggleRequired={toggleRequired}
+            deleteQuestion={deleteQuestion}
+            deleteSection={deleteSection}
+            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
+            addSection={addSection}
+            toggleCorrectOption={toggleCorrectOption}
+            setCorrectOption={setCorrectOption}
+            addCorrectAnswer={addCorrectAnswer}
+            removeCorrectAnswer={removeCorrectAnswer}
+            updateCorrectAnswer={updateCorrectAnswer}
+            updatePoints={updatePoints}
+            handleUploadImage={handleUploadImage}
           />
         ));
     }
@@ -421,12 +469,8 @@ export default function Question({ quizData }) {
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
-      <CoverPage coverPageData={quizData?.coverPage} theme={quizData?.theme} />
-      {Array.isArray(sections) ? (
-        renderSectionComponent()
-      ) : (
-        <div>No sections available</div>
-      )}
+      <CoverPage coverPageData={quizData?.coverPage}/>
+      {renderSectionComponent()}
 
       <div className="max-w-2xl mx-auto mt-8">
         <button className="w-full mt-2 px-4 py-2 bg-[#03A9F4] text-white rounded-full">

@@ -176,7 +176,7 @@ const Section = ({
                 {/* Add New Correct Answer */}
                 <button
                   onClick={() => addCorrectAnswer(section.id, question.id)}
-                  className="text-[#03A9F4] underline"
+                  className="text-[#03A9F4] "
                 >
                   + เพิ่มคำตอบที่ถูกต้อง
                 </button>
@@ -434,7 +434,7 @@ const Section = ({
               {/* Add New Option Button */}
               <button
                 onClick={() => addOption(section.id, question.id)}
-                className="text-[#03A9F4] underline mb-2"
+                className="text-[#03A9F4] mb-2"
               >
                 + เพิ่มตัวเลือกใหม่
               </button>
@@ -491,63 +491,99 @@ const Section = ({
               {/* Options List */}
               <div>
                 {question.options.map((option, idx) => (
-                  <div key={idx} className="flex items-center mb-2">
-                    {/* Correct Answer Toggle */}
-                    <button
-                      className="mr-2"
-                      onClick={() =>
-                        toggleCorrectOption(section.id, question.id, idx)
-                      }
-                    >
-                      <FontAwesomeIcon
-                        icon={
-                          question.correctOptions?.includes(idx)
-                            ? faSquareCheck
-                            : faSquareXmark
+                  <div key={idx} className="flex flex-col mb-4">
+                    <div className="flex items-center mb-2">
+                      <div className="relative flex items-center w-full">
+                        <FontAwesomeIcon
+                          icon={faGripVertical}
+                          className="mr-2 text-gray-400"
+                        />{" "}
+                        {/* Correct Answer Toggle */}
+                        <button
+                          className="mr-2"
+                          onClick={() =>
+                            toggleCorrectOption(section.id, question.id, idx)
+                          }
+                        >
+                          <FontAwesomeIcon
+                            icon={
+                              question.correctOptions?.includes(idx)
+                                ? faSquareCheck
+                                : faSquareXmark
+                            }
+                            className={`w-5 h-5 ${
+                              question.correctOptions?.includes(idx)
+                                ? "text-green-500"
+                                : "text-gray-400"
+                            }`}
+                          />
+                        </button>
+                        {/* Option Input */}
+                        <input
+                          type="text"
+                          value={option.text || ""}
+                          onChange={(e) =>
+                            updateOption(
+                              section.id,
+                              question.id,
+                              idx,
+                              e.target.value
+                            )
+                          }
+                          placeholder={`ตัวเลือก ${idx + 1}`}
+                          className="w-full px-4 py-2 border border-gray-300 rounded text-black"
+                        />
+                        {/* Upload Image Button */}
+                        <button
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+                          onClick={() =>
+                            document
+                              .getElementById(
+                                `file-upload-${section.id}-${question.id}-${idx}`
+                              )
+                              .click()
+                          }
+                        >
+                          <FontAwesomeIcon icon={faImage} className="w-6 h-6" />
+                        </button>
+                        {/* Hidden File Input */}
+                        <input
+                          type="file"
+                          id={`file-upload-${section.id}-${question.id}-${idx}`}
+                          className="hidden"
+                          accept="image/*"
+                          onChange={(e) =>
+                            handleUploadImage(e, section.id, question.id, idx)
+                          }
+                        />
+                      </div>
+
+                      {/* Delete Option Button */}
+                      <button
+                        onClick={() =>
+                          removeOption(section.id, question.id, idx)
                         }
-                        className={`w-5 h-5 ${
-                          question.correctOptions?.includes(idx)
-                            ? "text-green-500"
-                            : "text-gray-400"
-                        }`}
-                      />
-                    </button>
-
-                    {/* Option Input */}
-                    <input
-                      type="text"
-                      value={option}
-                      onChange={(e) =>
-                        updateOption(
-                          section.id,
-                          question.id,
-                          idx,
-                          e.target.value
-                        )
-                      }
-                      placeholder={`ตัวเลือก ${idx + 1}`}
-                      className="w-full px-4 py-2 border border-gray-300 rounded text-black"
-                    />
-
-                    {/* Add Image Button */}
-                    <button className="ml-2 text-gray-500">
-                      <FontAwesomeIcon icon={faImage} className="w-6 h-6" />
-                    </button>
-
-                    {/* Delete Option Button */}
-                    <button
-                      onClick={() => removeOption(section.id, question.id, idx)}
-                      className="ml-2 text-red-500"
-                    >
-                      ✖️
-                    </button>
+                        className="ml-2 text-red-500"
+                      >
+                        ✖️
+                      </button>
+                    </div>
+                    {option.image && (
+                      <div className="mt-2 ms-10 flex justify-start">
+                        <img
+                          src={option.image}
+                          alt={`ตัวเลือก ${idx + 1}`}
+                          className="w-4/5 max-h-80 object-contain border border-gray-300 rounded"
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
 
                 {/* Add New Option */}
                 <button
                   onClick={() => addOption(section.id, question.id)}
-                  className="text-[#03A9F4] underline"
+                  className="text-[#03A9F4] "
                 >
                   + เพิ่มตัวเลือกใหม่
                 </button>

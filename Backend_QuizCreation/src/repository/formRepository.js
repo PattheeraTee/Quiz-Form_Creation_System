@@ -273,19 +273,28 @@ exports.addOption = async (questionId, optionData) => {
 /**
  * แก้ไข Option
  */
-exports.editOption = async (questionId, optionData) => {
+exports.editOption = async (questionId, optionId, optionData) => {
     await validateExistence(Question, { question_id: questionId }, 'Question not found');
     try {
+        // ตรวจสอบว่า option_id มีอยู่ใน options array
+        const question = await Question.findOne({ question_id: questionId, 'options.option_id': optionId });
+        if (!question) {
+            throw new Error('Option not found');
+        }
+
+        // อัปเดตข้อมูลของ option
         const updatedQuestion = await Question.findOneAndUpdate(
-            { question_id: questionId, 'options.option_id': optionData.option_id },
-            { $set: { 'options.$': optionData } },
-            { new: true }
+            { question_id: questionId, 'options.option_id': optionId },
+            { $set: { 'options.$.text': optionData.text } }, // อัปเดตเฉพาะฟิลด์ที่ส่งมา
+            { new: true } // ส่งผลลัพธ์ใหม่กลับมา
         );
+
         return updatedQuestion;
     } catch (error) {
-        throw new Error(`เกิดข้อผิดพลาดในการแก้ไข Option: ${error.message}`);
+        throw new Error(`Error editing option: ${error.message}`);
     }
 };
+
 
 /**
  * ลบ Option

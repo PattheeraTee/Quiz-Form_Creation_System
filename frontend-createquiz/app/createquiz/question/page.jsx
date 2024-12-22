@@ -5,6 +5,7 @@ import { useState } from "react";
 import CoverPage from "./coverpage/page";
 import SectionQuiz from "./section-quiz/page";
 import SectionForm from "./section-form/page";
+import SectionPsychology from "./section-psychology/page";
 
 export default function CreateQuiz() {
   const searchParams = useSearchParams();

@@ -17,6 +17,7 @@ const questionSchema = new Schema({
     question: {
         type: String,
         required: true,
+        default: "คำถาม",
     },
     question_image: {
         type: String,

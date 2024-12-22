@@ -3,6 +3,7 @@ const Form = require('../models/form');
 const Coverpage = require('../models/coverpage');
 const Theme = require('../models/theme');
 const Section = require('../models/section'); // ตรวจสอบให้แน่ใจว่าไฟล์ section.js มีการส่งออกโมเดล Section อย่างถูกต้อง
+const Question = require('../models/question');
 
 //ตรวจสอบว่าข้อมูลมีอยู่จริงหรือไม่
 async function validateExistence(model, query, errorMessage) {
@@ -70,9 +71,10 @@ exports.getForm = async (formId) => {
 
         const coverPage = await Coverpage.findOne({ form_id: formId });
         const theme = await Theme.findOne({ form_id: formId });
-        const section = await Section.findOne({ form_id: formId }).sort({ number: -1 });
+        // แก้ไขให้ดึงข้อมูล section ทั้งหมด
+        const sections = await Section.find({ form_id: formId }).sort({ number: 1 });
 
-        return { form, coverPage, theme, section };
+        return { form, coverPage, theme, sections };
     } catch (error) {
         throw new Error(`เกิดข้อผิดพลาดในการดึงข้อมูลแบบฟอร์ม: ${error.message}`);
     }
@@ -190,19 +192,20 @@ exports.addQuestion = async (sectionId, questionData) => {
     await validateExistence(Section, { section_id: sectionId }, 'Section not found');
     try {
         const question = new Question({
-            section_id: sectionId,
-            ...questionData
+            section_id: sectionId, // เชื่อมโยงกับ Section
+            ...questionData,      // ข้อมูลเพิ่มเติม เช่น type, options
         });
-        await question.save();
+        await question.save(); // บันทึก Question
         await Section.updateOne(
             { section_id: sectionId },
-            { $push: { questions: question.question_id } }
+            { $push: { questions: question.question_id } } // เพิ่ม question_id ใน Section
         );
         return question;
     } catch (error) {
         throw new Error(`เกิดข้อผิดพลาดในการเพิ่ม Question: ${error.message}`);
     }
 };
+
 
 /**
  * แก้ไข Question

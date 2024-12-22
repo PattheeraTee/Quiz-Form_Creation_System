@@ -28,7 +28,7 @@ const service = {
     if (!user) throw new Error('ไม่พบบัญชีผู้ใช้นี้ในระบบ');
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) throw new Error('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
-    const token = jwt.sign({ userId: user.user_id }, process.env.SECRET_KEY, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: user.user_id }, process.env.SECRET_KEY, { expiresIn: '8h' });
     return { token, user };
   },
 

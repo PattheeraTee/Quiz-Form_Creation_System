@@ -12,5 +12,5 @@ export function middleware(request) {
 }
 
 export const config = {
-    matcher: '/profile/:path*', // เปลี่ยนเส้นทางสำหรับเส้นทางที่ตรงตามนี้
-}
+    matcher: ['/profile/:path*', '/home'], // เพิ่ม '/home' เข้าไปใน matcher
+};

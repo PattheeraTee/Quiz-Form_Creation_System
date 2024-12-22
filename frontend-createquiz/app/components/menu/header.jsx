@@ -29,9 +29,7 @@ export default function Header() {
           },
           withCredentials: true,
         });
-    
-        console.log("response.data:", response.data);
-    
+        
         // ตรวจสอบโครงสร้างของ response.data
         const { email = "", profileImage = "" } = response.data || {};
         setUserData({ email, profileImage });

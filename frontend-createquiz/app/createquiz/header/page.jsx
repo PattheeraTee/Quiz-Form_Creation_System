@@ -21,17 +21,19 @@ export default function QuizHeader({ onSectionSelect }) {
             onSectionSelect(section);
         }
     };
-  
+
     return (
         <div className='bg-white border-b border-black'>
-            <header className="flex items-center p-4">
+            <header className="flex items-center justify-between p-4 relative">
                 {/* Left Section: Logo */}
                 <Link className="flex items-center" href="/home">
-                    <span className="text-2xl font-bold text-black mr-4">QUIZ LOGO</span>
+                    <span className="text-2xl font-bold text-black">QUIZ LOGO</span>
                 </Link>
 
                 {/* Center Section: Quiz Name */}
-                <div className="text-xl font-medium text-center text-black flex-grow">ชื่อแบบสอบถาม</div>
+                <div className="absolute left-1/2 transform -translate-x-1/2 text-xl font-medium text-center text-black">
+                    ชื่อแบบสอบถาม
+                </div>
 
                 {/* Right Section: Settings and User Profile */}
                 <div className="flex items-center space-x-4">
@@ -49,7 +51,7 @@ export default function QuizHeader({ onSectionSelect }) {
                     {/* User Profile */}
                     <div className="rounded-full overflow-hidden w-10 h-10">
                         <Image
-                            src={taeyeon} // Update with your user profile path
+                            src={taeyeon}
                             alt="User Profile"
                             width={40}
                             height={40}
@@ -78,3 +80,4 @@ export default function QuizHeader({ onSectionSelect }) {
         </div>
     );
 }
+

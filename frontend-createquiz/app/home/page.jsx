@@ -1,5 +1,5 @@
 'use client';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "../components/menu/header";
 import Sidebar from "../components/menu/sidebar";
 import ImportFile from "../components/importfile/import-file";
@@ -9,15 +9,44 @@ import Template from "../components/template/page";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faTimes ,faQuestion, faClipboardList, faBrain} from "@fortawesome/free-solid-svg-icons";
 import { useRouter } from "next/navigation"; 
+import axios from "axios";
 
 export default function Page() {
   const [selectedComponent, setSelectedComponent] = useState("myquiz"); // default to "myquiz"
   const [isPopupOpen, setIsPopupOpen] = useState(false); // Popup state
+  const [userId, setUserId] = useState(null);
   const router = useRouter();
 
-  const handleCreateQuiz = (type) => {
-    // Redirect to CreateQuiz page with the selected type as a query parameter
-    router.push(`/createquiz?type=${type}`);
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const res = await axios.get("http://localhost:3000/api/getCookie");
+        setUserId(res.data.userId);
+      } catch (error) {
+        console.error("Error fetching userId:", error);
+      }
+    };
+    fetchUserId();
+  }, []);
+
+  const handleCreateQuiz = async (type) => {
+    if (!userId) {
+      console.error("UserId not available");
+      return;
+    }
+    try {
+      console.log("Creating quiz with type:", type);
+      console.log("UserId:", userId);
+      const res = await axios.post("http://localhost:3001/form/create", {
+        user_id: userId,
+        form_type: type,
+      });
+      const result = res.data;
+      console.log("Create quiz result:", result);
+      router.push(`/createquiz?type=${type}&form_id=${result.form.form_id}`);
+    } catch (error) {
+      console.error("Error creating quiz:", error);
+    }
   };
 
   // Function to conditionally render components based on selectedComponent
@@ -28,11 +57,11 @@ export default function Page() {
       case "ai":
         return <GenerateQuiz />;
       case "myquiz":
-        return <MyQuiz />;
+        // return <MyQuiz />;
       case "template":
         return <Template />;
       default:
-        return <MyQuiz />;
+        // return <MyQuiz />;
     }
   };
 

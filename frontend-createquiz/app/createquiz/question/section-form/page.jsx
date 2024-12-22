@@ -27,11 +27,11 @@ const Section = ({
   return (
     <div className="max-w-2xl mx-auto mt-8 bg-white p-6 rounded-xl shadow relative">
       <h3 className="text-xl font-semibold mb-2 text-black">
-        ส่วนที่ {section.id}
+        ส่วนที่ {section.number}
       </h3>
       <input
         type="text"
-        placeholder={`ชื่อส่วนที่ ${section.id}`}
+        placeholder={`ชื่อส่วนที่ ${section.number}`}
         className="w-full px-4 py-2 mb-2 border border-gray-300 rounded text-black"
       />
       <textarea

@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPalette, faEye } from "@fortawesome/free-solid-svg-icons";
 import Theme from '../question/popup/theme/page';
 
-export default function QuizHeader({ onSectionSelect }) {
+export default function QuizHeader({ onSectionSelect, quizTitle}) {
     const [isThemeVisible, setIsThemeVisible] = useState(false);
     const [selectedSection, setSelectedSection] = useState('คำถาม');
 
@@ -32,7 +32,7 @@ export default function QuizHeader({ onSectionSelect }) {
 
                 {/* Center Section: Quiz Name */}
                 <div className="absolute left-1/2 transform -translate-x-1/2 text-xl font-medium text-center text-black">
-                    ชื่อแบบสอบถาม
+                    {quizTitle}
                 </div>
 
                 {/* Right Section: Settings and User Profile */}

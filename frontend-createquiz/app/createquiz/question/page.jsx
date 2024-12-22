@@ -1,13 +1,12 @@
-// pages/create-quiz.js
 "use client";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CoverPage from "./coverpage/page";
 import SectionQuiz from "./section-quiz/page";
 import SectionForm from "./section-form/page";
 import SectionPsychology from "./section-psychology/page";
 
-export default function CreateQuiz() {
+export default function Question({ quizData }) {
   const searchParams = useSearchParams();
   const type = searchParams.get("type");
   const questionTypes = [
@@ -18,15 +17,24 @@ export default function CreateQuiz() {
     { label: "เติมคำตอบ", icon: "✍️", value: "text_input" },
     { label: "วันที่", icon: "📅", value: "date" },
   ];
-  const [sections, setSections] = useState([
-    {
-      id: 1,
-      title: "",
-      description: "",
-      questions: [],
-      showQuestionTypes: false,
-    },
-  ]);
+  const [sections, setSections] = useState(
+    quizData?.section ? [quizData.section] : []
+  );
+
+  useEffect(() => {
+    if (quizData?.section) {
+      if (Array.isArray(quizData.section)) {
+        setSections(quizData.section);
+      } else {
+        console.warn(
+          "Expected section to be an array, wrapping it into an array:",
+          quizData.section
+        );
+        setSections([quizData.section]); // แปลง object เป็น array
+      }
+    }
+    console.log(("QQuiz Data", quizData));
+  }, [quizData]);
 
   const addSection = () => {
     const newSection = {
@@ -50,12 +58,10 @@ export default function CreateQuiz() {
               id: section.questions.length + 1,
               type,
               options:
-                type !== "text_input" &&
-                type !== "date" &&
-                type !== "rating"
+                type !== "text_input" && type !== "date" && type !== "rating"
                   ? [""]
                   : [],
-              correctAnswers: type === "text_input" ? [""] : [], // Add this line
+              correctAnswers: type === "text_input" ? [""] : [],
               maxSelect: 1,
               isRequired: false,
               ratingLevel: type === "rating" ? 5 : null,
@@ -68,7 +74,6 @@ export default function CreateQuiz() {
     });
     setSections(updatedSections);
   };
-  
 
   const updateOption = (sectionId, questionId, optionIndex, value) => {
     const updatedSections = sections.map((section) => {
@@ -264,7 +269,7 @@ export default function CreateQuiz() {
       )
     );
   };
-  
+
   const updatePoints = (sectionId, questionId, value) => {
     setSections((prevSections) =>
       prevSections.map((section) =>
@@ -375,139 +380,56 @@ export default function CreateQuiz() {
       reader.readAsDataURL(file);
     }
   };
-  
+
   const renderSectionComponent = () => {
+    if (!Array.isArray(sections)) {
+      console.error("Sections is not an array:", sections);
+      return <div>No valid sections available</div>;
+    }
+
     switch (type) {
       case "quiz":
         return sections.map((section) => (
           <SectionQuiz
-            key={section.id}
-            section={section}
-            questionTypes={questionTypes}
-            addQuestion={addQuestion}
-            updateOption={updateOption}
-            updateRatingLevel={updateRatingLevel}
-            addOption={addOption}
-            removeOption={removeOption}
-            updateMaxSelect={updateMaxSelect}
-            toggleRequired={toggleRequired}
-            deleteQuestion={deleteQuestion}
-            deleteSection={deleteSection}
-            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
-            addSection={addSection}
-            toggleCorrectOption={toggleCorrectOption}
-            setCorrectOption={setCorrectOption}
-            addCorrectAnswer={addCorrectAnswer}
-            removeCorrectAnswer={removeCorrectAnswer}
-            updateCorrectAnswer={updateCorrectAnswer}
-            updatePoints={updatePoints}
-            handleUploadImage={handleUploadImage}
+            key={section.section_id}
+            section={section} /* other props */
           />
         ));
       case "survey":
         return sections.map((section) => (
           <SectionForm
-            key={section.id}
-            section={section}
-            questionTypes={questionTypes}
-            addQuestion={addQuestion}
-            updateOption={updateOption}
-            updateRatingLevel={updateRatingLevel}
-            addOption={addOption}
-            removeOption={removeOption}
-            updateMaxSelect={updateMaxSelect}
-            toggleRequired={toggleRequired}
-            deleteQuestion={deleteQuestion}
-            deleteSection={deleteSection}
-            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
-            addSection={addSection}
-            handleUploadImage={handleUploadImage}
+            key={section.section_id}
+            section={section} /* other props */
           />
         ));
       case "psychology":
         return sections.map((section) => (
           <SectionPsychology
-            key={section.id}
-            section={section}
-            questionTypes={questionTypes}
-            addQuestion={addQuestion}
-            updateOption={updateOption}
-            updateRatingLevel={updateRatingLevel}
-            addOption={addOption}
-            removeOption={removeOption}
-            updateMaxSelect={updateMaxSelect}
-            toggleRequired={toggleRequired}
-            deleteQuestion={deleteQuestion}
-            deleteSection={deleteSection}
-            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
-            addSection={addSection}
+            key={section.section_id}
+            section={section} /* other props */
           />
         ));
       default:
         return sections.map((section) => (
           <SectionQuiz
-            key={section.id}
-            section={section}
-            questionTypes={questionTypes}
-            addQuestion={addQuestion}
-            updateOption={updateOption}
-            updateRatingLevel={updateRatingLevel}
-            addOption={addOption}
-            removeOption={removeOption}
-            updateMaxSelect={updateMaxSelect}
-            toggleRequired={toggleRequired}
-            deleteQuestion={deleteQuestion}
-            deleteSection={deleteSection}
-            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
-            addSection={addSection}
-            toggleCorrectOption={toggleCorrectOption}
-            setCorrectOption={setCorrectOption}
-            addCorrectAnswer={addCorrectAnswer}
-            removeCorrectAnswer={removeCorrectAnswer}
-            updateCorrectAnswer={updateCorrectAnswer}
-            updatePoints={updatePoints}
-            handleUploadImage={handleUploadImage}
+            key={section.section_id}
+            section={section} /* other props */
           />
         ));
     }
   };
-  
-  
+
   return (
     <div className="min-h-screen bg-gray-100 py-8">
-      <CoverPage />
-      {/* {sections.map((section) => (
-        // <Section
-        <SectionQuiz
-          key={section.id}
-          section={section}
-          questionTypes={questionTypes}
-          addQuestion={addQuestion}
-          updateOption={updateOption}
-          updateRatingLevel={updateRatingLevel}
-          addOption={addOption}
-          removeOption={removeOption}
-          updateMaxSelect={updateMaxSelect}
-          toggleRequired={toggleRequired}
-          deleteQuestion={deleteQuestion}
-          deleteSection={deleteSection}
-          toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
-          addSection={addSection}
-          toggleCorrectOption={toggleCorrectOption}
-          setCorrectOption={setCorrectOption}
-          addCorrectAnswer={addCorrectAnswer} // Pass addCorrectAnswer
-          removeCorrectAnswer={removeCorrectAnswer} // Pass removeCorrectAnswer
-          updateCorrectAnswer={updateCorrectAnswer} // Pass updateCorrectAnswer
-          updatePoints={updatePoints} // Pass updatePoints
-          handleUploadImage={handleUploadImage} // Pass handle
-        />
-      ))} */}
-            {renderSectionComponent()}
+      <CoverPage coverPageData={quizData?.coverPage} theme={quizData?.theme} />
+      {Array.isArray(sections) ? (
+        renderSectionComponent()
+      ) : (
+        <div>No sections available</div>
+      )}
 
       <div className="max-w-2xl mx-auto mt-8">
-        <button
-          className="w-full mt-2 px-4 py-2 bg-[#03A9F4] text-white rounded-full"
-        >
+        <button className="w-full mt-2 px-4 py-2 bg-[#03A9F4] text-white rounded-full">
           สร้างแบบทดสอบ
         </button>
       </div>

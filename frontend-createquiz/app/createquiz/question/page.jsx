@@ -5,6 +5,7 @@ import CoverPage from "./coverpage/page";
 import SectionQuiz from "./section-quiz/page";
 import SectionForm from "./section-form/page";
 import SectionPsychology from "./section-psychology/page";
+import axios from "axios";
 
 export default function Question({quizData}) {
   
@@ -26,7 +27,7 @@ export default function Question({quizData}) {
   }, [sections]);
 
 
-  const addSection = () => {
+  const addSection = async () => {
     const newSection = {
       id: sections.length + 1,
       title: "",
@@ -34,7 +35,36 @@ export default function Question({quizData}) {
       questions: [],
       showQuestionTypes: false,
     };
-    setSections([...sections, newSection]);
+  
+    try {
+      const formId = quizData?.form?.form_id; // ดึง formId จาก quizData
+      if (!formId) {
+        console.error("Form ID not found!");
+        return;
+      }
+      console.log("Form ID:", formId);
+  
+      const response = await axios.post(
+        `http://localhost:3001/form/${formId}/sections`,
+        {
+          title: newSection.title,
+          description: newSection.description,
+          questions: newSection.questions,
+        }
+      );
+  
+      if (response.status === 201) {
+        console.log("Section added successfully:", response.data);
+  
+        // เพิ่ม Section ใหม่ใน State
+        setSections((prevSections) => [
+          ...prevSections,
+          { ...newSection, ...response.data }, // ใช้ข้อมูลจาก response เพื่ออัปเดต
+        ]);
+      }
+    } catch (error) {
+      console.error("Failed to add section:", error);
+    }
   };
 
   const addQuestion = (sectionId, type) => {
@@ -371,12 +401,26 @@ export default function Question({quizData}) {
     }
   };
 
+  const updateSectionTitle = (sectionId, newTitle) => {
+    const updatedSections = sections.map((sec) =>
+      sec.id === sectionId ? { ...sec, title: newTitle } : sec
+    );
+    setSections(updatedSections);
+  };
+  
+  const updateSectionDescription = (sectionId, newDescription) => {
+    const updatedSections = sections.map((sec) =>
+      sec.id === sectionId ? { ...sec, description: newDescription } : sec
+    );
+    setSections(updatedSections);
+  };
+
   const renderSectionComponent = () => {
     switch (type) {
       case "quiz":
         return sections.map((section) => (
           <SectionQuiz
-            key={section.id}
+            key={section.section_id}
             section={section}
             questionTypes={questionTypes}
             addQuestion={addQuestion}
@@ -402,7 +446,7 @@ export default function Question({quizData}) {
       case "survey":
         return sections.map((section) => (
           <SectionForm
-            key={section.id}
+            key={section.section_id}
             section={section}
             questionTypes={questionTypes}
             addQuestion={addQuestion}
@@ -422,8 +466,8 @@ export default function Question({quizData}) {
       case "psychology":
         return sections.map((section) => (
           <SectionPsychology
-            key={section.id}
-            section={section}
+            key={section.section_id}
+            section={section} /* other props */
             questionTypes={questionTypes}
             addQuestion={addQuestion}
             updateOption={updateOption}

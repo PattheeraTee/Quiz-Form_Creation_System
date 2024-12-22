@@ -23,6 +23,8 @@ const Section = ({
   toggleQuestionTypesVisibility,
   addSection,
   handleUploadImage,
+  updateSectionTitle,
+  updateSectionDescription
 }) => {
   return (
     <div className="max-w-2xl mx-auto mt-8 bg-white p-6 rounded-xl shadow relative">
@@ -33,10 +35,15 @@ const Section = ({
         type="text"
         placeholder={`ชื่อส่วนที่ ${section.number}`}
         className="w-full px-4 py-2 mb-2 border border-gray-300 rounded text-black"
+        value={section.title || ""} // ใส่ค่าหากมีค่าใน section.title
+        onChange={(e) => updateSectionTitle(section.id, e.target.value)} // เพิ่มฟังก์ชันสำหรับอัปเดต title
       />
+
       <textarea
         placeholder="คำอธิบาย"
         className="w-full px-4 py-2 mb-4 border border-gray-300 rounded text-black"
+        value={section.description || ""} // ใส่ค่าหากมีค่าใน section.description
+        onChange={(e) => updateSectionDescription(section.id, e.target.value)} // เพิ่มฟังก์ชันสำหรับอัปเดต description
       />
 
       {/* Display question types */}
@@ -347,130 +354,146 @@ const Section = ({
             </div>
           )}
 
-{question.type === "checkbox" && (
-  <div>
-    {/* Options List */}
-    <div>
-      {question.options.map((option, idx) => (
-        <div key={idx} className="flex flex-col mb-4">
-          <div className="relative flex items-center w-full mb-2">
-            <FontAwesomeIcon
-              icon={faGripVertical}
-              className="mr-2 text-gray-400"
-            />
-            <input type="checkbox" className="mr-2" disabled />
+          {question.type === "checkbox" && (
+            <div>
+              {/* Options List */}
+              <div>
+                {question.options.map((option, idx) => (
+                  <div key={idx} className="flex flex-col mb-4">
+                    <div className="relative flex items-center w-full mb-2">
+                      <FontAwesomeIcon
+                        icon={faGripVertical}
+                        className="mr-2 text-gray-400"
+                      />
+                      <input type="checkbox" className="mr-2" disabled />
 
-            {/* Option Input */}
-            <div className="relative w-full">
-              <input
-                type="text"
-                value={option.text || ""}
-                onChange={(e) =>
-                  updateOption(section.id, question.id, idx, e.target.value)
-                }
-                placeholder={`ตัวเลือก ${idx + 1}`}
-                className="w-full px-4 py-2 border border-gray-300 rounded text-black pr-10"
-              />
+                      {/* Option Input */}
+                      <div className="relative w-full">
+                        <input
+                          type="text"
+                          value={option.text || ""}
+                          onChange={(e) =>
+                            updateOption(
+                              section.id,
+                              question.id,
+                              idx,
+                              e.target.value
+                            )
+                          }
+                          placeholder={`ตัวเลือก ${idx + 1}`}
+                          className="w-full px-4 py-2 border border-gray-300 rounded text-black pr-10"
+                        />
 
-              {/* Image Upload Icon */}
-              <button
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
-                onClick={() =>
-                  document.getElementById(`file-upload-${section.id}-${idx}`).click()
-                }
-              >
-                <FontAwesomeIcon icon={faImage} className="w-6 h-6" />
-              </button>
+                        {/* Image Upload Icon */}
+                        <button
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+                          onClick={() =>
+                            document
+                              .getElementById(
+                                `file-upload-${section.id}-${idx}`
+                              )
+                              .click()
+                          }
+                        >
+                          <FontAwesomeIcon icon={faImage} className="w-6 h-6" />
+                        </button>
 
-              {/* Hidden File Input */}
-              <input
-                type="file"
-                id={`file-upload-${section.id}-${idx}`}
-                className="hidden"
-                accept="image/*"
-                onChange={(e) => handleUploadImage(e, section.id, question.id, idx)}
-              />
-            </div>
+                        {/* Hidden File Input */}
+                        <input
+                          type="file"
+                          id={`file-upload-${section.id}-${idx}`}
+                          className="hidden"
+                          accept="image/*"
+                          onChange={(e) =>
+                            handleUploadImage(e, section.id, question.id, idx)
+                          }
+                        />
+                      </div>
 
-            {/* Delete Option Button */}
-            <button
-              onClick={() => removeOption(section.id, question.id, idx)}
-              className="ml-2 text-red-500"
-            >
-              ✖️
-            </button>
-          </div>
+                      {/* Delete Option Button */}
+                      <button
+                        onClick={() =>
+                          removeOption(section.id, question.id, idx)
+                        }
+                        className="ml-2 text-red-500"
+                      >
+                        ✖️
+                      </button>
+                    </div>
 
-          {/* Show Uploaded Image */}
-          {option.image && (
-            <div className="mt-2 ms-10 flex justify-start">
-              <img
-                src={option.image}
-                alt={`ตัวเลือก ${idx + 1}`}
-                className="w-4/5 max-h-80 object-contain border border-gray-300 rounded"
-              />
+                    {/* Show Uploaded Image */}
+                    {option.image && (
+                      <div className="mt-2 ms-10 flex justify-start">
+                        <img
+                          src={option.image}
+                          alt={`ตัวเลือก ${idx + 1}`}
+                          className="w-4/5 max-h-80 object-contain border border-gray-300 rounded"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {/* Add New Option */}
+                <button
+                  onClick={() => addOption(section.id, question.id)}
+                  className="text-[#03A9F4]"
+                >
+                  + เพิ่มตัวเลือกใหม่
+                </button>
+              </div>
+
+              {/* Max Select Dropdown */}
+              <div className="flex items-center mt-4">
+                <span className="mr-2 text-black">เลือกสูงสุด:</span>
+                <select
+                  value={question.maxSelect || 1}
+                  onChange={(e) =>
+                    updateMaxSelect(
+                      section.id,
+                      question.id,
+                      parseInt(e.target.value)
+                    )
+                  }
+                  className="border border-gray-300 rounded px-2 py-1 text-black"
+                >
+                  {question.options.map((_, idx) => (
+                    <option key={idx} value={idx + 1}>
+                      {idx + 1}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Points Input, Trash Bin, and Required Toggle */}
+              <div className="flex justify-end items-center mt-4">
+                {/* Trash Bin and Required Toggle */}
+                <div className="flex items-center space-x-4">
+                  {/* Trash Bin */}
+                  <button
+                    onClick={() => deleteQuestion(section.id, question.id)}
+                    className="text-gray-500"
+                  >
+                    <FontAwesomeIcon icon={faTrash} className="w-5 h-5" />
+                  </button>
+
+                  {/* Required Toggle */}
+                  <div className="flex items-center">
+                    <span className="text-black mr-2">จำเป็น</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={question.isRequired}
+                        onChange={() => toggleRequired(section.id, question.id)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#03A9F4]"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
-        </div>
-      ))}
-
-      {/* Add New Option */}
-      <button
-        onClick={() => addOption(section.id, question.id)}
-        className="text-[#03A9F4]"
-      >
-        + เพิ่มตัวเลือกใหม่
-      </button>
-    </div>
-
-    {/* Max Select Dropdown */}
-    <div className="flex items-center mt-4">
-      <span className="mr-2 text-black">เลือกสูงสุด:</span>
-      <select
-        value={question.maxSelect || 1}
-        onChange={(e) =>
-          updateMaxSelect(section.id, question.id, parseInt(e.target.value))
-        }
-        className="border border-gray-300 rounded px-2 py-1 text-black"
-      >
-        {question.options.map((_, idx) => (
-          <option key={idx} value={idx + 1}>
-            {idx + 1}
-          </option>
-        ))}
-      </select>
-    </div>
-
-    {/* Points Input, Trash Bin, and Required Toggle */}
-    <div className="flex justify-end items-center mt-4">
-      {/* Trash Bin and Required Toggle */}
-      <div className="flex items-center space-x-4">
-        {/* Trash Bin */}
-        <button
-          onClick={() => deleteQuestion(section.id, question.id)}
-          className="text-gray-500"
-        >
-          <FontAwesomeIcon icon={faTrash} className="w-5 h-5" />
-        </button>
-
-        {/* Required Toggle */}
-        <div className="flex items-center">
-          <span className="text-black mr-2">จำเป็น</span>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={question.isRequired}
-              onChange={() => toggleRequired(section.id, question.id)}
-              className="sr-only peer"
-            />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#03A9F4]"></div>
-          </label>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-
 
           {/* If date, show a date picker */}
           {question.type === "date" && (

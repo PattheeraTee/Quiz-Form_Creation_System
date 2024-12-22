@@ -295,12 +295,18 @@ exports.editOption = async (questionId, optionId, optionData) => {
     }
 };
 
-
 /**
  * ลบ Option
  */
 exports.deleteOption = async (questionId, optionId) => {
     await validateExistence(Question, { question_id: questionId }, 'Question not found');
+
+    // ตรวจสอบว่า option_id มีอยู่จริงใน options
+    const question = await Question.findOne({ question_id: questionId, 'options.option_id': optionId });
+    if (!question) {
+        throw new Error('Option not found');
+    }
+
     try {
         const updatedQuestion = await Question.findOneAndUpdate(
             { question_id: questionId },
@@ -309,6 +315,6 @@ exports.deleteOption = async (questionId, optionId) => {
         );
         return updatedQuestion;
     } catch (error) {
-        throw new Error(`เกิดข้อผิดพลาดในการลบ Option: ${error.message}`);
+        throw new Error(`Error deleting option: ${error.message}`);
     }
 };

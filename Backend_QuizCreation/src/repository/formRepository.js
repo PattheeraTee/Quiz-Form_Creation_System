@@ -4,6 +4,15 @@ const Coverpage = require('../models/coverpage');
 const Theme = require('../models/theme');
 const Section = require('../models/section'); // ตรวจสอบให้แน่ใจว่าไฟล์ section.js มีการส่งออกโมเดล Section อย่างถูกต้อง
 
+//ตรวจสอบว่าข้อมูลมีอยู่จริงหรือไม่
+async function validateExistence(model, query, errorMessage) {
+    const result = await model.findOne(query);
+    if (!result) {
+        throw new Error(errorMessage);
+    }
+    return result;
+}
+
 exports.createForm = async (data) => {
     try {
         // สร้างแบบฟอร์มใหม่แต่ยังไม่บันทึก
@@ -54,6 +63,7 @@ exports.createForm = async (data) => {
 };
 
 exports.getForm = async (formId) => {
+    await validateExistence(Form, { form_id: formId }, 'Form not found');
     try {
         const form = await Form.findOne({ form_id: formId });
         if (!form) throw new Error('ไม่พบแบบฟอร์ม');
@@ -73,6 +83,7 @@ exports.getForm = async (formId) => {
 //  * @param {Object} updateData - ข้อมูลที่ต้องการอัปเดต
 //  * @returns {Object} - ข้อมูลที่อัปเดตแล้ว
 exports.updateForm = async (formId, updateData) => {
+    await validateExistence(Form, { form_id: formId }, 'Form not found');
     try {
         const updatedForm = await Form.findOneAndUpdate(
             { form_id: formId },
@@ -86,9 +97,27 @@ exports.updateForm = async (formId, updateData) => {
 };
 
 /**
+ * อัปเดต Coverpage
+ */
+exports.updateCoverpage = async (coverpageId, updateData) => {
+    await validateExistence(Coverpage, { cover_page_id: coverpageId }, 'Coverpage not found');
+    try {
+        const updatedCoverpage = await Coverpage.findOneAndUpdate(
+            { cover_page_id: coverpageId },
+            { $set: updateData },
+            { new: true }
+        );
+        return updatedCoverpage;
+    } catch (error) {
+        throw new Error(`Error updating coverpage: ${error.message}`);
+    }
+};
+
+/**
  * เพิ่ม Section
  */
 exports.addSection = async (formId, sectionData) => {
+    await validateExistence(Form, { form_id: formId }, 'Form not found');
     try {
         const maxSection = await Section.findOne({ form_id: formId }).sort({ number: -1 });
         const nextNumber = maxSection ? maxSection.number + 1 : 1;
@@ -112,6 +141,7 @@ exports.addSection = async (formId, sectionData) => {
  * แก้ไข Section
  */
 exports.editSection = async (sectionId, sectionData) => {
+    await validateExistence(Section, { section_id: sectionId }, 'Section not found');
     try {
         const updatedSection = await Section.findOneAndUpdate(
             { section_id: sectionId },
@@ -128,13 +158,26 @@ exports.editSection = async (sectionId, sectionData) => {
  * ลบ Section
  */
 exports.deleteSection = async (formId, sectionId) => {
+    await validateExistence(Form, { form_id: formId }, 'Form not found');
+    await validateExistence(Section, { section_id: sectionId }, 'Section not found');
     try {
+        // ลบ Section
         await Section.deleteOne({ section_id: sectionId });
+
+        // ลบ Section ID จาก Form
         await Form.updateOne(
             { form_id: formId },
             { $pull: { section_id: sectionId } }
         );
-        return { message: 'Section deleted' };
+
+        // ดึง Sections ที่เหลือและจัดเรียงใหม่
+        const sections = await Section.find({ form_id: formId }).sort({ number: 1 });
+        for (let i = 0; i < sections.length; i++) {
+            sections[i].number = i + 1; // อัปเดตหมายเลขใหม่
+            await sections[i].save();
+        }
+
+        return { message: 'Section deleted and numbers updated' };
     } catch (error) {
         throw new Error(`เกิดข้อผิดพลาดในการลบ Section: ${error.message}`);
     }
@@ -144,6 +187,7 @@ exports.deleteSection = async (formId, sectionId) => {
  * เพิ่ม Question
  */
 exports.addQuestion = async (sectionId, questionData) => {
+    await validateExistence(Section, { section_id: sectionId }, 'Section not found');
     try {
         const question = new Question({
             section_id: sectionId,
@@ -164,6 +208,7 @@ exports.addQuestion = async (sectionId, questionData) => {
  * แก้ไข Question
  */
 exports.editQuestion = async (questionId, questionData) => {
+    await validateExistence(Question, { question_id: questionId }, 'Question not found');
     try {
         const updatedQuestion = await Question.findOneAndUpdate(
             { question_id: questionId },
@@ -180,6 +225,8 @@ exports.editQuestion = async (questionId, questionData) => {
  * ลบ Question
  */
 exports.deleteQuestion = async (sectionId, questionId) => {
+    await validateExistence(Section, { section_id: sectionId }, 'Section not found');
+    await validateExistence(Question, { question_id: questionId }, 'Question not found');
     try {
         await Question.deleteOne({ question_id: questionId });
         await Section.updateOne(
@@ -196,6 +243,7 @@ exports.deleteQuestion = async (sectionId, questionId) => {
  * เพิ่ม Option
  */
 exports.addOption = async (questionId, optionData) => {
+    await validateExistence(Question, { question_id: questionId }, 'Question not found');
     try {
         const updatedQuestion = await Question.findOneAndUpdate(
             { question_id: questionId },
@@ -212,6 +260,7 @@ exports.addOption = async (questionId, optionData) => {
  * แก้ไข Option
  */
 exports.editOption = async (questionId, optionData) => {
+    await validateExistence(Question, { question_id: questionId }, 'Question not found');
     try {
         const updatedQuestion = await Question.findOneAndUpdate(
             { question_id: questionId, 'options.option_id': optionData.option_id },
@@ -228,6 +277,7 @@ exports.editOption = async (questionId, optionData) => {
  * ลบ Option
  */
 exports.deleteOption = async (questionId, optionId) => {
+    await validateExistence(Question, { question_id: questionId }, 'Question not found');
     try {
         const updatedQuestion = await Question.findOneAndUpdate(
             { question_id: questionId },

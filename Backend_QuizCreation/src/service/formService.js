@@ -45,8 +45,8 @@ exports.addOption = async (questionId, optionData) => {
     return await formRepo.addOption(questionId, optionData);
 };
 
-exports.editOption = async (questionId, optionData) => {
-    return await formRepo.editOption(questionId, optionData);
+exports.editOption = async (questionId, optionId, optionData) => {
+    return await formRepo.editOption(questionId, optionId, optionData);
 };
 
 exports.deleteOption = async (questionId, optionId) => {

@@ -26,5 +26,5 @@ app.use(
 );
 app.use(cookieParser());
 app.use(express.json());
-app.use("/", testForm);
+app.use("/form", testForm);
 app.use("/",userRouter);

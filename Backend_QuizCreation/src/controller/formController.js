@@ -101,11 +101,14 @@ exports.addOption = async (req, res) => {
 };
 
 exports.editOption = async (req, res) => {
+    const { questionId, optionId } = req.params; // ดึง questionId และ optionId จาก URL
+    const optionData = req.body; // ดึงข้อมูลการแก้ไขจาก Body ของ Request
+
     try {
-        const data = await formService.editOption(req.params.questionId, req.body);
-        res.status(200).json(data);
+        const updatedQuestion = await formService.editOption(questionId, optionId, optionData);
+        res.status(200).json(updatedQuestion); // ส่งข้อมูล Question ที่อัปเดตกลับไป
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: error.message }); // แสดงข้อความ Error หากเกิดปัญหา
     }
 };
 

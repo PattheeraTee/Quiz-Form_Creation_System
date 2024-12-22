@@ -71,8 +71,19 @@ exports.getForm = async (formId) => {
 
         const coverPage = await Coverpage.findOne({ form_id: formId });
         const theme = await Theme.findOne({ form_id: formId });
-        // แก้ไขให้ดึงข้อมูล section ทั้งหมด
-        const sections = await Section.find({ form_id: formId }).sort({ number: 1 });
+
+        // ดึงข้อมูล Section พร้อม Question และ Options
+        const sections = await Section.find({ form_id: formId })
+            .sort({ number: 1 })
+            .lean(); // ใช้ lean() เพื่อแปลงผลลัพธ์ให้เป็น JSON ที่แก้ไขได้
+
+        for (let section of sections) {
+            const questions = await Question.find({ section_id: section.section_id }).lean();
+            section.questions = questions.map((question) => ({
+                ...question,
+                options: question.options,
+            }));
+        }
 
         return { form, coverPage, theme, sections };
     } catch (error) {

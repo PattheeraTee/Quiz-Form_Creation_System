@@ -77,33 +77,61 @@ export default function Question({ quizData }) {
     }
   };
 
-  const addQuestion = (sectionId, type) => {
-    const updatedSections = sections.map((section) => {
-      if (section.id === sectionId) {
-        return {
-          ...section,
-          questions: [
-            ...section.questions,
-            {
-              id: section.questions.length + 1,
-              type,
-              options:
-                type !== "text_input" && type !== "date" && type !== "rating"
-                  ? [""]
-                  : [],
-              correctAnswers: type === "text_input" ? [""] : [],
-              maxSelect: 1,
-              isRequired: false,
-              ratingLevel: type === "rating" ? 5 : null,
-            },
-          ],
-          showQuestionTypes: false,
-        };
-      }
-      return section;
-    });
-    setSections(updatedSections);
+  const addQuestion = async (sectionId, type) => {
+  const newQuestion = {
+    type,
+    question: "คำถามจ้า", // คำถามเริ่มต้น
+    options: [], // กำหนดค่าเริ่มต้นให้ options
+    correctAnswers: type === "text_input" ? [""] : [], // คำตอบที่ถูกต้องเฉพาะประเภท text_input
+    maxSelect: type === "checkbox" ? 1 : null, // ค่า maxSelect เฉพาะประเภท checkbox
+    isRequired: false,
+    ratingLevel: type === "rating" ? 10 : null, // ค่าเริ่มต้นสำหรับ rating
   };
+
+  // เตรียม Payload โดยไม่รวม `options` ถ้าไม่ใช่ประเภทที่ต้องการ
+  const payload = {
+    type: newQuestion.type,
+    question: newQuestion.question,
+  };
+
+  // เพิ่ม `options` ใน Payload เฉพาะประเภทที่ต้องการ
+  if (type === "multiple_choice" || type === "checkbox" || type === "dropdown") {
+    payload.options = [""];
+  }
+
+  try {
+    console.log("sectionId:", sectionId);
+    console.log("type question:", newQuestion.type);
+    console.log("Payload for POST request:", payload);
+
+    // ส่งคำขอไปยัง API
+    const response = await axios.post(
+      `http://localhost:3001/form/${sectionId}/questions`,
+      payload
+    );
+
+    if (response.status === 201) {
+      console.log("Question added successfully:", response.data);
+
+      // อัปเดต State ด้วยคำถามใหม่
+      const updatedSections = sections.map((section) => {
+        if (section.section_id === sectionId) {
+          return {
+            ...section,
+            questions: [...section.questions, { ...newQuestion, ...response.data }],
+          };
+        }
+        return section;
+      });
+      setSections(updatedSections);
+    }
+  } catch (error) {
+    console.error("Failed to add question:", error);
+  }
+};
+
+  
+  
 
   const updateOption = (sectionId, questionId, optionIndex, value) => {
     const updatedSections = sections.map((section) => {
@@ -384,14 +412,14 @@ export default function Question({ quizData }) {
   // };
 
   const toggleQuestionTypesVisibility = (sectionId) => {
-    const updatedSections = sections.map((section) => {
-      if (section.id === sectionId) {
-        return { ...section, showQuestionTypes: !section.showQuestionTypes };
-      }
-      return section;
-    });
+    const updatedSections = sections.map((section) =>
+      section.section_id === sectionId
+        ? { ...section, showQuestionTypes: !section.showQuestionTypes }
+        : section
+    );
     setSections(updatedSections);
   };
+  
 
   const handleUploadImage = (e, sectionId, questionId, optionIdx = null) => {
     const file = e.target.files[0];

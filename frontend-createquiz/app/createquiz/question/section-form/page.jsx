@@ -60,7 +60,7 @@ const Section = ({
               {questionTypes.map((qType) => (
                 <button
                   key={qType.value}
-                  onClick={() => addQuestion(section.id, qType.value)}
+                  onClick={() => addQuestion(section.section_id, qType.value)}
                   className="flex items-center px-4 py-2 bg-gray-200 rounded-full"
                 >
                   <span className="mr-2">{qType.icon}</span>
@@ -75,7 +75,7 @@ const Section = ({
       {/* List of questions */}
       {section.questions.map((question) => (
         <div
-          key={question.id}
+          key={question.question_id}
           className="mt-4 p-4 border border-gray-300 rounded bg-white"
         >
           <div className="flex flex-col mb-4">
@@ -91,7 +91,7 @@ const Section = ({
                 className="ml-4 text-gray-500"
                 onClick={() =>
                   document
-                    .getElementById(`question-file-upload-${question.id}`)
+                    .getElementById(`question-file-upload-${question.question_id}}`)
                     .click()
                 }
               >
@@ -103,10 +103,10 @@ const Section = ({
               {/* Hidden File Input */}
               <input
                 type="file"
-                id={`question-file-upload-${question.id}`}
+                id={`question-file-upload-${question.question_id}`}
                 className="hidden"
                 accept="image/*"
-                onChange={(e) => handleUploadImage(e, section.id, question.id)}
+                onChange={(e) => handleUploadImage(e, section.section_id, question.question_id)}
               />
             </div>
 
@@ -154,7 +154,7 @@ const Section = ({
                       <input
                         type="checkbox"
                         checked={question.isRequired}
-                        onChange={() => toggleRequired(section.id, question.id)}
+                        onChange={() => toggleRequired(section.section_id, question.question_id)}
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#03A9F4]"></div>
@@ -183,8 +183,8 @@ const Section = ({
                         value={option.text || ""}
                         onChange={(e) =>
                           updateOption(
-                            section.id,
-                            question.id,
+                            section.section_id,
+                            question.question_id,
                             idx,
                             e.target.value
                           )
@@ -209,14 +209,14 @@ const Section = ({
                         className="hidden"
                         accept="image/*"
                         onChange={(e) =>
-                          handleUploadImage(e, section.id, question.id, idx)
+                          handleUploadImage(e, section.section_id, question.question_id, idx)
                         }
                       />
                     </div>
 
                     {/* Delete Option Button */}
                     <button
-                      onClick={() => removeOption(section.id, question.id, idx)}
+                      onClick={() => removeOption(section.section_id, question.question_id, idx)}
                       className="ml-2 text-red-500"
                     >
                       ✖️
@@ -238,7 +238,7 @@ const Section = ({
 
               {/* Add New Option Button */}
               <button
-                onClick={() => addOption(section.id, question.id)}
+                onClick={() => addOption(section.section_id, question.question_id)}
                 className="text-[#03A9F4] mb-2"
               >
                 + เพิ่มตัวเลือกใหม่
@@ -250,7 +250,7 @@ const Section = ({
                 <div className="flex items-center space-x-4">
                   {/* Trash Bin */}
                   <button
-                    onClick={() => deleteQuestion(section.id, question.id)}
+                    onClick={() => deleteQuestion(section.section_id, question.question_id)}
                     className="text-gray-500"
                   >
                     <FontAwesomeIcon icon={faTrash} className="w-5 h-5" />
@@ -263,7 +263,7 @@ const Section = ({
                       <input
                         type="checkbox"
                         checked={question.isRequired}
-                        onChange={() => toggleRequired(section.id, question.id)}
+                        onChange={() => toggleRequired(section.section_id, question.question_id)}
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#03A9F4]"></div>
@@ -302,13 +302,13 @@ const Section = ({
                     type="text"
                     value={option}
                     onChange={(e) =>
-                      updateOption(section.id, question.id, idx, e.target.value)
+                      updateOption(section.section_id, question.quesiton_id, idx, e.target.value)
                     }
                     placeholder={`ตัวเลือก ${idx + 1}`}
                     className="w-full px-4 py-2 border border-gray-300 rounded text-black"
                   />
                   <button
-                    onClick={() => removeOption(section.id, question.id, idx)}
+                    onClick={() => removeOption(section.section_id, question.question_id, idx)}
                     className="ml-2 text-red-500"
                   >
                     ✖️
@@ -318,7 +318,7 @@ const Section = ({
 
               {/* Add New Option Button */}
               <button
-                onClick={() => addOption(section.id, question.id)}
+                onClick={() => addOption(section.section_id, question.question_id)}
                 className="text-[#03A9F4] mb-2"
               >
                 + เพิ่มตัวเลือกใหม่
@@ -330,7 +330,7 @@ const Section = ({
                 <div className="flex items-center space-x-4">
                   {/* Trash Bin */}
                   <button
-                    onClick={() => deleteQuestion(section.id, question.id)}
+                    onClick={() => deleteQuestion(section.section_id, question.question_id)}
                     className="text-gray-500"
                   >
                     <FontAwesomeIcon icon={faTrash} className="w-5 h-5" />
@@ -343,7 +343,7 @@ const Section = ({
                       <input
                         type="checkbox"
                         checked={question.isRequired}
-                        onChange={() => toggleRequired(section.id, question.id)}
+                        onChange={() => toggleRequired(section.section_id, question.question_id)}
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#03A9F4]"></div>
@@ -374,8 +374,8 @@ const Section = ({
                           value={option.text || ""}
                           onChange={(e) =>
                             updateOption(
-                              section.id,
-                              question.id,
+                              section.section_id,
+                              question.question_id,
                               idx,
                               e.target.value
                             )
@@ -390,7 +390,7 @@ const Section = ({
                           onClick={() =>
                             document
                               .getElementById(
-                                `file-upload-${section.id}-${idx}`
+                                `file-upload-${section.section_id}-${idx}`
                               )
                               .click()
                           }
@@ -401,11 +401,11 @@ const Section = ({
                         {/* Hidden File Input */}
                         <input
                           type="file"
-                          id={`file-upload-${section.id}-${idx}`}
+                          id={`file-upload-${section.section_id}-${idx}`}
                           className="hidden"
                           accept="image/*"
                           onChange={(e) =>
-                            handleUploadImage(e, section.id, question.id, idx)
+                            handleUploadImage(e, section.section_id, question.question_id, idx)
                           }
                         />
                       </div>
@@ -413,7 +413,7 @@ const Section = ({
                       {/* Delete Option Button */}
                       <button
                         onClick={() =>
-                          removeOption(section.id, question.id, idx)
+                          removeOption(section.section_id, question.question_id, idx)
                         }
                         className="ml-2 text-red-500"
                       >
@@ -436,7 +436,7 @@ const Section = ({
 
                 {/* Add New Option */}
                 <button
-                  onClick={() => addOption(section.id, question.id)}
+                  onClick={() => addOption(section.section_id, question.question_id)}
                   className="text-[#03A9F4]"
                 >
                   + เพิ่มตัวเลือกใหม่
@@ -450,8 +450,8 @@ const Section = ({
                   value={question.maxSelect || 1}
                   onChange={(e) =>
                     updateMaxSelect(
-                      section.id,
-                      question.id,
+                      section.section_id,
+                      question.question_id,
                       parseInt(e.target.value)
                     )
                   }
@@ -471,7 +471,7 @@ const Section = ({
                 <div className="flex items-center space-x-4">
                   {/* Trash Bin */}
                   <button
-                    onClick={() => deleteQuestion(section.id, question.id)}
+                    onClick={() => deleteQuestion(section.section_id, question.question_id)}
                     className="text-gray-500"
                   >
                     <FontAwesomeIcon icon={faTrash} className="w-5 h-5" />
@@ -484,7 +484,7 @@ const Section = ({
                       <input
                         type="checkbox"
                         checked={question.isRequired}
-                        onChange={() => toggleRequired(section.id, question.id)}
+                        onChange={() => toggleRequired(section.section_id, question.question_id)}
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#03A9F4]"></div>
@@ -515,7 +515,7 @@ const Section = ({
                 <div className="flex items-center space-x-4">
                   {/* Trash Bin */}
                   <button
-                    onClick={() => deleteQuestion(section.id, question.id)}
+                    onClick={() => deleteQuestion(section.section_id, question.question_id)}
                     className="text-gray-500"
                   >
                     <FontAwesomeIcon icon={faTrash} className="w-5 h-5" />
@@ -528,7 +528,7 @@ const Section = ({
                       <input
                         type="checkbox"
                         checked={question.isRequired}
-                        onChange={() => toggleRequired(section.id, question.id)}
+                        onChange={() => toggleRequired(section.section_id, question.question_id)}
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#03A9F4]"></div>
@@ -557,8 +557,8 @@ const Section = ({
                   value={question.ratingLevel}
                   onChange={(e) =>
                     updateRatingLevel(
-                      section.id,
-                      question.id,
+                      section.section_id,
+                      question.question_id,
                       parseInt(e.target.value)
                     )
                   }
@@ -589,7 +589,7 @@ const Section = ({
                       <input
                         type="checkbox"
                         checked={question.isRequired}
-                        onChange={() => toggleRequired(section.id, question.id)}
+                        onChange={() => toggleRequired(section.section_id, question.question_id)}
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#03A9F4]"></div>
@@ -605,7 +605,7 @@ const Section = ({
       {section.questions.length > 0 && (
         <div className="mt-4">
           <button
-            onClick={() => toggleQuestionTypesVisibility(section.id)}
+            onClick={() => toggleQuestionTypesVisibility(section.section_id)}
             className="text-[#03A9F4] font-bold mb-2"
           >
             {section.showQuestionTypes
@@ -617,7 +617,7 @@ const Section = ({
               {questionTypes.map((qType) => (
                 <button
                   key={qType.value}
-                  onClick={() => addQuestion(section.id, qType.value)}
+                  onClick={() => addQuestion(section.section_id, qType.value)}
                   className="flex items-center px-4 py-2 bg-gray-200 rounded-full"
                 >
                   <span className="mr-2">{qType.icon}</span>

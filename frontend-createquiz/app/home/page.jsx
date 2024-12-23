@@ -57,11 +57,11 @@ export default function Page() {
       case "ai":
         return <GenerateQuiz />;
       case "myquiz":
-        // return <MyQuiz />;
+        return <MyQuiz />;
       case "template":
         return <Template />;
       default:
-        // return <MyQuiz />;
+        return <MyQuiz />;
     }
   };
 

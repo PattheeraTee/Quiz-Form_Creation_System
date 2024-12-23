@@ -1,35 +1,46 @@
-import React, { useState, useEffect } from "react";
-import ButtonPopup from "../popup/buttonpopup/page"; // Import the buttonpopup component
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
+import React, { useContext,useState, useEffect } from "react";
+import { QuizContext } from "../../QuizContext"; // Import QuizContext
 import Background from "../../../components/images/Background.svg";
 import Image from "next/image";
+import axios from "axios";
 
 export default function CoverPage({ coverPageData, theme }) {
-  const [showButtonPopup, setShowButtonPopup] = useState(false); // State for buttonpopup
-  const [title, setTitle] = useState("");
+  const { quizTitle, setQuizTitle } = useContext(QuizContext); // Access quizTitle and setQuizTitle from Context
   const [description, setDescription] = useState("");
   const [buttonText, setButtonText] = useState("");
+  const [isEditingButtonText, setIsEditingButtonText] = useState(false); // State to toggle editing button text
   const [primaryColor, setPrimaryColor] = useState("#000000");
 
   // Update state when coverPageData changes
   useEffect(() => {
     if (coverPageData && theme) {
-      setTitle(coverPageData.title || "");
       setDescription(coverPageData.description || "");
       setButtonText(coverPageData.text_button || "");
       setPrimaryColor(theme.primary_color || "#000000");
     }
   }, [coverPageData, theme]);
 
-  const handleButtonClick = () => {
-    setShowButtonPopup((prev) => !prev); // Toggle buttonpopup on click
+  const handleAutosave = async (field, value) => {
+    const coverpageId = coverPageData?.cover_page_id; // Replace with actual coverPageId if different
+    if (!coverpageId) {
+      console.error("CoverPage ID is not available");
+      return;
+    }
+
+    const data = { [field]: value }; // Dynamically create payload based on the field
+
+    try {
+      const response = await axios.patch(
+        `http://localhost:3001/form/coverpage/${coverpageId}`,
+        data
+      );
+    } catch (error) {
+      console.error("Autosave failed:", error);
+    }
   };
 
   return (
     <div className="cover-page max-w-2xl mx-auto bg-white p-6 rounded-xl shadow">
-      {showButtonPopup && <ButtonPopup />}{" "}
-      {/* Show buttonpopup when state is true */}
       <h2 className="text-2xl font-semibold mb-4 text-black">หน้าปก</h2>
       <div className="flex flex-col items-center mb-6">
         <div
@@ -47,12 +58,11 @@ export default function CoverPage({ coverPageData, theme }) {
             type="text"
             placeholder="ชื่อแบบสอบถาม"
             className="w-full px-4 py-2 border border-gray-300 rounded text-black"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)} // Update state correctly
-          />
-          <FontAwesomeIcon
-            icon={faPenToSquare}
-            className="ml-2 cursor-pointer text-gray-600 w-5 h-5"
+            value={quizTitle}
+            onChange={(e) => {
+              setQuizTitle(e.target.value); // Update Context
+              handleAutosave("title", e.target.value); // Autosave title
+            }}
           />
         </div>
         <input
@@ -60,14 +70,33 @@ export default function CoverPage({ coverPageData, theme }) {
           placeholder="อธิบายแบบสอบถาม"
           className="w-full px-4 py-2 mb-4 border border-gray-300 rounded text-black"
           value={description}
-          onChange={(e) => setDescription(e.target.value)} // Update state correctly
+          onChange={(e) => {
+            setDescription(e.target.value);
+            handleAutosave("description", e.target.value); // Autosave description
+          }}
         />
-        <button
-          className="px-6 py-2 bg-[#03A9F4] text-white rounded-full"
-          onClick={handleButtonClick} // Toggle buttonpopup visibility
-        >
-          {buttonText}
-        </button>
+        <div className="relative flex items-center">
+          {!isEditingButtonText ? (
+            <button
+              className="px-6 py-2 bg-[#03A9F4] text-white rounded-full"
+              onClick={() => setIsEditingButtonText(true)} // Enter editing mode on click
+            >
+              {buttonText || "คลิกเพื่อแก้ไข"}
+            </button>
+          ) : (
+            <input
+              type="text"
+              className="px-4 py-2 border border-gray-300 rounded text-black"
+              value={buttonText}
+              onChange={(e) => {
+                setButtonText(e.target.value);
+                handleAutosave("text_button", e.target.value); // Autosave buttonText
+              }}
+              onBlur={() => setIsEditingButtonText(false)} // Exit editing mode when input loses focus
+              autoFocus // Automatically focus on input when editing starts
+            />
+          )}
+        </div>
       </div>
     </div>
   );

@@ -78,133 +78,188 @@ export default function Question({ quizData }) {
   };
 
   const addQuestion = async (sectionId, type) => {
-  const newQuestion = {
-    type,
-    question: "คำถามจ้า", // คำถามเริ่มต้น
-    options: [], // กำหนดค่าเริ่มต้นให้ options
-    correctAnswers: type === "text_input" ? [""] : [], // คำตอบที่ถูกต้องเฉพาะประเภท text_input
-    maxSelect: type === "checkbox" ? 1 : null, // ค่า maxSelect เฉพาะประเภท checkbox
-    isRequired: false,
-    ratingLevel: type === "rating" ? 10 : null, // ค่าเริ่มต้นสำหรับ rating
-  };
+    const newQuestion = {
+      type,
+      question: "คำถาม",
+      options: [], // กำหนดค่าเริ่มต้นให้ options เป็น array ว่าง
+      correctAnswers: type === "text_input" ? [""] : [], // คำตอบที่ถูกต้องเฉพาะประเภท text_input
+      maxSelect: type === "checkbox" ? 1 : null, // ค่า maxSelect เฉพาะประเภท checkbox
+      isRequired: false,
+      ratingLevel: type === "rating" ? 10 : null, // ค่าเริ่มต้นสำหรับ rating
+    };
 
-  // เตรียม Payload โดยไม่รวม `options` ถ้าไม่ใช่ประเภทที่ต้องการ
-  const payload = {
-    type: newQuestion.type,
-    question: newQuestion.question,
-  };
+    // เตรียม Payload โดยไม่รวม `options`
+    const payload = {
+      type: newQuestion.type,
+      question: newQuestion.question,
+    };
 
-  // เพิ่ม `options` ใน Payload เฉพาะประเภทที่ต้องการ
-  if (type === "multiple_choice" || type === "checkbox" || type === "dropdown") {
-    payload.options = [""];
-  }
+    try {
+      console.log("sectionId:", sectionId);
+      console.log("type question:", newQuestion.type);
+      console.log("Payload for POST request:", payload);
 
-  try {
-    console.log("sectionId:", sectionId);
-    console.log("type question:", newQuestion.type);
-    console.log("Payload for POST request:", payload);
+      // ส่งคำขอไปยัง API
+      const response = await axios.post(
+        `http://localhost:3001/form/${sectionId}/questions`,
+        payload
+      );
 
-    // ส่งคำขอไปยัง API
-    const response = await axios.post(
-      `http://localhost:3001/form/${sectionId}/questions`,
-      payload
-    );
+      if (response.status === 201) {
+        console.log("Question added successfully:", response.data);
 
-    if (response.status === 201) {
-      console.log("Question added successfully:", response.data);
-
-      // อัปเดต State ด้วยคำถามใหม่
-      const updatedSections = sections.map((section) => {
-        if (section.section_id === sectionId) {
-          return {
-            ...section,
-            questions: [...section.questions, { ...newQuestion, ...response.data }],
-          };
-        }
-        return section;
-      });
-      setSections(updatedSections);
-    }
-  } catch (error) {
-    console.error("Failed to add question:", error);
-  }
-};
-
-  
-  
-
-  const updateOption = (sectionId, questionId, optionIndex, value) => {
-    const updatedSections = sections.map((section) => {
-      if (section.id === sectionId) {
-        return {
-          ...section,
-          questions: section.questions.map((question) => {
-            if (question.id === questionId) {
-              const updatedOptions = [...question.options];
-              updatedOptions[optionIndex] = value;
-              return { ...question, options: updatedOptions };
-            }
-            return question;
-          }),
-        };
+        // อัปเดต State ด้วยคำถามใหม่
+        const updatedSections = sections.map((section) => {
+          if (section.section_id === sectionId) {
+            return {
+              ...section,
+              questions: [
+                ...section.questions,
+                { ...newQuestion, ...response.data },
+              ],
+            };
+          }
+          return section;
+        });
+        setSections(updatedSections);
       }
-      return section;
-    });
-    setSections(updatedSections);
+    } catch (error) {
+      console.error("Failed to add question:", error);
+    }
   };
+
+  const updateOption = (sectionId, questionId, optionId, value) => {
+    setSections((prevSections) =>
+      prevSections.map((section) =>
+        section.section_id === sectionId
+          ? {
+              ...section,
+              questions: section.questions.map((question) =>
+                question.question_id === questionId
+                  ? {
+                      ...question,
+                      options: question.options.map((option) =>
+                        option.option_id === optionId
+                          ? { ...option, text: value }
+                          : option
+                      ),
+                    }
+                  : question
+              ),
+            }
+          : section
+      )
+    );
+  
+    // Autosave the updated option using option_id
+    autosaveOption(questionId, optionId, { text: value });
+  };
+  
+  
+  const autosaveOption = async (questionId, optionId, updates) => {
+    try {
+      const response = await axios.patch(
+        `http://localhost:3001/form/${questionId}/options/${optionId}`,
+        updates
+      );
+    } catch (error) {
+      console.error("Option autosave failed:", error);
+    }
+  };
+  
+  
 
   const updateRatingLevel = (sectionId, questionId, value) => {
-    const updatedSections = sections.map((section) => {
-      if (section.id === sectionId) {
-        return {
-          ...section,
-          questions: section.questions.map((question) => {
-            if (question.id === questionId && question.type === "rating") {
-              return { ...question, ratingLevel: value };
+    if (value > 10) value = 10; // จำกัดค่าไม่ให้เกิน 10
+    setSections((prevSections) =>
+      prevSections.map((section) =>
+        section.section_id === sectionId
+          ? {
+              ...section,
+              questions: section.questions.map((question) =>
+                question.question_id === questionId
+                  ? { ...question, ratingLevel: value }
+                  : question
+              ),
             }
-            return question;
-          }),
-        };
-      }
-      return section;
-    });
-    setSections(updatedSections);
+          : section
+      )
+    );
   };
 
-  const addOption = (sectionId, questionId) => {
-    const updatedSections = sections.map((section) => {
-      if (section.id === sectionId) {
-        return {
-          ...section,
-          questions: section.questions.map((question) => {
-            if (question.id === questionId) {
-              return { ...question, options: [...question.options, ""] };
-            }
-            return question;
-          }),
-        };
+  const addOption = async (sectionId, questionId) => {
+    try {
+      // เรียก API เพื่อเพิ่ม Option
+      const response = await axios.post(
+        `http://localhost:3001/form/${questionId}/options`,
+        { text: "ตัวเลือกใหม่" }
+      );
+
+      if (response.status === 201) {
+        const updatedQuestion = response.data;
+
+        // อัปเดต State ด้วยข้อมูลใหม่
+        setSections((prevSections) =>
+          prevSections.map((section) =>
+            section.section_id === sectionId
+              ? {
+                  ...section,
+                  questions: section.questions.map((question) =>
+                    question.question_id === questionId
+                      ? {
+                          ...question,
+                          options: updatedQuestion.options,
+                        }
+                      : question
+                  ),
+                }
+              : section
+          )
+        );
+
+        console.log("Option added and State updated successfully!");
       }
-      return section;
-    });
-    setSections(updatedSections);
+    } catch (error) {
+      console.error("Error adding option:", error);
+    }
   };
 
-  const removeOption = (sectionId, questionId, optionIndex) => {
-    const updatedSections = sections.map((section) => {
-      if (section.id === sectionId) {
-        return {
-          ...section,
-          questions: section.questions.map((question) => {
-            const updatedOptions = question.options.filter(
-              (_, idx) => idx !== optionIndex
-            );
-            return { ...question, options: updatedOptions };
-          }),
-        };
+  const removeOption = async (sectionId, questionId, optionId) => {
+    try {
+      // ส่งคำขอ DELETE ไปยัง API
+      const response = await axios.delete(
+        `http://localhost:3001/form/${questionId}/options/${optionId}`
+      );
+
+      if (response.status === 200) {
+        console.log("Option deleted successfully:", response.data);
+
+        // อัปเดต state หลังจากลบสำเร็จ
+        setSections((prevSections) =>
+          prevSections.map((section) =>
+            section.section_id === sectionId
+              ? {
+                  ...section,
+                  questions: section.questions.map((question) =>
+                    question.question_id === questionId
+                      ? {
+                          ...question,
+                          options: question.options.filter(
+                            (option) => option.option_id !== optionId
+                          ),
+                        }
+                      : question
+                  ),
+                }
+              : section
+          )
+        );
+      } else {
+        console.error("Failed to delete option:", response.data);
       }
-      return section;
-    });
-    setSections(updatedSections);
+    } catch (error) {
+      console.error("Error deleting option:", error);
+    }
   };
 
   const updateMaxSelect = (sectionId, questionId, value) => {
@@ -347,12 +402,20 @@ export default function Question({ quizData }) {
 
   const toggleRequired = (sectionId, questionId) => {
     const updatedSections = sections.map((section) => {
-      if (section.id === sectionId) {
+      if (section.section_id === sectionId) {
         return {
           ...section,
           questions: section.questions.map((question) => {
-            if (question.id === questionId) {
-              return { ...question, isRequired: !question.isRequired };
+            if (question.question_id === questionId) {
+              const updatedQuestion = {
+                ...question,
+                isRequired: !question.isRequired,
+              };
+              // Autosave question's required state
+              handleAutosaveForQuestion(sectionId, questionId, {
+                required: updatedQuestion.isRequired,
+              });
+              return updatedQuestion;
             }
             return question;
           }),
@@ -360,22 +423,41 @@ export default function Question({ quizData }) {
       }
       return section;
     });
+
     setSections(updatedSections);
   };
 
-  const deleteQuestion = (sectionId, questionId) => {
-    const updatedSections = sections.map((section) => {
-      if (section.id === sectionId) {
-        return {
-          ...section,
-          questions: section.questions.filter(
-            (question) => question.id !== questionId
-          ),
-        };
+  const deleteQuestion = async (sectionId, questionId) => {
+    try {
+      // สร้าง URL ที่รวม sectionId และ questionId
+      const url = `http://localhost:3001/form/${sectionId}/questions/${questionId}`;
+      console.log("Deleting question:", url);
+
+      // ส่งคำขอ DELETE
+      const response = await axios.delete(url);
+
+      if (response.status === 200) {
+        console.log("Question deleted successfully:", response.data);
+
+        // อัปเดต state เพื่อลบคำถามออกจาก UI
+        setSections((prevSections) =>
+          prevSections.map((section) =>
+            section.section_id === sectionId
+              ? {
+                  ...section,
+                  questions: section.questions.filter(
+                    (question) => question.question_id !== questionId
+                  ),
+                }
+              : section
+          )
+        );
+      } else {
+        console.error("Failed to delete question:", response.data);
       }
-      return section;
-    });
-    setSections(updatedSections);
+    } catch (error) {
+      console.error("Error deleting question:", error);
+    }
   };
 
   const deleteSection = async (sectionId) => {
@@ -384,16 +466,16 @@ export default function Question({ quizData }) {
       console.error("Form ID not found!");
       return;
     }
-  
+
     try {
       // ส่งคำขอลบ section ไปยัง API
       const response = await axios.delete(
         `http://localhost:3001/form/${formId}/sections/${sectionId}`
       );
-  
+
       if (response.status === 200) {
         console.log("Section deleted successfully:", response.data);
-  
+
         // อัปเดต state เพื่อเอา section ที่ลบออก
         setSections((prevSections) =>
           prevSections.filter((section) => section.section_id !== sectionId)
@@ -405,7 +487,6 @@ export default function Question({ quizData }) {
       console.error("Error deleting section:", error);
     }
   };
-  
 
   // const toggleAddQuestionVisibility = (sectionId) => {
   //   setShowAddQuestion((prev) => ({ ...prev, [sectionId]: !prev[sectionId] }));
@@ -419,7 +500,6 @@ export default function Question({ quizData }) {
     );
     setSections(updatedSections);
   };
-  
 
   const handleUploadImage = (e, sectionId, questionId, optionIdx = null) => {
     const file = e.target.files[0];
@@ -461,23 +541,75 @@ export default function Question({ quizData }) {
   };
 
   const updateSectionTitle = (sectionId, newTitle) => {
-    const updatedSections = sections.map((sec) =>
-      sec.id === sectionId ? { ...sec, title: newTitle } : sec
+    setSections((prevSections) =>
+      prevSections.map((section) =>
+        section.section_id === sectionId
+          ? { ...section, title: newTitle }
+          : section
+      )
     );
-    setSections(updatedSections);
   };
 
   const updateSectionDescription = (sectionId, newDescription) => {
-    const updatedSections = sections.map((sec) =>
-      sec.id === sectionId ? { ...sec, description: newDescription } : sec
+    setSections((prevSections) =>
+      prevSections.map((section) =>
+        section.section_id === sectionId
+          ? { ...section, description: newDescription }
+          : section
+      )
     );
-    setSections(updatedSections);
   };
 
+  const handleAutosaveForQuestion = async (sectionId, questionId, updates) => {
+    try {
+      const response = await axios.patch(
+        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
+        updates
+      );
+    } catch (error) {
+      console.error("Autosave question failed:", error);
+    }
+  };
+
+  const updateQuestion = (sectionId, questionId, field, value) => {
+    setSections((prevSections) =>
+      prevSections.map((section) =>
+        section.section_id === sectionId
+          ? {
+              ...section,
+              questions: section.questions.map((question) =>
+                question.question_id === questionId
+                  ? { ...question, [field]: value }
+                  : question
+              ),
+            }
+          : section
+      )
+    );
+  
+    // Autosave the updated question
+    autosaveQuestion(sectionId, questionId, { [field]: value });
+  };
+  
+  const autosaveQuestion = async (sectionId, questionId, updates) => {
+    try {
+      const response = await axios.patch(
+        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
+        updates
+      );
+      console.log("Question autosave successful:", response.data);
+    } catch (error) {
+      console.error("Question autosave failed:", error);
+    }
+  };
+  
+  
   const renderSectionComponent = () => {
     if (!Array.isArray(sections) || sections.length === 0) {
       // console.error("No valid sections available");
-      return <div className="text-center mt-5">No valid sections available</div>;
+      return (
+        <div className="text-center mt-5">No valid sections available</div>
+      );
     }
     return sections.map((section) => {
       switch (type) {
@@ -515,6 +647,7 @@ export default function Question({ quizData }) {
               questionTypes={questionTypes}
               addQuestion={addQuestion}
               updateOption={updateOption}
+              updateQuestion={updateQuestion}
               updateRatingLevel={updateRatingLevel}
               addOption={addOption}
               removeOption={removeOption}
@@ -525,6 +658,10 @@ export default function Question({ quizData }) {
               toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
               addSection={addSection}
               handleUploadImage={handleUploadImage}
+              updateSectionTitle={updateSectionTitle}
+              updateSectionDescription={updateSectionDescription}
+              handleAutosaveForQuestion={handleAutosaveForQuestion}
+              formId={quizData?.form?.form_id} // Pass formId to Section
             />
           );
         case "psychology":
@@ -580,12 +717,6 @@ export default function Question({ quizData }) {
     <div className="min-h-screen bg-gray-100 py-8">
       <CoverPage coverPageData={quizData?.coverPage} theme={quizData?.theme} />
       {renderSectionComponent()}
-
-      <div className="max-w-2xl mx-auto mt-8">
-        <button className="w-full mt-2 px-4 py-2 bg-[#03A9F4] text-white rounded-full">
-          สร้างแบบทดสอบ
-        </button>
-      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState,useEffect,useContext } from 'react';
+import { QuizContext } from "../QuizContext"; // Import QuizContext
 import Image from 'next/image';
 import Link from 'next/link';
 import taeyeon from "../../components/images/taeyeon.png";
@@ -7,9 +8,16 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPalette, faEye } from "@fortawesome/free-solid-svg-icons";
 import Theme from '../question/popup/theme/page';
 
-export default function QuizHeader({ onSectionSelect, quizTitle}) {
+export default function QuizHeader() {
+    const { quizTitle } = useContext(QuizContext); 
     const [isThemeVisible, setIsThemeVisible] = useState(false);
     const [selectedSection, setSelectedSection] = useState('คำถาม');
+    const [currentTitle, setCurrentTitle] = useState(quizTitle); // Local state for quiz title
+
+    useEffect(() => {
+        setCurrentTitle(quizTitle);
+    }, [quizTitle]);
+
 
     const handleThemeClick = () => {
         setIsThemeVisible(!isThemeVisible);
@@ -32,7 +40,7 @@ export default function QuizHeader({ onSectionSelect, quizTitle}) {
 
                 {/* Center Section: Quiz Name */}
                 <div className="absolute left-1/2 transform -translate-x-1/2 text-xl font-medium text-center text-black">
-                    {quizTitle}
+                {currentTitle}
                 </div>
 
                 {/* Right Section: Settings and User Profile */}

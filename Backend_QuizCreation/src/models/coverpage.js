@@ -12,6 +12,7 @@ const coverpageSchema = new Schema({
     title: {
         type: String,
         required: true,
+        default: 'Untitled Form',
     },
     description: {
         type: String,

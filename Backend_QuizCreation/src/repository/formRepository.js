@@ -217,7 +217,6 @@ exports.addQuestion = async (sectionId, questionData) => {
     }
 };
 
-
 /**
  * แก้ไข Question
  */

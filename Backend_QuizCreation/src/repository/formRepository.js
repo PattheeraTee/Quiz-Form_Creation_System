@@ -268,10 +268,10 @@ exports.addQuestionToSection = async (sectionId, questionId) => {
 };
 
 // อัปเดต Question
-exports.updateQuestion = async (questionId, questionData) => {
+exports.updateQuestion = async (questionId, updateFields) => {
     const updatedQuestion = await Question.findOneAndUpdate(
         { question_id: questionId },
-        { $set: questionData },
+        { $set: updateFields },
         { new: true }
     );
     if (!updatedQuestion) {
@@ -307,31 +307,27 @@ exports.addOptionToQuestion = async (questionId, optionData) => {
     return updatedQuestion;
 };
 
-// แก้ไข Option ใน Question
-exports.updateOption = async (questionId, optionId, optionData) => {
-    // กรองฟิลด์ที่ไม่ลงท้ายด้วย `_id` ออกจาก optionData
-    const updateFields = Object.keys(optionData)
-        .filter((key) => !key.endsWith('_id')) // กรองฟิลด์ที่ลงท้ายด้วย `_id`
-        .reduce((obj, key) => {
-            obj[`options.$.${key}`] = optionData[key];
-            return obj;
-        }, {});
-
-    if (Object.keys(updateFields).length === 0) {
-        throw new Error('No valid fields to update');
-    }
+// อัปเดต Option ใน Question
+exports.updateOption = async (questionId, optionId, updateFields) => {
+    // สร้าง `$set` เฉพาะฟิลด์ที่ผ่านการกรอง
+    const setFields = Object.keys(updateFields).reduce((result, key) => {
+        result[`options.$.${key}`] = updateFields[key];
+        return result;
+    }, {});
 
     const updatedQuestion = await Question.findOneAndUpdate(
         { question_id: questionId, 'options.option_id': optionId },
-        { $set: updateFields }, // อัปเดตเฉพาะฟิลด์ที่ถูกกรอง
+        { $set: setFields }, // อัปเดตเฉพาะฟิลด์ที่ผ่านการกรอง
         { new: true } // ส่งผลลัพธ์ใหม่กลับมา
     );
 
     if (!updatedQuestion) {
         throw new Error('Failed to update option');
     }
+
     return updatedQuestion;
 };
+
 
 // ลบ Option ใน Question
 exports.deleteOption = async (questionId, optionId) => {
@@ -348,15 +344,17 @@ exports.deleteOption = async (questionId, optionId) => {
 
 // *********** Theme ***********
 // แก้ไข Theme
-exports.updateTheme = async (themeId, themeData) => {
+exports.updateTheme = async (themeId, updateFields) => {
     const updatedTheme = await Theme.findOneAndUpdate(
         { theme_id: themeId },
-        { $set: themeData },
+        { $set: updateFields }, // อัปเดตเฉพาะฟิลด์ที่ผ่านการกรอง
         { new: true } // ส่งข้อมูลที่อัปเดตแล้วกลับมา
     );
+
     if (!updatedTheme) {
         throw new Error('Failed to update theme');
     }
+
     return updatedTheme;
 };
 

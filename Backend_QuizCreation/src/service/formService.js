@@ -1,4 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
+const { filterRestrictedFields } = require('../utils/filterRestrictedFields');
+const { formRestrictedFields, coverpageRestrictedFields, sectionRestrictedFields, questionRestrictedFields, optionRestrictedFields, themeRestrictedFields } = require('../constants/restrictedFields');
 const formRepo = require('../repository/formRepository');
 
 //สร้างฟอร์มใหม่
@@ -52,8 +54,15 @@ exports.updateFormData = async (formId, updateData) => {
         // ตรวจสอบว่าฟอร์มมีอยู่
         await formRepo.validateFormExistence(formId);
 
+        // กรองฟิลด์ต้องห้าม
+        const updateFields = filterRestrictedFields(updateData, formRestrictedFields);
+
+        if (Object.keys(updateFields).length === 0) {
+            throw new Error('No valid fields to update');
+        }
+
         // อัปเดตข้อมูลในฟอร์ม
-        const updatedForm = await formRepo.updateForm(formId, updateData);
+        const updatedForm = await formRepo.updateForm(formId, updateFields);
 
         return updatedForm;
     } catch (error) {
@@ -134,8 +143,15 @@ exports.updateCoverpage = async (coverpageId, updateData) => {
         // ตรวจสอบว่า Coverpage มีอยู่
         await formRepo.validateCoverpageExistence(coverpageId);
 
+        // กรองฟิลด์ต้องห้าม
+        const updateFields = filterRestrictedFields(updateData, coverpageRestrictedFields);
+
+        if (Object.keys(updateFields).length === 0) {
+            throw new Error('No valid fields to update');
+        }
+
         // อัปเดตข้อมูลใน Coverpage
-        const updatedCoverpage = await formRepo.updateCoverpage(coverpageId, updateData);
+        const updatedCoverpage = await formRepo.updateCoverpage(coverpageId, updateFields);
 
         // Return the updated coverpage
         return updatedCoverpage;
@@ -183,8 +199,15 @@ exports.editSection = async (formId, sectionId, sectionData) => {
         // ตรวจสอบว่า Section เป็นของ Form ที่กำหนด
         await formRepo.validateSectionBelongsToForm(formId, sectionId);
 
+        // กรองฟิลด์ต้องห้าม
+        const updateFields = filterRestrictedFields(sectionData, sectionRestrictedFields);
+
+        if (Object.keys(updateFields).length === 0) {
+            throw new Error('No valid fields to update');
+        }
+
         // อัปเดตข้อมูลใน Section
-        const updatedSection = await formRepo.updateSection(sectionId, sectionData);
+        const updatedSection = await formRepo.updateSection(sectionId, updateFields);
 
         // ส่งคืน Section ที่อัปเดตแล้ว
         return updatedSection;
@@ -258,8 +281,15 @@ exports.editQuestion = async (sectionId, questionId, questionData) => {
         // ตรวจสอบว่า Question อยู่ใน Section ที่กำหนด
         await formRepo.validateQuestionInSection(sectionId, questionId);
 
+        // กรองฟิลด์ต้องห้าม
+        const updateFields = filterRestrictedFields(questionData, questionRestrictedFields);
+
+        if (Object.keys(updateFields).length === 0) {
+            throw new Error('No valid fields to update');
+        }
+
         // อัปเดต Question
-        const updatedQuestion = await formRepo.updateQuestion(questionId, questionData);
+        const updatedQuestion = await formRepo.updateQuestion(questionId, updateFields);
 
         // ส่งคืน Question ที่อัปเดตแล้ว
         return updatedQuestion;
@@ -316,15 +346,22 @@ exports.editOption = async (questionId, optionId, optionData) => {
         // ตรวจสอบว่า Option มีอยู่ใน Question
         await formRepo.validateOptionExistence(questionId, optionId);
 
-        // อัปเดต Option
-        const updatedQuestion = await formRepo.updateOption(questionId, optionId, optionData);
+        // กรองฟิลด์ต้องห้าม
+        const updateFields = filterRestrictedFields(optionData, optionRestrictedFields);
 
-        // ส่งคืน Question ที่อัปเดตแล้ว
+        if (Object.keys(updateFields).length === 0) {
+            throw new Error('No valid fields to update');
+        }
+
+        // อัปเดต Option
+        const updatedQuestion = await formRepo.updateOption(questionId, optionId, updateFields);
+
         return updatedQuestion;
     } catch (error) {
         throw new Error(`Error editing option: ${error.message}`);
     }
 };
+
 
 // ลบ option
 exports.deleteOption = async (questionId, optionId) => {
@@ -351,8 +388,15 @@ exports.editTheme = async (themeId, themeData) => {
         // ตรวจสอบว่า Theme มีอยู่
         await formRepo.validateThemeExistence(themeId);
 
+        // กรองฟิลด์ต้องห้าม
+        const updateFields = filterRestrictedFields(themeData, themeRestrictedFields);
+
+        if (Object.keys(updateFields).length === 0) {
+            throw new Error('No valid fields to update');
+        }
+
         // อัปเดต Theme
-        const updatedTheme = await formRepo.updateTheme(themeId, themeData);
+        const updatedTheme = await formRepo.updateTheme(themeId, updateFields);
 
         // ส่งคืน Theme ที่อัปเดตแล้ว
         return updatedTheme;

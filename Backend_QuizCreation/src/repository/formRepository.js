@@ -1,320 +1,359 @@
-// File: repo/formRepo.js
 const Form = require('../models/form');
 const Coverpage = require('../models/coverpage');
 const Theme = require('../models/theme');
-const Section = require('../models/section'); // ตรวจสอบให้แน่ใจว่าไฟล์ section.js มีการส่งออกโมเดล Section อย่างถูกต้อง
+const Section = require('../models/section');
 const Question = require('../models/question');
+const Result = require('../models/result');
+const Response = require('../models/response');
 
-//ตรวจสอบว่าข้อมูลมีอยู่จริงหรือไม่
-async function validateExistence(model, query, errorMessage) {
-    const result = await model.findOne(query);
-    if (!result) {
-        throw new Error(errorMessage);
+// ---------- ฟังก์ชันสำหรับการตรวจสอบข้อมูล ----------
+// ตรวจสอบว่ามีแบบฟอร์มอยู่ในฐานข้อมูล
+exports.validateFormExistence = async (formId) => {
+    const form = await Form.findOne({ form_id: formId });
+    if (!form) {
+        throw new Error('Form not found');
     }
-    return result;
-}
-
-exports.createForm = async (data) => {
-    try {
-        // สร้างแบบฟอร์มใหม่แต่ยังไม่บันทึก
-        const form = new Form({
-            user_id: data.user_id,
-            form_type: data.form_type,
-            section_id: [], // เพิ่มค่าเริ่มต้นให้เป็น array ว่าง
-            // result_id: [] // เพิ่มค่าเริ่มต้นให้เป็น array ว่าง
-        });
-
-        // สร้างหน้าปกค่าเริ่มต้น
-        const coverPage = new Coverpage({
-            form_id: form.form_id,
-            title: 'Untitled Form'
-        });
-        await coverPage.save();
-
-        // สร้างธีมค่าเริ่มต้น
-        const theme = new Theme({
-            form_id: form.form_id
-        });
-        await theme.save();
-
-        // ดึงค่า number สูงสุดใน Section ของแบบฟอร์มนี้
-        const maxSection = await Section.findOne({ form_id: form.form_id }).sort({ number: -1 });
-        const nextNumber = maxSection ? maxSection.number + 1 : 1;
-
-        // สร้าง section ค่าเริ่มต้น
-        const section = new Section({
-            form_id: form.form_id,
-            title: 'Section 1',
-            number: nextNumber // ตั้งค่า number สำหรับแบบฟอร์มนี้
-        });
-        await section.save();
-
-        // เชื่อมโยงหน้าปก ธีม section กับแบบฟอร์ม
-        form.cover_page_id = coverPage.cover_page_id;
-        form.theme_id = theme.theme_id;
-        form.section_id.push(section.section_id);
-
-        // บันทึกแบบฟอร์มพร้อมข้อมูลที่เชื่อมโยง
-        await form.save();
-
-        return { form, coverPage, theme, section };
-    } catch (error) {
-        throw new Error(`เกิดข้อผิดพลาดในการสร้างแบบฟอร์ม: ${error.message}`);
-    }
+    return form;
 };
 
-exports.getForm = async (formId) => {
-    await validateExistence(Form, { form_id: formId }, 'Form not found');
-    try {
-        const form = await Form.findOne({ form_id: formId });
-        if (!form) throw new Error('ไม่พบแบบฟอร์ม');
-
-        const coverPage = await Coverpage.findOne({ form_id: formId });
-        const theme = await Theme.findOne({ form_id: formId });
-
-        // ดึงข้อมูล Section พร้อม Question และ Options
-        const sections = await Section.find({ form_id: formId })
-            .sort({ number: 1 })
-            .lean(); // ใช้ lean() เพื่อแปลงผลลัพธ์ให้เป็น JSON ที่แก้ไขได้
-
-        for (let section of sections) {
-            const questions = await Question.find({ section_id: section.section_id }).lean();
-            section.questions = questions.map((question) => ({
-                ...question,
-                options: question.options,
-            }));
-        }
-
-        return { form, coverPage, theme, sections };
-    } catch (error) {
-        throw new Error(`เกิดข้อผิดพลาดในการดึงข้อมูลแบบฟอร์ม: ${error.message}`);
+// ตรวจสอบว่า Coverpage มีอยู่ในฐานข้อมูลหรือไม่
+exports.validateCoverpageExistence = async (coverpageId) => {
+    const coverpage = await Coverpage.findOne({ cover_page_id: coverpageId });
+    if (!coverpage) {
+        throw new Error('Coverpage not found');
     }
+    return coverpage;
 };
 
-//  * อัปเดตข้อมูลในแบบฟอร์ม
-//  * @param {String} formId - รหัสของแบบฟอร์ม
-//  * @param {Object} updateData - ข้อมูลที่ต้องการอัปเดต
-//  * @returns {Object} - ข้อมูลที่อัปเดตแล้ว
-exports.updateForm = async (formId, updateData) => {
-    await validateExistence(Form, { form_id: formId }, 'Form not found');
-    try {
-        const updatedForm = await Form.findOneAndUpdate(
-            { form_id: formId },
-            { $set: updateData },
-            { new: true }
-        );
-        return updatedForm;
-    } catch (error) {
-        throw new Error(`เกิดข้อผิดพลาดในการอัปเดตแบบฟอร์ม: ${error.message}`);
+// ตรวจสอบว่ามี Section อยู่ในฐานข้อมูลหรือไม่
+exports.validateSectionExistence = async (sectionId) => {
+    const section = await Section.findOne({ section_id: sectionId });
+    if (!section) {
+        throw new Error('Section not found');
     }
+    return section;
 };
 
-/**
- * อัปเดต Coverpage
- */
-exports.updateCoverpage = async (coverpageId, updateData) => {
-    await validateExistence(Coverpage, { cover_page_id: coverpageId }, 'Coverpage not found');
-    try {
-        const updatedCoverpage = await Coverpage.findOneAndUpdate(
-            { cover_page_id: coverpageId },
-            { $set: updateData },
-            { new: true }
-        );
-        return updatedCoverpage;
-    } catch (error) {
-        throw new Error(`Error updating coverpage: ${error.message}`);
+// ตรวจสอบว่า Section เป็นของ Form ที่กำหนดหรือไม่
+exports.validateSectionBelongsToForm = async (formId, sectionId) => {
+    const section = await Section.findOne({ section_id: sectionId, form_id: formId });
+    if (!section) {
+        throw new Error(`Section ${sectionId} does not belong to Form ${formId}`);
     }
+    return section;
 };
 
-/**
- * เพิ่ม Section
- */
-exports.addSection = async (formId, sectionData) => {
-    await validateExistence(Form, { form_id: formId }, 'Form not found');
-    try {
-        const maxSection = await Section.findOne({ form_id: formId }).sort({ number: -1 });
-        const nextNumber = maxSection ? maxSection.number + 1 : 1;
-        const section = new Section({
-            form_id: formId,
-            title: sectionData.title || `Section ${nextNumber}`,
-            number: nextNumber
-        });
-        await section.save();
-        await Form.updateOne(
-            { form_id: formId },
-            { $push: { section_id: section.section_id } }
-        );
-        return section;
-    } catch (error) {
-        throw new Error(`เกิดข้อผิดพลาดในการเพิ่ม Section: ${error.message}`);
+// ตรวจสอบการมีอยู่ของ Question
+exports.validateQuestionExistence = async (questionId) => {
+    const question = await Question.findOne({ question_id: questionId });
+    if (!question) {
+        throw new Error('Question not found');
     }
+    return question;
 };
 
-/**
- * แก้ไข Section
- */
-exports.editSection = async (sectionId, sectionData) => {
-    await validateExistence(Section, { section_id: sectionId }, 'Section not found');
-    try {
-        const updatedSection = await Section.findOneAndUpdate(
-            { section_id: sectionId },
-            { $set: sectionData },
-            { new: true }
-        );
-        return updatedSection;
-    } catch (error) {
-        throw new Error(`เกิดข้อผิดพลาดในการแก้ไข Section: ${error.message}`);
+// ตรวจสอบว่า Question อยู่ใน Section ที่กำหนด
+exports.validateQuestionInSection = async (sectionId, questionId) => {
+    const question = await Question.findOne({ question_id: questionId, section_id: sectionId });
+    if (!question) {
+        throw new Error('Question does not belong to the specified section');
     }
+    return question;
 };
 
-/**
- * ลบ Section
- */
-exports.deleteSection = async (formId, sectionId) => {
-    await validateExistence(Form, { form_id: formId }, 'Form not found');
-    await validateExistence(Section, { section_id: sectionId }, 'Section not found');
-    try {
-        // ลบ Section
-        await Section.deleteOne({ section_id: sectionId });
-
-        // ลบ Section ID จาก Form
-        await Form.updateOne(
-            { form_id: formId },
-            { $pull: { section_id: sectionId } }
-        );
-
-        // ดึง Sections ที่เหลือและจัดเรียงใหม่
-        const sections = await Section.find({ form_id: formId }).sort({ number: 1 });
-        for (let i = 0; i < sections.length; i++) {
-            sections[i].number = i + 1; // อัปเดตหมายเลขใหม่
-            await sections[i].save();
-        }
-
-        return { message: 'Section deleted and numbers updated' };
-    } catch (error) {
-        throw new Error(`เกิดข้อผิดพลาดในการลบ Section: ${error.message}`);
-    }
-};
-
-/**
- * เพิ่ม Question
- */
-exports.addQuestion = async (sectionId, questionData) => {
-    await validateExistence(Section, { section_id: sectionId }, 'Section not found');
-    try {
-        const question = new Question({
-            section_id: sectionId, // เชื่อมโยงกับ Section
-            ...questionData,      // ข้อมูลเพิ่มเติม เช่น type, options
-        });
-        await question.save(); // บันทึก Question
-        await Section.updateOne(
-            { section_id: sectionId },
-            { $push: { questions: question.question_id } } // เพิ่ม question_id ใน Section
-        );
-        return question;
-    } catch (error) {
-        throw new Error(`เกิดข้อผิดพลาดในการเพิ่ม Question: ${error.message}`);
-    }
-};
-
-
-/**
- * แก้ไข Question
- */
-exports.editQuestion = async (questionId, questionData) => {
-    await validateExistence(Question, { question_id: questionId }, 'Question not found');
-    try {
-        const updatedQuestion = await Question.findOneAndUpdate(
-            { question_id: questionId },
-            { $set: questionData },
-            { new: true }
-        );
-        return updatedQuestion;
-    } catch (error) {
-        throw new Error(`เกิดข้อผิดพลาดในการแก้ไข Question: ${error.message}`);
-    }
-};
-
-/**
- * ลบ Question
- */
-exports.deleteQuestion = async (sectionId, questionId) => {
-    await validateExistence(Section, { section_id: sectionId }, 'Section not found');
-    await validateExistence(Question, { question_id: questionId }, 'Question not found');
-    try {
-        await Question.deleteOne({ question_id: questionId });
-        await Section.updateOne(
-            { section_id: sectionId },
-            { $pull: { questions: questionId } }
-        );
-        return { message: 'Question deleted' };
-    } catch (error) {
-        throw new Error(`เกิดข้อผิดพลาดในการลบ Question: ${error.message}`);
-    }
-};
-
-/**
- * เพิ่ม Option
- */
-exports.addOption = async (questionId, optionData) => {
-    await validateExistence(Question, { question_id: questionId }, 'Question not found');
-    try {
-        const updatedQuestion = await Question.findOneAndUpdate(
-            { question_id: questionId },
-            { $push: { options: optionData } },
-            { new: true }
-        );
-        return updatedQuestion;
-    } catch (error) {
-        throw new Error(`เกิดข้อผิดพลาดในการเพิ่ม Option: ${error.message}`);
-    }
-};
-
-/**
- * แก้ไข Option
- */
-exports.editOption = async (questionId, optionId, optionData) => {
-    await validateExistence(Question, { question_id: questionId }, 'Question not found');
-    try {
-        // ตรวจสอบว่า option_id มีอยู่ใน options array
-        const question = await Question.findOne({ question_id: questionId, 'options.option_id': optionId });
-        if (!question) {
-            throw new Error('Option not found');
-        }
-
-        // อัปเดตข้อมูลของ option
-        const updatedQuestion = await Question.findOneAndUpdate(
-            { question_id: questionId, 'options.option_id': optionId },
-            { $set: { 'options.$.text': optionData.text } }, // อัปเดตเฉพาะฟิลด์ที่ส่งมา
-            { new: true } // ส่งผลลัพธ์ใหม่กลับมา
-        );
-
-        return updatedQuestion;
-    } catch (error) {
-        throw new Error(`Error editing option: ${error.message}`);
-    }
-};
-
-/**
- * ลบ Option
- */
-exports.deleteOption = async (questionId, optionId) => {
-    await validateExistence(Question, { question_id: questionId }, 'Question not found');
-
-    // ตรวจสอบว่า option_id มีอยู่จริงใน options
+// ตรวจสอบการมีอยู่ของ Option ใน Question
+exports.validateOptionExistence = async (questionId, optionId) => {
     const question = await Question.findOne({ question_id: questionId, 'options.option_id': optionId });
     if (!question) {
         throw new Error('Option not found');
     }
+    return question;
+};
 
-    try {
-        const updatedQuestion = await Question.findOneAndUpdate(
-            { question_id: questionId },
-            { $pull: { options: { option_id: optionId } } },
-            { new: true }
-        );
-        return updatedQuestion;
-    } catch (error) {
-        throw new Error(`Error deleting option: ${error.message}`);
+// ตรวจสอบการมีอยู่ของ Theme
+exports.validateThemeExistence = async (themeId) => {
+    const theme = await Theme.findOne({ theme_id: themeId });
+    if (!theme) {
+        throw new Error('Theme not found');
     }
+    return theme;
+};
+
+// ---------- ฟังก์ชันสำหรับการจัดการข้อมูล ----------
+// ********** Form **********
+exports.createForm = async (formData) => {
+    const form = new Form(formData);
+    await form.save();
+    return form;
+};
+
+exports.updateForm = async (formId, updateData) => {
+    return await Form.findOneAndUpdate({ form_id: formId }, updateData, { new: true });
+};
+
+// ลบ Form
+exports.deleteForm = async (formId) => {
+    await Form.deleteOne({ form_id: formId });
+};
+
+// ลบ Coverpage
+exports.deleteCoverpage = async (coverPageId) => {
+    await Coverpage.deleteOne({ cover_page_id: coverPageId });
+};
+
+// ลบ Sections
+exports.deleteSections = async (sectionIds) => {
+    await Section.deleteMany({ section_id: { $in: sectionIds } });
+};
+
+// ลบ Results
+exports.deleteResults = async (resultIds) => {
+    await Result.deleteMany({ result_id: { $in: resultIds } });
+};
+
+// ลบ Theme
+exports.deleteTheme = async (themeId) => {
+    await Theme.deleteOne({ theme_id: themeId });
+};
+
+// ลบ Responses
+exports.deleteResponses = async (responseIds) => {
+    await Response.deleteMany({ response_id: { $in: responseIds } });
+};
+
+// ฟังก์ชันสำหรับจัดการ Coverpage
+exports.createCoverpage = async (coverpageData) => {
+    const coverpage = new Coverpage(coverpageData);
+    await coverpage.save();
+    return coverpage;
+};
+
+// ฟังก์ชันสำหรับจัดการ Theme
+exports.createTheme = async (themeData) => {
+    const theme = new Theme(themeData);
+    await theme.save();
+    return theme;
+};
+
+// ฟังก์ชันสำหรับจัดการ Section
+exports.createSection = async (sectionData) => {
+    const section = new Section(sectionData);
+    await section.save();
+    return section;
+};
+
+// อัปเดตข้อมูลในแบบฟอร์ม
+exports.updateForm = async (formId, updateData) => {
+    const updatedForm = await Form.findOneAndUpdate(
+        { form_id: formId },
+        { $set: updateData },
+        { new: true }
+    );
+    if (!updatedForm) {
+        throw new Error('Failed to update form');
+    }
+    return updatedForm;
+};
+
+// ดึงข้อมูลฟอร์ม
+exports.getForm = async (formId) => {
+    return await Form.findOne({ form_id: formId });
+};
+
+// ดึงข้อมูล Coverpage
+exports.getCoverpage = async (formId) => {
+    return await Coverpage.findOne({ form_id: formId });
+};
+
+// ดึงข้อมูล Theme
+exports.getTheme = async (formId) => {
+    return await Theme.findOne({ form_id: formId });
+};
+
+// ดึงข้อมูล Sections
+exports.getSections = async (formId) => {
+    return await Section.find({ form_id: formId }).sort({ number: 1 }).lean();
+};
+
+// ดึงข้อมูล Questions
+exports.getQuestionsBySection = async (sectionId) => {
+    return await Question.find({ section_id: sectionId }).lean();
+};
+
+// ********** Coverpage **********
+// อัปเดต Coverpage
+exports.updateCoverpage = async (coverpageId, updateData) => {
+    const updatedCoverpage = await Coverpage.findOneAndUpdate(
+        { cover_page_id: coverpageId },
+        { $set: updateData },
+        { new: true }
+    );
+    if (!updatedCoverpage) {
+        throw new Error('Failed to update coverpage');
+    }
+    return updatedCoverpage;
+};
+
+// ********** Section **********
+// ค้นหา Section ที่มีหมายเลขสูงสุดในฟอร์ม
+exports.getMaxSectionNumber = async (formId) => {
+    return await Section.findOne({ form_id: formId }).sort({ number: -1 });
+};
+
+// สร้าง Section ใหม่
+exports.createSection = async (sectionData) => {
+    const section = new Section(sectionData);
+    await section.save();
+    return section;
+};
+
+// เพิ่ม Section ID ลงในฟอร์ม
+exports.addSectionToForm = async (formId, sectionId) => {
+    await Form.updateOne(
+        { form_id: formId },
+        { $push: { section_id: sectionId } }
+    );
+};
+
+// อัปเดต Section
+exports.updateSection = async (sectionId, sectionData) => {
+    const updatedSection = await Section.findOneAndUpdate(
+        { section_id: sectionId },
+        { $set: sectionData },
+        { new: true }
+    );
+    if (!updatedSection) {
+        throw new Error('Failed to update section');
+    }
+    return updatedSection;
+};
+
+// ลบ Section
+exports.deleteSection = async (sectionId) => {
+    await Section.deleteOne({ section_id: sectionId });
+};
+
+// ลบ Section ID ออกจาก Form
+exports.removeSectionFromForm = async (formId, sectionId) => {
+    await Form.updateOne(
+        { form_id: formId },
+        { $pull: { section_id: sectionId } }
+    );
+};
+
+// ดึง Sections ทั้งหมดใน Form
+exports.getSectionsByForm = async (formId) => {
+    return await Section.find({ form_id: formId }).sort({ number: 1 });
+};
+
+// อัปเดตหมายเลข Section
+exports.updateSectionNumber = async (section) => {
+    await section.save();
+};
+
+// ********** Question **********
+// เพิ่ม Question
+exports.createQuestion = async (questionData) => {
+    const question = new Question(questionData);
+    await question.save();
+    return question;
+};
+
+// เพิ่ม Question ID ลงใน Section
+exports.addQuestionToSection = async (sectionId, questionId) => {
+    await Section.updateOne(
+        { section_id: sectionId },
+        { $push: { questions: questionId } }
+    );
+};
+
+// อัปเดต Question
+exports.updateQuestion = async (questionId, questionData) => {
+    const updatedQuestion = await Question.findOneAndUpdate(
+        { question_id: questionId },
+        { $set: questionData },
+        { new: true }
+    );
+    if (!updatedQuestion) {
+        throw new Error('Failed to update question');
+    }
+    return updatedQuestion;
+};
+
+// ลบ Question
+exports.deleteQuestion = async (questionId) => {
+    await Question.deleteOne({ question_id: questionId });
+};
+
+// ลบ Question ID จาก Section
+exports.removeQuestionFromSection = async (sectionId, questionId) => {
+    await Section.updateOne(
+        { section_id: sectionId },
+        { $pull: { questions: questionId } }
+    );
+};
+
+// ********** Option **********
+// เพิ่ม Option ใน Question
+exports.addOptionToQuestion = async (questionId, optionData) => {
+    const updatedQuestion = await Question.findOneAndUpdate(
+        { question_id: questionId },
+        { $push: { options: optionData } },
+        { new: true }
+    );
+    if (!updatedQuestion) {
+        throw new Error('Failed to add option to question');
+    }
+    return updatedQuestion;
+};
+
+// แก้ไข Option ใน Question
+exports.updateOption = async (questionId, optionId, optionData) => {
+    const updatedQuestion = await Question.findOneAndUpdate(
+        { question_id: questionId, 'options.option_id': optionId },
+        { $set: { 'options.$': optionData } }, // อัปเดตทั้ง object ของ option
+        { new: true } // ส่งผลลัพธ์ใหม่กลับมา
+    );
+    if (!updatedQuestion) {
+        throw new Error('Failed to update option');
+    }
+    return updatedQuestion;
+};
+
+// ลบ Option ใน Question
+exports.deleteOption = async (questionId, optionId) => {
+    const updatedQuestion = await Question.findOneAndUpdate(
+        { question_id: questionId },
+        { $pull: { options: { option_id: optionId } } }, // ลบ Option ที่ตรงกับ option_id
+        { new: true } // ส่งผลลัพธ์ใหม่กลับมา
+    );
+    if (!updatedQuestion) {
+        throw new Error('Failed to delete option');
+    }
+    return updatedQuestion;
+};
+
+// *********** Theme ***********
+// แก้ไข Theme
+exports.updateTheme = async (themeId, themeData) => {
+    const updatedTheme = await Theme.findOneAndUpdate(
+        { theme_id: themeId },
+        { $set: themeData },
+        { new: true } // ส่งข้อมูลที่อัปเดตแล้วกลับมา
+    );
+    if (!updatedTheme) {
+        throw new Error('Failed to update theme');
+    }
+    return updatedTheme;
+};
+
+// ---------- ฟังก์ชันสำหรับการดึงข้อมูลของ user ----------
+// ดึง Forms ทั้งหมดของ User
+exports.getFormsByUserId = async (userId) => {
+    return await Form.find({ user_id: userId }).lean();
+};
+
+// ดึง Coverpage ที่เกี่ยวข้องกับ Form
+exports.getCoverpagesByFormIds = async (formIds) => {
+    return await Coverpage.find({ form_id: { $in: formIds } }).lean();
 };

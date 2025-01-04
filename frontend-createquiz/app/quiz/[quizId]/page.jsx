@@ -1,22 +1,43 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function QuizPage({ params }) {
   const { quizId } = params;
   const [quiz, setQuiz] = useState(null);
   const [answers, setAnswers] = useState({});
+  const router = useRouter();
 
   useEffect(() => {
     // Fetch quiz data from Express.js backend
     async function fetchQuiz() {
       try {
-        const response = await fetch(`http://localhost:3001/quiz/${quizId}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch quiz");
-        }
-        const data = await response.json();
-        setQuiz(data);
+        const response = await axios.get(`http://localhost:3001/form/${quizId}`);
+        const data = response.data;
+
+        // Restructure data for easier use
+        const formattedQuiz = {
+          title: data.coverPage.title,
+          description: data.coverPage.description,
+          sections: data.sections.map((section) => ({
+            id: section.section_id,
+            title: section.title,
+            description: section.description,
+            questions: section.questions.map((question) => ({
+              id: question.question_id,
+              text: question.question,
+              type: question.type,
+              options: question.options.map((option) => ({
+                id: option.option_id,
+                text: option.text,
+              })),
+            })),
+          })),
+        };
+
+        setQuiz(formattedQuiz);
       } catch (error) {
         console.error("Error fetching quiz:", error);
       }
@@ -31,13 +52,11 @@ export default function QuizPage({ params }) {
 
   const handleDeleteQuiz = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/quiz/${quiz.id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        throw new Error("Failed to delete quiz");
+      const response = await axios.delete(`http://localhost:3001/form/${quizId}`);
+      if (response.status === 200) {
+        alert("Quiz deleted successfully");
       }
-      alert("Quiz deleted successfully");
+      router.push("/home"); // Redirect to home page
     } catch (error) {
       console.error("Error deleting quiz:", error);
     }
@@ -53,15 +72,15 @@ export default function QuizPage({ params }) {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
-        <h1 className="text-2xl font-bold mb-4 text-black">{quiz.coverPage.quizTitle}</h1>
-        <p className="mb-6 text-gray-600">{quiz.coverPage.description}</p>
+        <h1 className="text-2xl font-bold mb-4 text-black">{quiz.title}</h1>
+        <p className="mb-6 text-gray-600">{quiz.description}</p>
         <form onSubmit={handleSubmit}>
           {quiz.sections.map((section) => (
             <div key={section.id} className="mb-6">
               <h2 className="text-xl font-semibold mb-2 text-black">
-                {section.sectionTitle}
+                {section.title}
               </h2>
-              <p className="mb-4 text-gray-500">{section.sectionDescription}</p>
+              <p className="mb-4 text-gray-500">{section.description}</p>
               {section.questions.map((question) => (
                 <QuestionComponent
                   key={question.id}
@@ -91,7 +110,7 @@ export default function QuizPage({ params }) {
 
 function QuestionComponent({ question, handleInputChange }) {
   switch (question.type) {
-    case "Multiple Choice":
+    case "multiple_choice":
       return (
         <div className="mb-4">
           <p className="font-medium mb-2 text-black">{question.text}</p>
@@ -113,7 +132,7 @@ function QuestionComponent({ question, handleInputChange }) {
           ))}
         </div>
       );
-    case "Checkbox":
+    case "checkbox":
       return (
         <div className="mb-4">
           <p className="font-medium mb-2 text-black">{question.text}</p>
@@ -134,7 +153,7 @@ function QuestionComponent({ question, handleInputChange }) {
           ))}
         </div>
       );
-    case "Dropdown":
+    case "dropdown":
       return (
         <div className="mb-4">
           <p className="font-medium mb-2">{question.text}</p>
@@ -152,7 +171,7 @@ function QuestionComponent({ question, handleInputChange }) {
           </select>
         </div>
       );
-    case "Rating":
+    case "rating":
       return (
         <div className="mb-4">
           <p className="font-medium mb-2">{question.text}</p>
@@ -174,7 +193,7 @@ function QuestionComponent({ question, handleInputChange }) {
           </div>
         </div>
       );
-    case "Text":
+    case "text_input":
       return (
         <div className="mb-4">
           <p className="font-medium mb-2">{question.text}</p>
@@ -186,7 +205,7 @@ function QuestionComponent({ question, handleInputChange }) {
           />
         </div>
       );
-    case "Date":
+    case "date":
       return (
         <div className="mb-4">
           <p className="font-medium mb-2">{question.text}</p>

@@ -3,7 +3,7 @@ import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import CoverPage from "./coverpage/page";
 import SectionQuiz from "./section-quiz/page";
-import SectionForm from "./section-form/page";
+import SectionSurvey from "./section-survey/page";
 import SectionPsychology from "./section-psychology/page";
 import axios from "axios";
 
@@ -36,6 +36,21 @@ export default function Question({ quizData }) {
       console.warn("No sections found in quizData");
     }
   }, [quizData]);
+
+  useEffect(() => {
+    if (quizData?.sections) {
+      const updatedSections = quizData.sections.map((section) => ({
+        ...section,
+        questions: section.questions.map((question) => ({
+          ...question,
+          maxSelect: question.maxSelect || 1, // Default to 1 if not provided
+          ratingLevel: question.ratingLevel || 1, // Default to 1 if not provided
+        })),
+      }));
+      setSections(updatedSections);
+    }
+  }, [quizData]);
+  
 
   const addSection = async () => {
     const newSection = {
@@ -169,22 +184,34 @@ export default function Question({ quizData }) {
   
   
 
-  const updateRatingLevel = (sectionId, questionId, value) => {
-    if (value > 10) value = 10; // จำกัดค่าไม่ให้เกิน 10
-    setSections((prevSections) =>
-      prevSections.map((section) =>
-        section.section_id === sectionId
-          ? {
-              ...section,
-              questions: section.questions.map((question) =>
-                question.question_id === questionId
-                  ? { ...question, ratingLevel: value }
-                  : question
-              ),
+  const updateRatingLevel = async (sectionId, questionId, value) => {
+    const updatedSections = sections.map((section) => {
+      if (section.section_id === sectionId) {
+        return {
+          ...section,
+          questions: section.questions.map((question) => {
+            if (question.question_id === questionId && question.type === "rating") {
+              return { ...question, ratingLevel: value };
             }
-          : section
-      )
-    );
+            return question;
+          }),
+        };
+      }
+      return section;
+    });
+  
+    setSections(updatedSections);
+  
+    // Save to server
+    try {
+      const response = await axios.patch(
+        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
+        { limit: value }
+      );
+      console.log("RatingLevel updated successfully:", response.data);
+    } catch (error) {
+      console.error("Failed to update RatingLevel:", error);
+    }
   };
 
   const addOption = async (sectionId, questionId) => {
@@ -262,13 +289,13 @@ export default function Question({ quizData }) {
     }
   };
 
-  const updateMaxSelect = (sectionId, questionId, value) => {
+  const updateMaxSelect = async (sectionId, questionId, value) => {
     const updatedSections = sections.map((section) => {
-      if (section.id === sectionId) {
+      if (section.section_id === sectionId) {
         return {
           ...section,
           questions: section.questions.map((question) => {
-            if (question.id === questionId && question.type === "checkbox") {
+            if (question.question_id === questionId && question.type === "checkbox") {
               return { ...question, maxSelect: value };
             }
             return question;
@@ -277,8 +304,21 @@ export default function Question({ quizData }) {
       }
       return section;
     });
+  
     setSections(updatedSections);
+  
+    // Save to server
+    try {
+      const response = await axios.patch(
+        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
+        { limit: value }
+      );
+      console.log("MaxSelect updated successfully:", response.data);
+    } catch (error) {
+      console.error("Failed to update MaxSelect:", error);
+    }
   };
+  
 
   const toggleCorrectOption = (sectionId, questionId, optionIdx) => {
     setSections((prevSections) =>
@@ -383,14 +423,17 @@ export default function Question({ quizData }) {
     );
   };
 
-  const updatePoints = (sectionId, questionId, value) => {
+  const updatePoints = async (sectionId, questionId, value) => {
+    // Update the local state
+    console.log("sectionId:", sectionId);
+    console.log("questionId:", questionId);
     setSections((prevSections) =>
       prevSections.map((section) =>
-        section.id === sectionId
+        section.section_id === sectionId
           ? {
               ...section,
               questions: section.questions.map((question) =>
-                question.id === questionId
+                question.question_id === questionId
                   ? { ...question, points: parseInt(value) || 0 }
                   : question
               ),
@@ -398,7 +441,19 @@ export default function Question({ quizData }) {
           : section
       )
     );
+  
+    // Save to the server
+    try {
+      const response = await axios.patch(
+        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
+        { points: parseInt(value) || 0 } // Send points as part of the payload
+      );
+      console.log("Points updated successfully:", response.data);
+    } catch (error) {
+      console.error("Failed to update points:", error);
+    }
   };
+  
 
   const toggleRequired = (sectionId, questionId) => {
     const updatedSections = sections.map((section) => {
@@ -645,7 +700,7 @@ export default function Question({ quizData }) {
           );
         case "survey":
           return (
-            <SectionForm
+            <SectionSurvey
               key={section.section_id}
               section={section}
               questionTypes={questionTypes}

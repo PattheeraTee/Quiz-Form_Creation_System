@@ -1,17 +1,17 @@
-'use client';
-import { useState } from 'react';
-import ColorPicker from '../colorpicker/page';
+"use client";
+import { useState, useEffect, useContext } from 'react';
+import { QuizContext } from '../../../QuizContext'; // Import QuizContext
+import { HexColorPicker } from "react-colorful";
+import axios from 'axios';
 
-export default function ThemeCustomizer() {
+export default function ThemeCustomizer({ quizData }) {
   const [uploadedImage, setUploadedImage] = useState(null);
-  const [font, setFont] = useState('Arial');
-  const [textColor, setTextColor] = useState('#89E78D');
   const [backgroundColor, setBackgroundColor] = useState('#FFFFFF');
   const [showBackgroundColorPicker, setShowBackgroundColorPicker] = useState(false);
-  const [showTextColorPicker, setShowTextColorPicker] = useState(false);
   const [showThemeCustomizer, setShowThemeCustomizer] = useState(true);
+  const { primaryColor, setPrimaryColor } = useContext(QuizContext);
+  const [tempBackgroundColor, setTempBackgroundColor] = useState(primaryColor);
 
-  const handleFontChange = (e) => setFont(e.target.value);
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -23,20 +23,42 @@ export default function ThemeCustomizer() {
     }
   };
 
+  useEffect(() => {
+    setTempBackgroundColor(primaryColor);
+  }, [primaryColor]);
+
+  const handleBackgroundColorChange = async (newColor) => {
+    setTempBackgroundColor(newColor);
+
+    const themeId = quizData.theme?.theme_id;
+    if (themeId) {
+      try {
+        await axios.patch(`http://localhost:3001/form/theme/${themeId}`, {
+          primary_color: newColor,
+        });
+        setPrimaryColor(newColor); // Update the context
+      } catch (error) {
+        console.error("Error updating theme color:", error);
+      }
+    }
+  };
+
+  const handleCancel = () => {
+    setTempBackgroundColor(primaryColor);
+    setShowBackgroundColorPicker(false);
+  };
+
+  const handleConfirm = () => {
+    setPrimaryColor(tempBackgroundColor);
+    setShowBackgroundColorPicker(false);
+  };
+
   return (
     showThemeCustomizer && (
       <div className="p-4 w-1/6 fixed mt-9 right-2 bg-white rounded-lg shadow-md text-black">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">ธีม</h2>
           <button className="text-xl cursor-pointer" onClick={() => setShowThemeCustomizer(false)}>X</button>
-        </div>
-        <div className="mt-5">
-          <label htmlFor="font" className="block mb-2">เลือกรูปแบบข้อความ</label>
-          <select id="font" value={font} onChange={handleFontChange} className="w-full p-2 border rounded border-gray-300">
-            <option value="Arial">Arial</option>
-            <option value="Times New Roman">Times New Roman</option>
-            <option value="Verdana">Verdana</option>
-          </select>
         </div>
         <div className="mt-5">
           <label className="block mb-2">พื้นหลัง</label>
@@ -58,49 +80,50 @@ export default function ThemeCustomizer() {
         </div>
         <div className="mt-5 space-y-3">
           <div>
-            <label htmlFor="text-color" className="block mb-2">สีตัวอักษร</label>
-            <div className="flex items-center space-x-2">
-              <div 
-                className="w-6 h-6 rounded cursor-pointer" 
-                style={{ backgroundColor: textColor }}
-                onClick={() => setShowTextColorPicker(!showTextColorPicker)}
-              ></div>
-              <button 
-                className="border rounded border-gray-300 px-3 py-1 text-black"
-                onClick={() => setShowTextColorPicker(!showTextColorPicker)}
-              >
-                {textColor}
-              </button>
-              {showTextColorPicker && (
-                <ColorPicker 
-                  color={textColor} 
-                  onChange={setTextColor} 
-                  onClose={() => setShowTextColorPicker(false)}
-                />
-              )}
-            </div>
-          </div>
-          <div>
             <label htmlFor="background-color" className="block mb-2">สีพื้นหลัง</label>
             <div className="flex items-center space-x-2">
               <div 
-                className="w-6 h-6 rounded border-gray-300 cursor-pointer" 
-                style={{ backgroundColor: backgroundColor }}
-                onClick={() => setShowBackgroundColorPicker(!showBackgroundColorPicker)}
+                className="w-6 h-6 rounded border border-gray-300 cursor-pointer" 
+                style={{ backgroundColor: primaryColor }}
+                onClick={() => {
+                  setTempBackgroundColor(primaryColor); // Save current color
+                  setShowBackgroundColorPicker(true);
+                }}
               ></div>
-              <button 
-                className="border rounded border-gray-300 px-3 py-1 text-black"
-                onClick={() => setShowBackgroundColorPicker(!showBackgroundColorPicker)}
-              >
-                {backgroundColor}
-              </button>
+              <input
+                type="text"
+                className="border rounded border-gray-300 px-3 py-1 text-black w-24"
+                onClick={() => {
+                  setTempBackgroundColor(primaryColor); // Save current color
+                }}
+                value={primaryColor}
+                onChange={(e) => handleBackgroundColorChange(e.target.value)} // Update tempBackgroundColor and send to server
+              />
+
               {showBackgroundColorPicker && (
-                <ColorPicker 
-                  color={backgroundColor} 
-                  onChange={setBackgroundColor} 
-                  onClose={() => setShowBackgroundColorPicker(false)}
-                />
-              )}
+  <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+    <div className="bg-gray-50 p-6 rounded-lg shadow-lg relative z-60 w-1/4 flex flex-col items-center">
+    <HexColorPicker
+            color={tempBackgroundColor}
+            onChange={handleBackgroundColorChange}
+          />
+      <div className="flex justify-end space-x-4 mt-4 w-full">
+        <button
+          className="px-4 py-1.5 bg-gray-200 rounded-md hover:bg-gray-400"
+          onClick={handleCancel}
+        >
+          ยกเลิก
+        </button>
+        <button
+          className="px-4 py-1.5 bg-[#03A9F4] text-white rounded-md hover:bg-blue-600"
+          onClick={handleConfirm}
+        >
+          ตกลง
+        </button>
+      </div>
+    </div>
+  </div>
+)}
             </div>
           </div>
         </div>

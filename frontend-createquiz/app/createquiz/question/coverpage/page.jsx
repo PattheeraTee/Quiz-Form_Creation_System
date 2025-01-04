@@ -1,24 +1,22 @@
-import React, { useContext,useState, useEffect } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { QuizContext } from "../../QuizContext"; // Import QuizContext
 import Background from "../../../components/images/Background.svg";
 import Image from "next/image";
 import axios from "axios";
 
 export default function CoverPage({ coverPageData, theme }) {
-  const { quizTitle, setQuizTitle } = useContext(QuizContext); // Access quizTitle and setQuizTitle from Context
+  const { quizTitle, setQuizTitle, primaryColor } = useContext(QuizContext); // Access quizTitle, setQuizTitle, and primaryColor from Context
   const [description, setDescription] = useState("");
   const [buttonText, setButtonText] = useState("");
   const [isEditingButtonText, setIsEditingButtonText] = useState(false); // State to toggle editing button text
-  const [primaryColor, setPrimaryColor] = useState("#000000");
 
   // Update state when coverPageData changes
   useEffect(() => {
-    if (coverPageData && theme) {
+    if (coverPageData) {
       setDescription(coverPageData.description || "");
       setButtonText(coverPageData.text_button || "");
-      setPrimaryColor(theme.primary_color || "#000000");
     }
-  }, [coverPageData, theme]);
+  }, [coverPageData]);
 
   const handleAutosave = async (field, value) => {
     const coverpageId = coverPageData?.cover_page_id; // Replace with actual coverPageId if different
@@ -75,11 +73,11 @@ export default function CoverPage({ coverPageData, theme }) {
             handleAutosave("description", e.target.value); // Autosave description
           }}
         />
-        <div className="relative flex items-center">
+        <div className="flex items-center">
           {!isEditingButtonText ? (
             <button
               className="px-6 py-2 bg-[#03A9F4] text-white rounded-full"
-              onClick={() => setIsEditingButtonText(true)} // Enter editing mode on click
+              onClick={() => setIsEditingButtonText(true)}
             >
               {buttonText || "คลิกเพื่อแก้ไข"}
             </button>

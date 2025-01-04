@@ -16,6 +16,7 @@ const Section = ({
   addQuestion,
   updateOption,
   updateRatingLevel,
+  updateMaxSelect,
   addOption,
   removeOption,
   toggleRequired,
@@ -43,7 +44,7 @@ const Section = ({
   };
 
   return (
-    <div className="max-w-2xl mx-auto mt-8 bg-white p-6 rounded-xl shadow relative">
+    <div className="max-w-2xl mx-auto mt-8 bg-white p-6 rounded-xl shadow">
       <h3 className="text-xl font-semibold mb-2 text-black">
         ส่วนที่ {section.number}
       </h3>
@@ -648,8 +649,7 @@ const Section = ({
           {/* If rating, show a rating scale */}
           {question.type === "rating" && (
             <div className="mb-4">
-              <div className="flex items-center mb-2">
-                {/* Render Stars Based on Rating Level */}
+ <div className="flex items-center mb-2">
                 {[...Array(question.ratingLevel)].map((_, idx) => (
                   <FontAwesomeIcon
                     key={idx}
@@ -658,9 +658,7 @@ const Section = ({
                   />
                 ))}
               </div>
-
-              {/* Select Dropdown to Update Rating Level */}
-              <div className="flex items-center mt-5">
+              <div className="flex items-center">
                 <span className="mr-2 text-black">ระดับคะแนน :</span>
                 <select
                   value={question.ratingLevel}

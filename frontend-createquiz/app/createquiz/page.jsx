@@ -35,10 +35,14 @@ export default function CreateQuiz() {
   };
 
   return (
-    <QuizProvider initialQuizTitle={quizData?.coverPage?.title || "Untitled Form"}>
+    <QuizProvider 
+    initialQuizTitle={quizData?.coverPage?.title || "Untitled Form"}
+    initialPrimaryColor={quizData?.theme?.primary_color || "#FFFFFF"}
+    >
       <div className="bg-gray-100 min-h-screen">
         <HeaderQuiz
           onSectionSelect={handleTabSelect}
+          quizData={quizData}
         />
         {selectedTab === "คำถาม" && <Question quizData={quizData} />}
         {selectedTab === "การตอบกลับ" && <Response />}

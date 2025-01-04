@@ -415,8 +415,8 @@ const Section = ({
                     value={question.points || 0}
                     onChange={(e) =>
                       updatePoints(
-                        section.id,
-                        question.id,
+                        section.section_id,
+                        question.question_id,
                         parseInt(e.target.value)
                       )
                     }
@@ -546,8 +546,8 @@ const Section = ({
                     value={question.points || 0}
                     onChange={(e) =>
                       updatePoints(
-                        section.id,
-                        question.id,
+                        section.section_id,
+                        question.question_id,
                         parseInt(e.target.value)
                       )
                     }
@@ -736,8 +736,8 @@ const Section = ({
                     value={question.points || 0}
                     onChange={(e) =>
                       updatePoints(
-                        section.id,
-                        question.id,
+                        section.section_id,
+                        question.question_id,
                         parseInt(e.target.value)
                       )
                     }
@@ -868,7 +868,7 @@ const Section = ({
                 <div className="flex items-center space-x-4">
                   {/* Trash Bin */}
                   <button
-                    onClick={() => deleteQuestion(section.id, question.id)}
+                    onClick={() => deleteQuestion(section.section_id, question.question_id)}
                     className="text-gray-500"
                   >
                     <FontAwesomeIcon icon={faTrash} className="w-5 h-5" />

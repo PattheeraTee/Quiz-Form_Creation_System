@@ -427,18 +427,22 @@ const Section = ({
     <div className="flex items-center mt-4">
       <span className="mr-2 text-black">เลือกสูงสุด:</span>
       <select
-        value={question.maxSelect || 1}
-        onChange={(e) =>
-          updateMaxSelect(section.id, question.id, parseInt(e.target.value))
-        }
-        className="border border-gray-300 rounded px-2 py-1 text-black"
-      >
-        {question.options.map((_, idx) => (
-          <option key={idx} value={idx + 1}>
-            {idx + 1}
-          </option>
-        ))}
-      </select>
+                  value={question.maxSelect || 1}
+                  onChange={(e) =>
+                    updateMaxSelect(
+                      section.section_id,
+                      question.question_id,
+                      parseInt(e.target.value)
+                    )
+                  }
+                  className="border border-gray-300 rounded px-2 py-1 text-black"
+                >
+                  {question.options.map((_, idx) => (
+                    <option key={idx} value={idx + 1}>
+                      {idx + 1}
+                    </option>
+                  ))}
+                </select>
     </div>
 
     {/* Points Input, Trash Bin, and Required Toggle */}
@@ -519,7 +523,7 @@ const Section = ({
           {/* If rating, show a rating scale */}
           {question.type === "rating" && (
             <div className="mb-4">
-              <div className="flex items-center mb-2">
+ <div className="flex items-center mb-2">
                 {[...Array(question.ratingLevel)].map((_, idx) => (
                   <FontAwesomeIcon
                     key={idx}
@@ -534,16 +538,16 @@ const Section = ({
                   value={question.ratingLevel}
                   onChange={(e) =>
                     updateRatingLevel(
-                      section.id,
-                      question.id,
+                      section.section_id,
+                      question.question_id,
                       parseInt(e.target.value)
                     )
                   }
                   className="border border-gray-300 text-black rounded px-2 py-1"
                 >
-                  {Array.from({ length: 11 }, (_, idx) => (
-                    <option key={idx} value={idx}>
-                      {idx}
+                  {Array.from({ length: 10 }, (_, idx) => (
+                    <option key={idx} value={idx + 1}>
+                      {idx + 1}
                     </option>
                   ))}
                 </select>

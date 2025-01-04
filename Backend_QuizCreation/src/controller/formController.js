@@ -48,7 +48,8 @@ exports.addSection = async (req, res) => {
 
 exports.editSection = async (req, res) => {
     try {
-        const data = await formService.editSection(req.params.sectionId, req.body);
+        const { formId, sectionId } = req.params;
+        const data = await formService.editSection(formId, sectionId, req.body);
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -66,19 +67,29 @@ exports.deleteSection = async (req, res) => {
 
 exports.addQuestion = async (req, res) => {
     try {
-        const data = await formService.addQuestion(req.params.sectionId, req.body);
-        res.status(201).json(data);
+        const { sectionId } = req.params;
+        const questionData = req.body;
+
+        // เรียก Service เพื่อเพิ่ม Question
+        const newQuestion = await formService.addQuestion(sectionId, questionData);
+
+        res.status(201).json(newQuestion);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(400).json({ error: error.message });
     }
 };
 
 exports.editQuestion = async (req, res) => {
     try {
-        const data = await formService.editQuestion(req.params.questionId, req.body);
-        res.status(200).json(data);
+        const { sectionId, questionId } = req.params;
+        const questionData = req.body;
+
+        // เรียก Service เพื่อแก้ไข Question
+        const updatedQuestion = await formService.editQuestion(sectionId, questionId, questionData);
+
+        res.status(200).json(updatedQuestion);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(400).json({ error: error.message });
     }
 };
 
@@ -105,18 +116,24 @@ exports.editOption = async (req, res) => {
     const optionData = req.body; // ดึงข้อมูลการแก้ไขจาก Body ของ Request
 
     try {
+        // เรียกใช้ Service เพื่อแก้ไข Option
         const updatedQuestion = await formService.editOption(questionId, optionId, optionData);
+
         res.status(200).json(updatedQuestion); // ส่งข้อมูล Question ที่อัปเดตกลับไป
     } catch (error) {
-        res.status(500).json({ error: error.message }); // แสดงข้อความ Error หากเกิดปัญหา
+        res.status(400).json({ error: error.message }); // แสดงข้อความ Error หากเกิดปัญหา
     }
 };
 
 exports.deleteOption = async (req, res) => {
     try {
-        const data = await formService.deleteOption(req.params.questionId, req.params.optionId);
-        res.status(200).json(data);
+        const { questionId, optionId } = req.params;
+
+        // เรียกใช้ Service เพื่อลบ Option
+        const updatedQuestion = await formService.deleteOption(questionId, optionId);
+
+        res.status(200).json(updatedQuestion); // ส่งผลลัพธ์กลับไป
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(400).json({ error: error.message }); // ส่งข้อผิดพลาดกลับไป
     }
 };

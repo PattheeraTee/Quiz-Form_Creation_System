@@ -1,11 +1,16 @@
-import React, { createContext, useState } from "react";
+// QuizContext.js
+import React, { createContext, useState, useEffect } from "react";
 
-// สร้าง Context
 export const QuizContext = createContext();
 
-// Provider Component
 export const QuizProvider = ({ children, initialQuizTitle }) => {
-  const [quizTitle, setQuizTitle] = useState(initialQuizTitle || "Untitled Form กกกก");
+  const [quizTitle, setQuizTitle] = useState(initialQuizTitle || "Untitled Form");
+
+  useEffect(() => {
+    if (initialQuizTitle) {
+      setQuizTitle(initialQuizTitle); // อัปเดตค่า quizTitle เมื่อ initialQuizTitle เปลี่ยน
+    }
+  }, [initialQuizTitle]);
 
   return (
     <QuizContext.Provider value={{ quizTitle, setQuizTitle }}>

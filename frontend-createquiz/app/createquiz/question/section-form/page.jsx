@@ -1,5 +1,5 @@
 // components/Section.js
-import React from "react";
+import React from 'react';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faImage,
@@ -15,7 +15,6 @@ const Section = ({
   questionTypes,
   addQuestion,
   updateOption,
-  updateQuestion,
   updateRatingLevel,
   addOption,
   removeOption,
@@ -27,6 +26,7 @@ const Section = ({
   handleUploadImage,
   updateSectionTitle,
   updateSectionDescription,
+  updateQuestion,
   formId,
 }) => {
   const handleAutosave = async (sectionId, field, value) => {
@@ -41,9 +41,6 @@ const Section = ({
       console.error("Autosave failed:", error);
     }
   };
-
-  
-  
 
   return (
     <div className="max-w-2xl mx-auto mt-8 bg-white p-6 rounded-xl shadow relative">
@@ -164,7 +161,7 @@ const Section = ({
             <div>
               {/* Correct Answers Section */}
               <div className="mb-4">
-                <input
+                <textarea
                   type="text"
                   placeholder="กรอกคำตอบของคุณ"
                   className="w-full px-4 py-2 border border-gray-300 rounded text-black"
@@ -368,8 +365,8 @@ const Section = ({
                     onChange={(e) =>
                       updateOption(
                         section.section_id,
-                        question.quesiton_id,
-                        idx,
+                        question.question_id,
+                        option.option_id, 
                         e.target.value
                       )
                     }
@@ -460,7 +457,7 @@ const Section = ({
                             updateOption(
                               section.section_id,
                               question.question_id,
-                              idx,
+                              option.option_id, 
                               e.target.value
                             )
                           }

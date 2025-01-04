@@ -500,7 +500,6 @@ export default function Question({ quizData }) {
     );
     setSections(updatedSections);
   };
-
   const handleUploadImage = (e, sectionId, questionId, optionIdx = null) => {
     const file = e.target.files[0];
     if (file) {
@@ -508,16 +507,16 @@ export default function Question({ quizData }) {
       reader.onload = () => {
         setSections((prevSections) =>
           prevSections.map((section) =>
-            section.id === sectionId
+            section.section_id === sectionId
               ? {
                   ...section,
                   questions: section.questions.map((question) =>
-                    question.id === questionId
+                    question.question_id === questionId
                       ? {
                           ...question,
                           ...(optionIdx !== null
                             ? {
-                                // Update image for a specific option
+                                // อัปเดต image ใน options
                                 options: question.options.map((option, idx) =>
                                   idx === optionIdx
                                     ? { ...option, image: reader.result }
@@ -525,7 +524,7 @@ export default function Question({ quizData }) {
                                 ),
                               }
                             : {
-                                // Update image for the question itself
+                                // อัปเดต image ของคำถาม
                                 image: reader.result,
                               }),
                         }
@@ -539,6 +538,7 @@ export default function Question({ quizData }) {
       reader.readAsDataURL(file);
     }
   };
+  
 
   const updateSectionTitle = (sectionId, newTitle) => {
     setSections((prevSections) =>
@@ -637,6 +637,10 @@ export default function Question({ quizData }) {
               updateCorrectAnswer={updateCorrectAnswer}
               updatePoints={updatePoints}
               handleUploadImage={handleUploadImage}
+              updateSectionTitle={updateSectionTitle}
+              updateSectionDescription={updateSectionDescription}
+              updateQuestion={updateQuestion}
+              formId={quizData?.form?.form_id}
             />
           );
         case "survey":
@@ -647,7 +651,6 @@ export default function Question({ quizData }) {
               questionTypes={questionTypes}
               addQuestion={addQuestion}
               updateOption={updateOption}
-              updateQuestion={updateQuestion}
               updateRatingLevel={updateRatingLevel}
               addOption={addOption}
               removeOption={removeOption}
@@ -660,8 +663,9 @@ export default function Question({ quizData }) {
               handleUploadImage={handleUploadImage}
               updateSectionTitle={updateSectionTitle}
               updateSectionDescription={updateSectionDescription}
+              updateQuestion={updateQuestion}
               handleAutosaveForQuestion={handleAutosaveForQuestion}
-              formId={quizData?.form?.form_id} // Pass formId to Section
+              formId={quizData?.form?.form_id} 
             />
           );
         case "psychology":

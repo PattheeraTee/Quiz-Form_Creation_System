@@ -5,8 +5,18 @@ const Section = require('../models/section');
 const Question = require('../models/question');
 const Result = require('../models/result');
 const Response = require('../models/response');
+const User = require('../models/user');
 
 // ---------- ฟังก์ชันสำหรับการตรวจสอบข้อมูล ----------
+// ตรวจสอบว่ามี user_id อยู่ในฐานข้อมูลหรือไม่
+exports.validateUserExistence = async (userId) => {
+    const user = await User.findOne({ user_id: userId }).lean();
+    if (!user) {
+        throw new Error('User not found');
+    }
+    return user;
+};
+
 // ตรวจสอบว่ามีแบบฟอร์มอยู่ในฐานข้อมูล
 exports.validateFormExistence = async (formId) => {
     const form = await Form.findOne({ form_id: formId });

@@ -362,7 +362,6 @@ exports.editOption = async (questionId, optionId, optionData) => {
     }
 };
 
-
 // ลบ option
 exports.deleteOption = async (questionId, optionId) => {
     try {
@@ -408,10 +407,18 @@ exports.editTheme = async (themeId, themeData) => {
 // ดึงข้อมูลฟอร์มทั้งหมดของ User
 exports.getFormsByUser = async (userId) => {
     try {
+        // ตรวจสอบว่า User มีอยู่ในระบบ
+        await formRepo.validateUserExistence(userId);
+
         // ดึง Forms ทั้งหมดของ User
         const forms = await formRepo.getFormsByUserId(userId);
+
         if (!forms || forms.length === 0) {
-            throw new Error('No forms found for the specified user');
+            // หากไม่มี Forms ให้ส่งข้อมูลบอกสถานะ
+            return {
+                message: 'No forms found for the specified user',
+                forms: [],
+            };
         }
 
         // ดึง form_ids เพื่อนำไปดึงข้อมูล Coverpage และ Theme
@@ -444,7 +451,10 @@ exports.getFormsByUser = async (userId) => {
             };
         });
 
-        return result;
+        return {
+            message: 'Forms retrieved successfully',
+            forms: result,
+        };
     } catch (error) {
         throw new Error(`Error fetching forms: ${error.message}`);
     }

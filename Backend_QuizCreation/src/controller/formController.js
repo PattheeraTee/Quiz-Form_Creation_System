@@ -28,6 +28,19 @@ exports.updateForm = async (req, res) => {
     }
 };
 
+exports.deleteForm = async (req, res) => {
+    const { formId } = req.params; // ดึง formId จาก URL
+
+    try {
+        // เรียกใช้ Service เพื่อลบ Form
+        const result = await formService.deleteForm(formId);
+
+        res.status(200).json(result); // ส่งข้อความสำเร็จกลับไป
+    } catch (error) {
+        res.status(400).json({ error: error.message }); // ส่งข้อผิดพลาดกลับไป
+    }
+};
+
 exports.updateCoverpage = async (req, res) => {
     try {
         const data = await formService.updateCoverpage(req.params.coverpageId, req.body);

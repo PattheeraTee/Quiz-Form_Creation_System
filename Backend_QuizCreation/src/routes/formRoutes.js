@@ -11,7 +11,9 @@ router.get('/:formId', formController.getForm);
 // เส้นทางสำหรับสร้างแบบฟอร์มใหม่
 router.post('/create', formController.createForm);
 // เส้นทางสำหรับแก้ไขข้อมูลแบบฟอร์ม
-router.patch('/:formId', formController.updateForm);
+router.patch('/:formId', formController.updateForm); 
+// ลบ Form
+router.delete('/:formId', formController.deleteForm);
 
 // อัปเดต Coverpage
 router.patch('/coverpage/:coverpageId', formController.updateCoverpage);

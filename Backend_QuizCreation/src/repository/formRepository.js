@@ -3,6 +3,8 @@ const Coverpage = require('../models/coverpage');
 const Theme = require('../models/theme');
 const Section = require('../models/section');
 const Question = require('../models/question');
+const Result = require('../models/result');
+const Response = require('../models/response');
 
 // ---------- ฟังก์ชันสำหรับการตรวจสอบข้อมูล ----------
 // ตรวจสอบว่ามีแบบฟอร์มอยู่ในฐานข้อมูล
@@ -78,7 +80,7 @@ exports.validateThemeExistence = async (themeId) => {
 };
 
 // ---------- ฟังก์ชันสำหรับการจัดการข้อมูล ----------
-// ฟังก์ชันสำหรับจัดการ Form
+// ********** Form **********
 exports.createForm = async (formData) => {
     const form = new Form(formData);
     await form.save();
@@ -87,6 +89,36 @@ exports.createForm = async (formData) => {
 
 exports.updateForm = async (formId, updateData) => {
     return await Form.findOneAndUpdate({ form_id: formId }, updateData, { new: true });
+};
+
+// ลบ Form
+exports.deleteForm = async (formId) => {
+    await Form.deleteOne({ form_id: formId });
+};
+
+// ลบ Coverpage
+exports.deleteCoverpage = async (coverPageId) => {
+    await Coverpage.deleteOne({ cover_page_id: coverPageId });
+};
+
+// ลบ Sections
+exports.deleteSections = async (sectionIds) => {
+    await Section.deleteMany({ section_id: { $in: sectionIds } });
+};
+
+// ลบ Results
+exports.deleteResults = async (resultIds) => {
+    await Result.deleteMany({ result_id: { $in: resultIds } });
+};
+
+// ลบ Theme
+exports.deleteTheme = async (themeId) => {
+    await Theme.deleteOne({ theme_id: themeId });
+};
+
+// ลบ Responses
+exports.deleteResponses = async (responseIds) => {
+    await Response.deleteMany({ response_id: { $in: responseIds } });
 };
 
 // ฟังก์ชันสำหรับจัดการ Coverpage
@@ -148,6 +180,7 @@ exports.getQuestionsBySection = async (sectionId) => {
     return await Question.find({ section_id: sectionId }).lean();
 };
 
+// ********** Coverpage **********
 // อัปเดต Coverpage
 exports.updateCoverpage = async (coverpageId, updateData) => {
     const updatedCoverpage = await Coverpage.findOneAndUpdate(
@@ -161,6 +194,7 @@ exports.updateCoverpage = async (coverpageId, updateData) => {
     return updatedCoverpage;
 };
 
+// ********** Section **********
 // ค้นหา Section ที่มีหมายเลขสูงสุดในฟอร์ม
 exports.getMaxSectionNumber = async (formId) => {
     return await Section.findOne({ form_id: formId }).sort({ number: -1 });
@@ -217,6 +251,7 @@ exports.updateSectionNumber = async (section) => {
     await section.save();
 };
 
+// ********** Question **********
 // เพิ่ม Question
 exports.createQuestion = async (questionData) => {
     const question = new Question(questionData);
@@ -258,6 +293,7 @@ exports.removeQuestionFromSection = async (sectionId, questionId) => {
     );
 };
 
+// ********** Option **********
 // เพิ่ม Option ใน Question
 exports.addOptionToQuestion = async (questionId, optionData) => {
     const updatedQuestion = await Question.findOneAndUpdate(
@@ -297,6 +333,7 @@ exports.deleteOption = async (questionId, optionId) => {
     return updatedQuestion;
 };
 
+// *********** Theme ***********
 // แก้ไข Theme
 exports.updateTheme = async (themeId, themeData) => {
     const updatedTheme = await Theme.findOneAndUpdate(

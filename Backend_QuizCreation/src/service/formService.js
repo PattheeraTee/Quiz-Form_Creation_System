@@ -92,6 +92,42 @@ exports.getFormDetails = async (formId) => {
     }
 };
 
+// ลบฟอร์ม
+exports.deleteForm = async (formId) => {
+    try {
+        // ตรวจสอบว่า Form มีอยู่
+        const form = await formRepo.validateFormExistence(formId);
+
+        // ลบ Coverpage
+        await formRepo.deleteCoverpage(form.cover_page_id);
+
+        // ลบ Sections ที่เกี่ยวข้อง
+        if (form.section_id && form.section_id.length > 0) {
+            await formRepo.deleteSections(form.section_id);
+        }
+
+        // ลบ Results ที่เกี่ยวข้อง
+        if (form.result_id && form.result_id.length > 0) {
+            await formRepo.deleteResults(form.result_id);
+        }
+
+        // ลบ Theme
+        await formRepo.deleteTheme(form.theme_id);
+
+        // ลบ Responses ที่เกี่ยวข้อง
+        if (form.response && form.response.length > 0) {
+            await formRepo.deleteResponses(form.response);
+        }
+
+        // ลบ Form
+        await formRepo.deleteForm(formId);
+
+        return { message: 'Form and related data deleted successfully' };
+    } catch (error) {
+        throw new Error(`Error deleting form: ${error.message}`);
+    }
+};
+
 // อัปเดต Coverpage
 exports.updateCoverpage = async (coverpageId, updateData) => {
     try {

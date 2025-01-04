@@ -197,8 +197,8 @@ const Section = ({
                         value={answer}
                         onChange={(e) =>
                           updateCorrectAnswer(
-                            section.id,
-                            question.id,
+                            section.section_id,
+                            question.question_id,
                             idx,
                             e.target.value
                           )
@@ -217,7 +217,7 @@ const Section = ({
                     {/* Delete Correct Answer */}
                     <button
                       onClick={() =>
-                        removeCorrectAnswer(section.id, question.id, idx)
+                        removeCorrectAnswer(section.section_id, question.question_id, idx)
                       }
                       className="ml-4 text-red-500"
                     >
@@ -228,7 +228,7 @@ const Section = ({
 
                 {/* Add New Correct Answer */}
                 <button
-                  onClick={() => addCorrectAnswer(section.id, question.id)}
+                  onClick={() => addCorrectAnswer(section.section_id, question.question_id)}
                   className="text-[#03A9F4] "
                 >
                   + เพิ่มคำตอบที่ถูกต้อง

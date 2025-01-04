@@ -363,65 +363,112 @@ export default function Question({ quizData }) {
     );
   };
 
-  const addCorrectAnswer = (sectionId, questionId) => {
-    setSections((prevSections) =>
-      prevSections.map((section) =>
-        section.id === sectionId
-          ? {
-              ...section,
-              questions: section.questions.map((question) =>
-                question.id === questionId
-                  ? {
-                      ...question,
-                      correctAnswers: [...(question.correctAnswers || []), ""],
-                    }
-                  : question
-              ),
-            }
-          : section
-      )
+  const addCorrectAnswer = async (sectionId, questionId) => {
+    const updatedSections = sections.map((section) =>
+      section.section_id === sectionId
+        ? {
+            ...section,
+            questions: section.questions.map((question) =>
+              question.question_id === questionId
+                ? {
+                    ...question,
+                    correctAnswers: [...(question.correctAnswers || []), ""], // Add an empty string as a placeholder
+                  }
+                : question
+            ),
+          }
+        : section
     );
+  
+    setSections(updatedSections);
+  
+    // Send the updated correct answers to the server
+    const updatedQuestion = updatedSections
+      .find((section) => section.section_id === sectionId)
+      .questions.find((question) => question.question_id === questionId);
+  
+    try {
+      const response = await axios.patch(
+        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
+        { correct_answer: updatedQuestion.correctAnswers }
+      );
+      console.log("Correct answer added successfully:", response.data);
+    } catch (error) {
+      console.error("Failed to add correct answer:", error);
+    }
   };
-  const removeCorrectAnswer = (sectionId, questionId) => {
-    setSections((prevSections) =>
-      prevSections.map((section) =>
-        section.id === sectionId
-          ? {
-              ...section,
-              questions: section.questions.map((question) =>
-                question.id === questionId
-                  ? {
-                      ...question,
-                      correctAnswers: question.correctAnswers.slice(0, -1),
-                    }
-                  : question
-              ),
-            }
-          : section
-      )
+
+  const removeCorrectAnswer = async (sectionId, questionId) => {
+  const updatedSections = sections.map((section) =>
+    section.section_id === sectionId
+      ? {
+          ...section,
+          questions: section.questions.map((question) =>
+            question.question_id === questionId
+              ? {
+                  ...question,
+                  correctAnswers: question.correctAnswers.slice(0, -1), // Remove the last answer
+                }
+              : question
+          ),
+        }
+      : section
+  );
+
+  setSections(updatedSections);
+
+  // Send the updated correct answers to the server
+  const updatedQuestion = updatedSections
+    .find((section) => section.section_id === sectionId)
+    .questions.find((question) => question.question_id === questionId);
+
+  try {
+    const response = await axios.patch(
+      `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
+      { correct_answer: updatedQuestion.correctAnswers }
     );
-  };
-  const updateCorrectAnswer = (sectionId, questionId, idx, value) => {
-    setSections((prevSections) =>
-      prevSections.map((section) =>
-        section.id === sectionId
-          ? {
-              ...section,
-              questions: section.questions.map((question) =>
-                question.id === questionId
-                  ? {
-                      ...question,
-                      correctAnswers: question.correctAnswers.map(
-                        (answer, index) => (index === idx ? value : answer)
-                      ),
-                    }
-                  : question
-              ),
-            }
-          : section
-      )
+    console.log("Correct answer removed successfully:", response.data);
+  } catch (error) {
+    console.error("Failed to remove correct answer:", error);
+  }
+};
+
+const updateCorrectAnswer = async (sectionId, questionId, idx, value) => {
+  const updatedSections = sections.map((section) =>
+    section.section_id === sectionId
+      ? {
+          ...section,
+          questions: section.questions.map((question) =>
+            question.question_id === questionId
+              ? {
+                  ...question,
+                  correctAnswers: question.correctAnswers.map((answer, index) =>
+                    index === idx ? value : answer
+                  ),
+                }
+              : question
+          ),
+        }
+      : section
+  );
+
+  setSections(updatedSections);
+
+  // Send the updated correct answers to the server
+  const updatedQuestion = updatedSections
+    .find((section) => section.section_id === sectionId)
+    .questions.find((question) => question.question_id === questionId);
+
+  try {
+    const response = await axios.patch(
+      `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
+      { correct_answer: updatedQuestion.correctAnswers }
     );
-  };
+    console.log("Correct answer updated successfully:", response.data);
+  } catch (error) {
+    console.error("Failed to update correct answer:", error);
+  }
+};
 
   const updatePoints = async (sectionId, questionId, value) => {
     // Update the local state

@@ -68,6 +68,15 @@ exports.validateOptionExistence = async (questionId, optionId) => {
     return question;
 };
 
+// ตรวจสอบการมีอยู่ของ Theme
+exports.validateThemeExistence = async (themeId) => {
+    const theme = await Theme.findOne({ theme_id: themeId });
+    if (!theme) {
+        throw new Error('Theme not found');
+    }
+    return theme;
+};
+
 // ---------- ฟังก์ชันสำหรับการจัดการข้อมูล ----------
 // ฟังก์ชันสำหรับจัดการ Form
 exports.createForm = async (formData) => {
@@ -275,7 +284,6 @@ exports.updateOption = async (questionId, optionId, optionData) => {
     return updatedQuestion;
 };
 
-
 // ลบ Option ใน Question
 exports.deleteOption = async (questionId, optionId) => {
     const updatedQuestion = await Question.findOneAndUpdate(
@@ -287,4 +295,28 @@ exports.deleteOption = async (questionId, optionId) => {
         throw new Error('Failed to delete option');
     }
     return updatedQuestion;
+};
+
+// แก้ไข Theme
+exports.updateTheme = async (themeId, themeData) => {
+    const updatedTheme = await Theme.findOneAndUpdate(
+        { theme_id: themeId },
+        { $set: themeData },
+        { new: true } // ส่งข้อมูลที่อัปเดตแล้วกลับมา
+    );
+    if (!updatedTheme) {
+        throw new Error('Failed to update theme');
+    }
+    return updatedTheme;
+};
+
+// ---------- ฟังก์ชันสำหรับการดึงข้อมูลของ user ----------
+// ดึง Forms ทั้งหมดของ User
+exports.getFormsByUserId = async (userId) => {
+    return await Form.find({ user_id: userId }).lean();
+};
+
+// ดึง Coverpage ที่เกี่ยวข้องกับ Form
+exports.getCoverpagesByFormIds = async (formIds) => {
+    return await Coverpage.find({ form_id: { $in: formIds } }).lean();
 };

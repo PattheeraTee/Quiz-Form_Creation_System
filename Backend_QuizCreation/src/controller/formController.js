@@ -137,3 +137,32 @@ exports.deleteOption = async (req, res) => {
         res.status(400).json({ error: error.message }); // ส่งข้อผิดพลาดกลับไป
     }
 };
+
+exports.editTheme = async (req, res) => {
+    const { themeId } = req.params; // ดึง themeId จาก URL
+    const themeData = req.body; // ดึงข้อมูลการแก้ไขจาก Body ของ Request
+
+    try {
+        // เรียกใช้ Service เพื่อแก้ไข Theme
+        const updatedTheme = await formService.editTheme(themeId, themeData);
+
+        res.status(200).json(updatedTheme); // ส่งข้อมูล Theme ที่อัปเดตกลับไป
+    } catch (error) {
+        res.status(400).json({ error: error.message }); // แสดงข้อความ Error หากเกิดปัญหา
+    }
+};
+
+exports.getFormsByUser = async (req, res) => {
+    const { userId } = req.params; // ดึง userId จาก URL
+
+    try {
+        // เรียกใช้ Service เพื่อดึงข้อมูล Forms
+        const forms = await formService.getFormsByUser(userId);
+
+        res.status(200).json(forms); // ส่ง Forms ที่ดึงมาให้ผู้ใช้
+    } catch (error) {
+        res.status(400).json({ error: error.message }); // ส่งข้อผิดพลาดกลับไป
+    }
+};
+
+

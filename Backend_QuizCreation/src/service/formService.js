@@ -308,3 +308,55 @@ exports.deleteOption = async (questionId, optionId) => {
         throw new Error(`Error deleting option: ${error.message}`);
     }
 };
+
+// แก้ไข Theme
+exports.editTheme = async (themeId, themeData) => {
+    try {
+        // ตรวจสอบว่า Theme มีอยู่
+        await formRepo.validateThemeExistence(themeId);
+
+        // อัปเดต Theme
+        const updatedTheme = await formRepo.updateTheme(themeId, themeData);
+
+        // ส่งคืน Theme ที่อัปเดตแล้ว
+        return updatedTheme;
+    } catch (error) {
+        throw new Error(`Error editing theme: ${error.message}`);
+    }
+};
+
+// ดึงข้อมูลฟอร์มทั้งหมดของ User
+exports.getFormsByUser = async (userId) => {
+    try {
+        // ดึง Forms ทั้งหมดของ User
+        const forms = await formRepo.getFormsByUserId(userId);
+        if (!forms || forms.length === 0) {
+            throw new Error('No forms found for the specified user');
+        }
+
+        // ดึง form_ids เพื่อนำไปดึงข้อมูล Coverpage
+        const formIds = forms.map((form) => form.form_id);
+
+        // ดึง Coverpages ที่เกี่ยวข้อง
+        const coverpages = await formRepo.getCoverpagesByFormIds(formIds);
+
+        // รวมข้อมูล Forms และ Coverpages
+        const result = forms.map((form) => {
+            const coverpage = coverpages.find((cp) => cp.form_id === form.form_id) || {};
+            return {
+                form_id: form.form_id,
+                form_type: form.form_type,
+                user_id: form.user_id,
+                coverpage: {
+                    cover_page_id: coverpage.cover_page_id || null,
+                    title: coverpage.title || null,
+                    cover_page_image: coverpage.cover_page_image || null,
+                },
+            };
+        });
+
+        return result;
+    } catch (error) {
+        throw new Error(`Error fetching forms: ${error.message}`);
+    }
+};

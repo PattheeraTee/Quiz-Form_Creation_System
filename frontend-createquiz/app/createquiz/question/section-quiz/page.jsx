@@ -183,57 +183,62 @@ const Section = ({
                   disabled
                 />
               </div>
-              {/* Correct Answers Section */}
-              <div className="mb-4">
-                <label className="block text-black font-semibold mb-1">
-                  กรอกคำตอบที่ถูกต้อง:
-                </label>
-                {question.correctAnswers?.map((answer, idx) => (
-                  <div key={idx} className="flex items-center mb-4">
-                    <div className="relative w-full">
-                      {/* Input Field for Correct Answer */}
-                      <input
-                        type="text"
-                        value={answer}
-                        onChange={(e) =>
-                          updateCorrectAnswer(
-                            section.section_id,
-                            question.question_id,
-                            idx,
-                            e.target.value
-                          )
-                        }
-                        placeholder={`คำตอบที่ ${idx + 1}`}
-                        className="w-full px-4 py-2 border border-gray-300 rounded text-black pr-10" // Add `pr-10` for spacing
-                      />
+{/* Correct Answers Section */}
+<div className="mb-4">
+  <label className="block text-black font-semibold mb-1">
+    กรอกคำตอบที่ถูกต้อง:
+  </label>
+  {question.correctAnswers?.length > 0 ? (
+    question.correctAnswers.map((answer, idx) => (
+      <div key={idx} className="flex items-center mb-4">
+        <div className="relative w-full">
+          {/* Input Field for Correct Answer */}
+          <input
+            type="text"
+            value={answer}
+            onChange={(e) =>
+              updateCorrectAnswer(
+                section.section_id,
+                question.question_id,
+                idx,
+                e.target.value
+              )
+            }
+            placeholder={`คำตอบที่ ${idx + 1}`}
+            className="w-full px-4 py-2 border border-gray-300 rounded text-black pr-10"
+          />
 
-                      {/* Mark Answer as Correct */}
-                      <FontAwesomeIcon
-                        icon={faCheck}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-500"
-                      />
-                    </div>
+          {/* Mark Answer as Correct */}
+          <FontAwesomeIcon
+            icon={faCheck}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-green-500"
+          />
+        </div>
 
-                    {/* Delete Correct Answer */}
-                    <button
-                      onClick={() =>
-                        removeCorrectAnswer(section.section_id, question.question_id, idx)
-                      }
-                      className="ml-4 text-red-500"
-                    >
-                      ✖️
-                    </button>
-                  </div>
-                ))}
+        {/* Delete Correct Answer */}
+        <button
+          onClick={() =>
+            removeCorrectAnswer(section.section_id, question.question_id, idx)
+          }
+          className="ml-4 text-red-500"
+        >
+          ✖️
+        </button>
+      </div>
+    ))
+  ) : (
+    <div className="text-gray-500 italic">ไม่มีคำตอบที่ถูกต้อง</div>
+  )}
 
-                {/* Add New Correct Answer */}
-                <button
-                  onClick={() => addCorrectAnswer(section.section_id, question.question_id)}
-                  className="text-[#03A9F4] "
-                >
-                  + เพิ่มคำตอบที่ถูกต้อง
-                </button>
-              </div>
+  {/* Add New Correct Answer */}
+  <button
+    onClick={() => addCorrectAnswer(section.section_id, question.question_id)}
+    className="text-[#03A9F4]"
+  >
+    + เพิ่มคำตอบที่ถูกต้อง
+  </button>
+</div>
+
 
               {/* Points Input, Trash Bin, and Required Toggle */}
               <div className="flex justify-between items-center mt-4">

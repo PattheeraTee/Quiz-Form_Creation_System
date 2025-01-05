@@ -51,6 +51,39 @@ export default function Question({ quizData }) {
     }
   }, [quizData]);
   
+  useEffect(() => {
+    if (quizData?.sections) {
+      const updatedSections = quizData.sections.map((section) => ({
+        ...section,
+        questions: section.questions.map((question) => ({
+          ...question,
+          correctAnswers: question.correctAnswers || [], // Ensure correctAnswers is initialized
+          maxSelect: question.maxSelect || 1, // Default maxSelect if not provided
+          ratingLevel: question.ratingLevel || 1, // Default ratingLevel if not provided
+        })),
+      }));
+      setSections(updatedSections);
+    } else {
+      console.warn("No sections found in quizData");
+    }
+  }, [quizData]);
+  
+  useEffect(() => {
+    if (quizData?.sections) {
+      const updatedSections = quizData.sections.map((section) => ({
+        ...section,
+        questions: section.questions.map((question) => ({
+          ...question,
+          correctAnswers: question.correctAnswers || [], // ตรวจสอบให้ `correctAnswers` มีค่า
+          maxSelect: question.maxSelect || 1,
+          ratingLevel: question.ratingLevel || 1,
+        })),
+      }));
+      setSections(updatedSections); // อัปเดต State
+    }
+  }, [quizData]);
+  
+  
 
   const addSection = async () => {
     const newSection = {
@@ -364,111 +397,128 @@ export default function Question({ quizData }) {
   };
 
   const addCorrectAnswer = async (sectionId, questionId) => {
-    const updatedSections = sections.map((section) =>
-      section.section_id === sectionId
-        ? {
-            ...section,
-            questions: section.questions.map((question) =>
-              question.question_id === questionId
-                ? {
-                    ...question,
-                    correctAnswers: [...(question.correctAnswers || []), ""], // Add an empty string as a placeholder
-                  }
-                : question
-            ),
-          }
-        : section
-    );
-  
-    setSections(updatedSections);
-  
-    // Send the updated correct answers to the server
-    const updatedQuestion = updatedSections
-      .find((section) => section.section_id === sectionId)
-      .questions.find((question) => question.question_id === questionId);
-  
     try {
+      const currentCorrectAnswers = sections
+        .find((section) => section.section_id === sectionId)
+        ?.questions.find((question) => question.question_id === questionId)
+        ?.correctAnswers || [];
+  
+      const updatedCorrectAnswers = [...currentCorrectAnswers, ""]; // เพิ่มคำตอบว่าง
+  
       const response = await axios.patch(
         `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
-        { correct_answer: updatedQuestion.correctAnswers }
+        { correct_answer: updatedCorrectAnswers }
       );
+  
+      const updatedQuestion = response.data;
+  
+      // อัปเดต State ให้ UI แสดงผลทันที
+      setSections((prevSections) =>
+        prevSections.map((section) =>
+          section.section_id === sectionId
+            ? {
+                ...section,
+                questions: section.questions.map((question) =>
+                  question.question_id === questionId
+                    ? { ...question, correctAnswers: updatedCorrectAnswers }
+                    : question
+                ),
+              }
+            : section
+        )
+      );
+  
       console.log("Correct answer added successfully:", response.data);
     } catch (error) {
       console.error("Failed to add correct answer:", error);
     }
   };
+  
+  
+  const removeCorrectAnswer = async (sectionId, questionId, idx) => {
+    try {
+      const currentCorrectAnswers = sections
+        .find((section) => section.section_id === sectionId)
+        ?.questions.find((question) => question.question_id === questionId)
+        ?.correctAnswers || [];
+  
+      const updatedCorrectAnswers = currentCorrectAnswers.filter(
+        (_, index) => index !== idx
+      ); // ลบคำตอบตาม index
+  
+      const response = await axios.patch(
+        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
+        { correct_answer: updatedCorrectAnswers }
+      );
+  
+      const updatedQuestion = response.data;
+  
+      // อัปเดต State ให้ UI แสดงผลทันที
+      setSections((prevSections) =>
+        prevSections.map((section) =>
+          section.section_id === sectionId
+            ? {
+                ...section,
+                questions: section.questions.map((question) =>
+                  question.question_id === questionId
+                    ? { ...question, correctAnswers: updatedCorrectAnswers }
+                    : question
+                ),
+              }
+            : section
+        )
+      );
+  
+      console.log("Correct answer removed successfully:", response.data);
+    } catch (error) {
+      console.error("Failed to remove correct answer:", error);
+    }
+  };
+  
+  
 
-  const removeCorrectAnswer = async (sectionId, questionId) => {
-  const updatedSections = sections.map((section) =>
-    section.section_id === sectionId
-      ? {
-          ...section,
-          questions: section.questions.map((question) =>
-            question.question_id === questionId
-              ? {
-                  ...question,
-                  correctAnswers: question.correctAnswers.slice(0, -1), // Remove the last answer
-                }
-              : question
-          ),
-        }
-      : section
-  );
-
-  setSections(updatedSections);
-
-  // Send the updated correct answers to the server
-  const updatedQuestion = updatedSections
-    .find((section) => section.section_id === sectionId)
-    .questions.find((question) => question.question_id === questionId);
-
-  try {
-    const response = await axios.patch(
-      `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
-      { correct_answer: updatedQuestion.correctAnswers }
-    );
-    console.log("Correct answer removed successfully:", response.data);
-  } catch (error) {
-    console.error("Failed to remove correct answer:", error);
-  }
-};
-
-const updateCorrectAnswer = async (sectionId, questionId, idx, value) => {
-  const updatedSections = sections.map((section) =>
-    section.section_id === sectionId
-      ? {
-          ...section,
-          questions: section.questions.map((question) =>
-            question.question_id === questionId
-              ? {
-                  ...question,
-                  correctAnswers: question.correctAnswers.map((answer, index) =>
-                    index === idx ? value : answer
-                  ),
-                }
-              : question
-          ),
-        }
-      : section
-  );
-
-  setSections(updatedSections);
-
-  // Send the updated correct answers to the server
-  const updatedQuestion = updatedSections
-    .find((section) => section.section_id === sectionId)
-    .questions.find((question) => question.question_id === questionId);
-
-  try {
-    const response = await axios.patch(
-      `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
-      { correct_answer: updatedQuestion.correctAnswers }
-    );
-    console.log("Correct answer updated successfully:", response.data);
-  } catch (error) {
-    console.error("Failed to update correct answer:", error);
-  }
-};
+  const updateCorrectAnswer = async (sectionId, questionId, idx, value) => {
+    try {
+      // ดึงข้อมูลปัจจุบันของ correctAnswers
+      const currentCorrectAnswers = sections
+        .find((section) => section.section_id === sectionId)
+        ?.questions.find((question) => question.question_id === questionId)
+        ?.correctAnswers || [];
+  
+      // อัปเดตคำตอบที่ต้องการ
+      const updatedCorrectAnswers = [...currentCorrectAnswers];
+      updatedCorrectAnswers[idx] = value;
+  
+      const response = await axios.patch(
+        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
+        { correct_answer: updatedCorrectAnswers }
+      );
+  
+      const updatedQuestion = response.data;
+  
+      // อัปเดต State ให้ UI แสดงผลทันที
+      setSections((prevSections) =>
+        prevSections.map((section) =>
+          section.section_id === sectionId
+            ? {
+                ...section,
+                questions: section.questions.map((question) =>
+                  question.question_id === questionId
+                    ? { ...question, correctAnswers: updatedCorrectAnswers }
+                    : question
+                ),
+              }
+            : section
+        )
+      );
+  
+      console.log("Correct answer updated successfully:", response.data);
+    } catch (error) {
+      console.error("Failed to update correct answer:", error);
+    }
+  };
+  
+  
 
   const updatePoints = async (sectionId, questionId, value) => {
     // Update the local state

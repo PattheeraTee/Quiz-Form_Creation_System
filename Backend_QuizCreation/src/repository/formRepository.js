@@ -309,11 +309,24 @@ exports.addOptionToQuestion = async (questionId, optionData) => {
 
 // แก้ไข Option ใน Question
 exports.updateOption = async (questionId, optionId, optionData) => {
+    // กรองฟิลด์ที่ไม่ลงท้ายด้วย `_id` ออกจาก optionData
+    const updateFields = Object.keys(optionData)
+        .filter((key) => !key.endsWith('_id')) // กรองฟิลด์ที่ลงท้ายด้วย `_id`
+        .reduce((obj, key) => {
+            obj[`options.$.${key}`] = optionData[key];
+            return obj;
+        }, {});
+
+    if (Object.keys(updateFields).length === 0) {
+        throw new Error('No valid fields to update');
+    }
+
     const updatedQuestion = await Question.findOneAndUpdate(
         { question_id: questionId, 'options.option_id': optionId },
-        { $set: { 'options.$': optionData } }, // อัปเดตทั้ง object ของ option
+        { $set: updateFields }, // อัปเดตเฉพาะฟิลด์ที่ถูกกรอง
         { new: true } // ส่งผลลัพธ์ใหม่กลับมา
     );
+
     if (!updatedQuestion) {
         throw new Error('Failed to update option');
     }
@@ -356,4 +369,9 @@ exports.getFormsByUserId = async (userId) => {
 // ดึง Coverpage ที่เกี่ยวข้องกับ Form
 exports.getCoverpagesByFormIds = async (formIds) => {
     return await Coverpage.find({ form_id: { $in: formIds } }).lean();
+};
+
+// ดึง Themes ที่เกี่ยวข้องกับ Form
+exports.getThemesByFormIds = async (formIds) => {
+    return await Theme.find({ form_id: { $in: formIds } }).lean();
 };

@@ -370,15 +370,20 @@ exports.getFormsByUser = async (userId) => {
             throw new Error('No forms found for the specified user');
         }
 
-        // ดึง form_ids เพื่อนำไปดึงข้อมูล Coverpage
+        // ดึง form_ids เพื่อนำไปดึงข้อมูล Coverpage และ Theme
         const formIds = forms.map((form) => form.form_id);
 
         // ดึง Coverpages ที่เกี่ยวข้อง
         const coverpages = await formRepo.getCoverpagesByFormIds(formIds);
 
-        // รวมข้อมูล Forms และ Coverpages
+        // ดึง Themes ที่เกี่ยวข้อง
+        const themes = await formRepo.getThemesByFormIds(formIds);
+
+        // รวมข้อมูล Forms, Coverpages, และ Themes
         const result = forms.map((form) => {
             const coverpage = coverpages.find((cp) => cp.form_id === form.form_id) || {};
+            const theme = themes.find((th) => th.form_id === form.form_id) || {};
+
             return {
                 form_id: form.form_id,
                 form_type: form.form_type,
@@ -387,6 +392,10 @@ exports.getFormsByUser = async (userId) => {
                     cover_page_id: coverpage.cover_page_id || null,
                     title: coverpage.title || null,
                     cover_page_image: coverpage.cover_page_image || null,
+                },
+                theme: {
+                    theme_id: theme.theme_id || null,
+                    primary_color: theme.primary_color || null,
                 },
             };
         });

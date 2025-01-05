@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Swal from "sweetalert2"; // Import SweetAlert
+import Swal from "sweetalert2";
 import axios from "axios";
 
 export default function MyQuizzesPage() {
@@ -12,7 +12,6 @@ export default function MyQuizzesPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Fetch user ID and quizzes
     const fetchUserIdAndQuizzes = async () => {
       try {
         // Fetch user ID from the API
@@ -21,8 +20,13 @@ export default function MyQuizzesPage() {
         setUserId(userId);
 
         // Fetch all quizzes using the user ID
-        const quizzesResponse = await axios.get(`http://localhost:3001/form/user/${userId}`);
-        setQuizzes(quizzesResponse.data);
+        const quizzesResponse = await axios.get(
+          `http://localhost:3001/form/user/${userId}`
+        );
+
+        // Extract quizzes from response
+        const quizzesData = quizzesResponse.data.forms;
+        setQuizzes(quizzesData);
       } catch (error) {
         console.error("Error fetching quizzes or user ID:", error);
       } finally {
@@ -42,7 +46,6 @@ export default function MyQuizzesPage() {
   };
 
   const handleDeleteQuiz = async (quizId) => {
-    // Confirm deletion with SweetAlert
     Swal.fire({
       title: "คุณแน่ใจหรือไม่?",
       text: "การลบควิซนี้จะไม่สามารถกู้คืนได้!",
@@ -55,12 +58,12 @@ export default function MyQuizzesPage() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          // Call API to delete quiz
-          const response = await axios.delete(`http://localhost:3001/form/${quizId}`);
+          const response = await axios.delete(
+            `http://localhost:3001/form/${quizId}`
+          );
 
           if (response.status === 200) {
             Swal.fire("ลบสำเร็จ!", "ควิซถูกลบแล้ว", "success");
-            // Remove the deleted quiz from the state
             setQuizzes(quizzes.filter((quiz) => quiz.form_id !== quizId));
           } else {
             Swal.fire("เกิดข้อผิดพลาด!", "ไม่สามารถลบควิซได้", "error");
@@ -94,23 +97,23 @@ export default function MyQuizzesPage() {
               key={quiz.form_id}
               className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between cursor-pointer hover:shadow-lg transition-shadow"
             >
-              {/* Image Section */}
-              <div className="flex space-x-8" onClick={() => handleQuizClick(quiz.form_id)}>
+              <div
+                className="flex space-x-8"
+                onClick={() => handleQuizClick(quiz.form_id)}
+              >
                 <img
                   src={
-                    quiz.coverpage.cover_page_image ||
+                    quiz.coverpage?.cover_page_image ||
                     "https://i.scdn.co/image/ab67616d0000b273bd0db295c0164ddbc0584ebb"
-                  } // Use default image if cover_page_image is null
-                  alt={quiz.coverpage.title}
+                  }
+                  alt={quiz.coverpage?.title || "Untitled Quiz"}
                   className="w-60 h-40 object-cover rounded-xl"
                 />
-                {/* Quiz Title */}
                 <h2 className="text-lg font-medium text-blue-500 mt-6">
-                  {quiz.coverpage.title || "Untitled Quiz"}
+                  {quiz.coverpage?.title || "Untitled Quiz"}
                 </h2>
               </div>
 
-              {/* Actions */}
               <div className="flex items-center space-x-4">
                 <button
                   className="text-gray-500 hover:text-black"

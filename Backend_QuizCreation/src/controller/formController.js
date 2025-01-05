@@ -1,6 +1,11 @@
 // File: controller/formController.js
 const formService = require('../service/formService');
+const coverpageService = require('../service/coverpageService');
+const sectionService = require('../service/sectionService');
+const questionService = require('../service/questionService');
+const themeService = require('../service/themeService');
 
+// ********** Form **********
 exports.createForm = async (req, res) => {
     try {
         const data = await formService.createNewForm(req.body);
@@ -41,18 +46,33 @@ exports.deleteForm = async (req, res) => {
     }
 };
 
+exports.getFormsByUser = async (req, res) => {
+    const { userId } = req.params; // ดึง userId จาก URL
+
+    try {
+        // เรียกใช้ Service เพื่อดึงข้อมูล Forms
+        const forms = await formService.getFormsByUser(userId);
+
+        res.status(200).json(forms); // ส่ง Forms ที่ดึงมาให้ผู้ใช้
+    } catch (error) {
+        res.status(400).json({ error: error.message }); // ส่งข้อผิดพลาดกลับไป
+    }
+};
+
+// ********** Coverpage **********
 exports.updateCoverpage = async (req, res) => {
     try {
-        const data = await formService.updateCoverpage(req.params.coverpageId, req.body);
+        const data = await coverpageService.updateCoverpage(req.params.coverpageId, req.body);
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
+// ********** Section **********
 exports.addSection = async (req, res) => {
     try {
-        const data = await formService.addSection(req.params.formId, req.body);
+        const data = await sectionService.addSection(req.params.formId, req.body);
         res.status(201).json(data);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -62,7 +82,7 @@ exports.addSection = async (req, res) => {
 exports.editSection = async (req, res) => {
     try {
         const { formId, sectionId } = req.params;
-        const data = await formService.editSection(formId, sectionId, req.body);
+        const data = await sectionService.editSection(formId, sectionId, req.body);
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -71,20 +91,21 @@ exports.editSection = async (req, res) => {
 
 exports.deleteSection = async (req, res) => {
     try {
-        const data = await formService.deleteSection(req.params.formId, req.params.sectionId);
+        const data = await sectionService.deleteSection(req.params.formId, req.params.sectionId);
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
+// ********** Question **********
 exports.addQuestion = async (req, res) => {
     try {
         const { sectionId } = req.params;
         const questionData = req.body;
 
         // เรียก Service เพื่อเพิ่ม Question
-        const newQuestion = await formService.addQuestion(sectionId, questionData);
+        const newQuestion = await questionService.addQuestion(sectionId, questionData);
 
         res.status(201).json(newQuestion);
     } catch (error) {
@@ -98,7 +119,7 @@ exports.editQuestion = async (req, res) => {
         const questionData = req.body;
 
         // เรียก Service เพื่อแก้ไข Question
-        const updatedQuestion = await formService.editQuestion(sectionId, questionId, questionData);
+        const updatedQuestion = await questionService.editQuestion(sectionId, questionId, questionData);
 
         res.status(200).json(updatedQuestion);
     } catch (error) {
@@ -108,16 +129,17 @@ exports.editQuestion = async (req, res) => {
 
 exports.deleteQuestion = async (req, res) => {
     try {
-        const data = await formService.deleteQuestion(req.params.sectionId, req.params.questionId);
+        const data = await questionService.deleteQuestion(req.params.sectionId, req.params.questionId);
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
+// ********** Option **********
 exports.addOption = async (req, res) => {
     try {
-        const data = await formService.addOption(req.params.questionId, req.body);
+        const data = await questionService.addOption(req.params.questionId, req.body);
         res.status(201).json(data);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -130,7 +152,7 @@ exports.editOption = async (req, res) => {
 
     try {
         // เรียกใช้ Service เพื่อแก้ไข Option
-        const updatedQuestion = await formService.editOption(questionId, optionId, optionData);
+        const updatedQuestion = await questionService.editOption(questionId, optionId, optionData);
 
         res.status(200).json(updatedQuestion); // ส่งข้อมูล Question ที่อัปเดตกลับไป
     } catch (error) {
@@ -143,7 +165,7 @@ exports.deleteOption = async (req, res) => {
         const { questionId, optionId } = req.params;
 
         // เรียกใช้ Service เพื่อลบ Option
-        const updatedQuestion = await formService.deleteOption(questionId, optionId);
+        const updatedQuestion = await questionService.deleteOption(questionId, optionId);
 
         res.status(200).json(updatedQuestion); // ส่งผลลัพธ์กลับไป
     } catch (error) {
@@ -151,13 +173,14 @@ exports.deleteOption = async (req, res) => {
     }
 };
 
+// ********** Theme **********
 exports.editTheme = async (req, res) => {
     const { themeId } = req.params; // ดึง themeId จาก URL
     const themeData = req.body; // ดึงข้อมูลการแก้ไขจาก Body ของ Request
 
     try {
         // เรียกใช้ Service เพื่อแก้ไข Theme
-        const updatedTheme = await formService.editTheme(themeId, themeData);
+        const updatedTheme = await themeService.editTheme(themeId, themeData);
 
         res.status(200).json(updatedTheme); // ส่งข้อมูล Theme ที่อัปเดตกลับไป
     } catch (error) {
@@ -165,17 +188,6 @@ exports.editTheme = async (req, res) => {
     }
 };
 
-exports.getFormsByUser = async (req, res) => {
-    const { userId } = req.params; // ดึง userId จาก URL
 
-    try {
-        // เรียกใช้ Service เพื่อดึงข้อมูล Forms
-        const forms = await formService.getFormsByUser(userId);
-
-        res.status(200).json(forms); // ส่ง Forms ที่ดึงมาให้ผู้ใช้
-    } catch (error) {
-        res.status(400).json({ error: error.message }); // ส่งข้อผิดพลาดกลับไป
-    }
-};
 
 

@@ -5,7 +5,8 @@ const cookieParser = require('cookie-parser');
 const app = express();
 const cors = require("cors");
 const userRouter = require("./src/routes/userRoute");
-const testForm = require("./src/routes/formRoutes");
+const formRouter = require("./src/routes/formRoutes");
+const responseRouter = require("./src/routes/responseRoutes");
 const port = 3001;
 
 mongoose
@@ -26,5 +27,6 @@ app.use(
 );
 app.use(cookieParser());
 app.use(express.json());
-app.use("/form", testForm);
+app.use("/form", formRouter);
+app.use("/response", responseRouter);
 app.use("/",userRouter);

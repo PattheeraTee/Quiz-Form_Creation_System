@@ -25,6 +25,11 @@ const responseRepository = {
     }
     return response;
   },
+
+  // ดึง Response ตาม response_id
+  getResponsesByFormId: async (formId) => {
+    return await Response.find({ form_id: formId }).lean();
+  },
 };
 
 module.exports = responseRepository;

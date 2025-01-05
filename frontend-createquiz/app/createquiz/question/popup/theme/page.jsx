@@ -55,7 +55,7 @@ export default function ThemeCustomizer({ quizData }) {
 
   return (
     showThemeCustomizer && (
-      <div className="p-4 w-1/6 fixed mt-9 right-2 bg-white rounded-lg shadow-md text-black">
+      <div className="p-4 w-1/6 fixed mt-9 right-2 bg-white rounded-lg shadow-md text-black z-50">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">ธีม</h2>
           <button className="text-xl cursor-pointer" onClick={() => setShowThemeCustomizer(false)}>X</button>

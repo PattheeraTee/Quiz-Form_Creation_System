@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from "react";
 import { QuizContext } from "../../QuizContext"; // Import QuizContext
-import Background from "../../../components/images/Background.svg";
+import Background from "../../../components/images/backgroud-cloud-horizental.svg";
 import Image from "next/image";
 import axios from "axios";
 
@@ -76,8 +76,9 @@ export default function CoverPage({ coverPageData, theme }) {
         <div className="flex items-center">
           {!isEditingButtonText ? (
             <button
-              className="px-6 py-2 bg-[#03A9F4] text-white rounded-full"
+              className="px-6 py-2 text-white rounded-full"
               onClick={() => setIsEditingButtonText(true)}
+              style={{ backgroundColor: primaryColor }}
             >
               {buttonText || "คลิกเพื่อแก้ไข"}
             </button>

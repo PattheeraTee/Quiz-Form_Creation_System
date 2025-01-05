@@ -9,7 +9,7 @@ import Theme from '../question/popup/theme/page';
 import axios from 'axios';
 
 export default function QuizHeader({ quizData }) {
-    const { quizTitle } = useContext(QuizContext);
+    const { quizTitle,primaryColor } = useContext(QuizContext);
     const [isThemeVisible, setIsThemeVisible] = useState(false);
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
     const [selectedSection, setSelectedSection] = useState('คำถาม');
@@ -100,7 +100,8 @@ export default function QuizHeader({ quizData }) {
 
                     {/* Publish Button */}
                     <button
-                        className="bg-[#03A9F4] text-white rounded-full px-4 py-2"
+                        className="text-white rounded-full px-4 py-2"
+                        style={{ backgroundColor: primaryColor }}
                         onClick={handlePublishClick}
                     >
                         เผยแพร่

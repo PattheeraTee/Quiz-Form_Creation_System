@@ -12,5 +12,5 @@ export function middleware(request) {
 }
 
 export const config = {
-    matcher: ['/profile/:path*', '/home'], // เพิ่ม '/home' เข้าไปใน matcher
+    matcher: ['/profile/:path*', '/home','/cretequiz'], // เพิ่ม '/home' เข้าไปใน matcher
 };

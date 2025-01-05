@@ -6,4 +6,5 @@ module.exports = {
     questionRestrictedFields: ['question_id', 'section_id', 'options'],
     optionRestrictedFields: ['option_id', 'question_id', 'section_id'],
     themeRestrictedFields: ['theme_id', 'form_id'],
+    responseRestrictedFields: ['response_id', 'form_id', 'user_id', 'result_id'],
 };

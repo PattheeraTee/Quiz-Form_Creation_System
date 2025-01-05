@@ -21,38 +21,7 @@ export default function Question({ quizData }) {
     { label: "วันที่", icon: "📅", value: "date" },
   ];
   const [sections, setSections] = useState(quizData?.sections || []);
-  const { primaryColor, setPrimaryColor } = useContext(QuizContext);
-
-  useEffect(() => {
-    if (quizData?.sections) {
-      // ตรวจสอบว่า `sections` เป็นอาร์เรย์
-      if (Array.isArray(quizData.sections)) {
-        setSections(quizData.sections);
-      } else {
-        console.warn(
-          "Expected sections to be an array, wrapping it into an array:",
-          quizData.sections
-        );
-        setSections([quizData.sections]); // แปลงเป็นอาร์เรย์ถ้าไม่ใช่
-      }
-    } else {
-      console.warn("No sections found in quizData");
-    }
-  }, [quizData]);
-
-  useEffect(() => {
-    if (quizData?.sections) {
-      const updatedSections = quizData.sections.map((section) => ({
-        ...section,
-        questions: section.questions.map((question) => ({
-          ...question,
-          maxSelect: question.maxSelect || 1, // Default to 1 if not provided
-          ratingLevel: question.ratingLevel || 1, // Default to 1 if not provided
-        })),
-      }));
-      setSections(updatedSections);
-    }
-  }, [quizData]);
+  const { primaryColor} = useContext(QuizContext);
   
   useEffect(() => {
     if (quizData?.sections) {
@@ -60,32 +29,33 @@ export default function Question({ quizData }) {
         ...section,
         questions: section.questions.map((question) => ({
           ...question,
-          correctAnswers: question.correctAnswers || [], // Ensure correctAnswers is initialized
-          maxSelect: question.maxSelect || 1, // Default maxSelect if not provided
-          ratingLevel: question.ratingLevel || 1, // Default ratingLevel if not provided
+          correct_answer: Array.isArray(question.correct_answer) ? question.correct_answer : [], // ตรวจสอบว่าเป็น Array จริง
+          maxSelect: question.maxSelect || 1, // ค่าเริ่มต้นสำหรับ maxSelect
+          ratingLevel: question.ratingLevel || 1, // ค่าเริ่มต้นสำหรับ ratingLevel
         })),
       }));
-      setSections(updatedSections);
-    } else {
-      console.warn("No sections found in quizData");
+      setSections(updatedSections); // อัปเดต State
     }
   }, [quizData]);
-  
+
   useEffect(() => {
     if (quizData?.sections) {
       const updatedSections = quizData.sections.map((section) => ({
         ...section,
         questions: section.questions.map((question) => ({
           ...question,
-          correctAnswers: question.correctAnswers || [], // ตรวจสอบให้ `correctAnswers` มีค่า
-          maxSelect: question.maxSelect || 1,
-          ratingLevel: question.ratingLevel || 1,
+          options: question.options.map((option) => ({
+            ...option,
+            is_correct: option.is_correct || false, // ดึงค่า is_correct หรือกำหนดค่าเริ่มต้น
+          })),
         })),
       }));
       setSections(updatedSections); // อัปเดต State
     }
   }, [quizData]);
   
+  
+  console.log("quizData:", quizData);
   
 
   const addSection = async () => {
@@ -252,15 +222,24 @@ export default function Question({ quizData }) {
 
   const addOption = async (sectionId, questionId) => {
     try {
+      // ตรวจสอบ form_type ว่าเป็น quiz หรือไม่
+      const isQuiz = quizData?.form?.form_type === "quiz";
+  
+      // กำหนด payload สำหรับ API
+      const payload = {
+        text: "ตัวเลือกใหม่",
+        ...(isQuiz && { is_correct: false }), // เพิ่ม is_correct: false ถ้า form_type เป็น quiz
+      };
+  
       // เรียก API เพื่อเพิ่ม Option
       const response = await axios.post(
         `http://localhost:3001/form/${questionId}/options`,
-        { text: "ตัวเลือกใหม่" }
+        payload
       );
-
+  
       if (response.status === 201) {
         const updatedQuestion = response.data;
-
+  
         // อัปเดต State ด้วยข้อมูลใหม่
         setSections((prevSections) =>
           prevSections.map((section) =>
@@ -279,13 +258,14 @@ export default function Question({ quizData }) {
               : section
           )
         );
-
+  
         console.log("Option added and State updated successfully!");
       }
     } catch (error) {
       console.error("Error adding option:", error);
     }
   };
+  
 
   const removeOption = async (sectionId, questionId, optionId) => {
     try {
@@ -356,173 +336,194 @@ export default function Question({ quizData }) {
   };
   
 
-  const toggleCorrectOption = (sectionId, questionId, optionIdx) => {
-    setSections((prevSections) =>
-      prevSections.map((section) =>
-        section.id === sectionId
-          ? {
-              ...section,
-              questions: section.questions.map((question) =>
-                question.id === questionId
-                  ? {
-                      ...question,
-                      correctOptions: question.correctOptions?.includes(
-                        optionIdx
-                      )
-                        ? question.correctOptions.filter(
-                            (idx) => idx !== optionIdx
-                          )
-                        : [...(question.correctOptions || []), optionIdx],
-                    }
-                  : question
-              ),
-            }
-          : section
-      )
+const toggleCorrectOption = async (sectionId, questionId, optionId) => {
+  try {
+    const sectionIndex = sections.findIndex(
+      (section) => section.section_id === sectionId
     );
-  };
-
-  const setCorrectOption = (sectionId, questionId, optionIdx) => {
-    setSections((prevSections) =>
-      prevSections.map((section) =>
-        section.id === sectionId
-          ? {
-              ...section,
-              questions: section.questions.map((question) =>
-                question.id === questionId
-                  ? { ...question, correctOption: optionIdx } // Update the correct option for single-answer
-                  : question
-              ),
-            }
-          : section
-      )
+    const questionIndex = sections[sectionIndex].questions.findIndex(
+      (q) => q.question_id === questionId
     );
-  };
 
-  const addCorrectAnswer = async (sectionId, questionId) => {
+    // อัปเดตค่าของตัวเลือกใน State
+    const updatedSections = [...sections];
+    const optionIndex = updatedSections[sectionIndex].questions[
+      questionIndex
+    ].options.findIndex((opt) => opt.option_id === optionId);
+
+    // Toggle is_correct
+    updatedSections[sectionIndex].questions[questionIndex].options[
+      optionIndex
+    ].is_correct =
+      !updatedSections[sectionIndex].questions[questionIndex].options[
+        optionIndex
+      ].is_correct;
+
+    setSections(updatedSections);
+
+    // ส่งคำขอ PATCH ไปยัง backend
+    const updatedOption =
+      updatedSections[sectionIndex].questions[questionIndex].options[
+        optionIndex
+      ];
+
+    await axios.patch(
+      `http://localhost:3001/form/${questionId}/options/${optionId}`,
+      { is_correct: updatedOption.is_correct }
+    );
+
+    console.log(`Option ${optionId} updated successfully`);
+  } catch (error) {
+    console.error("Failed to toggle correct option:", error);
+  }
+};
+
+
+  const setCorrectOption = async (sectionId, questionId, optionIdx) => {
     try {
-      const currentCorrectAnswers = sections
+      // ค้นหาคำถามที่เกี่ยวข้อง
+      const question = sections
         .find((section) => section.section_id === sectionId)
-        ?.questions.find((question) => question.question_id === questionId)
-        ?.correctAnswers || [];
+        ?.questions.find((q) => q.question_id === questionId);
   
-      const updatedCorrectAnswers = [...currentCorrectAnswers, ""]; // เพิ่มคำตอบว่าง
+      if (!question || !question.options) {
+        console.error("Question or options not found");
+        return;
+      }
   
-      const response = await axios.patch(
-        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
-        { correct_answer: updatedCorrectAnswers }
-      );
+      // อัปเดต is_correct ในทุก option
+      const updatedOptions = question.options.map((option, idx) => ({
+        ...option,
+        is_correct: idx === optionIdx, // ทำให้ true สำหรับตัวเลือกที่เลือก
+      }));
   
-      const updatedQuestion = response.data;
-  
-      // อัปเดต State ให้ UI แสดงผลทันที
-      setSections((prevSections) =>
-        prevSections.map((section) =>
-          section.section_id === sectionId
-            ? {
-                ...section,
-                questions: section.questions.map((question) =>
-                  question.question_id === questionId
-                    ? { ...question, correctAnswers: updatedCorrectAnswers }
-                    : question
-                ),
-              }
-            : section
+      // ส่ง API PATCH เพื่ออัปเดตทุก option
+      await Promise.all(
+        updatedOptions.map((option) =>
+          axios.patch(
+            `http://localhost:3001/form/${questionId}/options/${option.option_id}`,
+            { is_correct: option.is_correct }
+          )
         )
       );
   
-      console.log("Correct answer added successfully:", response.data);
+      // อัปเดต State
+      const updatedSections = sections.map((section) => {
+        if (section.section_id === sectionId) {
+          return {
+            ...section,
+            questions: section.questions.map((q) =>
+              q.question_id === questionId
+                ? { ...q, options: updatedOptions }
+                : q
+            ),
+          };
+        }
+        return section;
+      });
+  
+      setSections(updatedSections);
+      console.log("Correct option set successfully");
+    } catch (error) {
+      console.error("Failed to set correct option:", error);
+    }
+  };
+  
+  
+  
+
+  const addCorrectAnswer = async (sectionId, questionId) => {
+    try {
+      const updatedSections = sections.map((section) => {
+        if (section.section_id === sectionId) {
+          return {
+            ...section,
+            questions: section.questions.map((question) => {
+              if (question.question_id === questionId) {
+                return {
+                  ...question,
+                  correct_answer: [...(question.correct_answer || []), ""],
+                };
+              }
+              return question;
+            }),
+          };
+        }
+        return section;
+      });
+  
+      setSections(updatedSections); // อัปเดต State ก่อน
+      await axios.patch(`http://localhost:3001/form/${sectionId}/questions/${questionId}`, {
+        correct_answer: updatedSections
+          .find((section) => section.section_id === sectionId)
+          ?.questions.find((question) => question.question_id === questionId)?.correct_answer,
+      });
     } catch (error) {
       console.error("Failed to add correct answer:", error);
     }
   };
   
-  
   const removeCorrectAnswer = async (sectionId, questionId, idx) => {
     try {
-      const currentCorrectAnswers = sections
-        .find((section) => section.section_id === sectionId)
-        ?.questions.find((question) => question.question_id === questionId)
-        ?.correctAnswers || [];
-  
-      const updatedCorrectAnswers = currentCorrectAnswers.filter(
-        (_, index) => index !== idx
-      ); // ลบคำตอบตาม index
-  
-      const response = await axios.patch(
-        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
-        { correct_answer: updatedCorrectAnswers }
-      );
-  
-      const updatedQuestion = response.data;
-  
-      // อัปเดต State ให้ UI แสดงผลทันที
-      setSections((prevSections) =>
-        prevSections.map((section) =>
-          section.section_id === sectionId
-            ? {
-                ...section,
-                questions: section.questions.map((question) =>
-                  question.question_id === questionId
-                    ? { ...question, correctAnswers: updatedCorrectAnswers }
-                    : question
-                ),
+      const updatedSections = sections.map((section) => {
+        if (section.section_id === sectionId) {
+          return {
+            ...section,
+            questions: section.questions.map((question) => {
+              if (question.question_id === questionId) {
+                return {
+                  ...question,
+                  correct_answer: question.correct_answer.filter((_, index) => index !== idx),
+                };
               }
-            : section
-        )
-      );
+              return question;
+            }),
+          };
+        }
+        return section;
+      });
   
-      console.log("Correct answer removed successfully:", response.data);
+      setSections(updatedSections); // อัปเดต State ก่อน
+      await axios.patch(`http://localhost:3001/form/${sectionId}/questions/${questionId}`, {
+        correct_answer: updatedSections
+          .find((section) => section.section_id === sectionId)
+          ?.questions.find((question) => question.question_id === questionId)?.correct_answer,
+      });
     } catch (error) {
       console.error("Failed to remove correct answer:", error);
     }
   };
   
-  
-
   const updateCorrectAnswer = async (sectionId, questionId, idx, value) => {
     try {
-      // ดึงข้อมูลปัจจุบันของ correctAnswers
-      const currentCorrectAnswers = sections
-        .find((section) => section.section_id === sectionId)
-        ?.questions.find((question) => question.question_id === questionId)
-        ?.correctAnswers || [];
-  
-      // อัปเดตคำตอบที่ต้องการ
-      const updatedCorrectAnswers = [...currentCorrectAnswers];
-      updatedCorrectAnswers[idx] = value;
-  
-      const response = await axios.patch(
-        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
-        { correct_answer: updatedCorrectAnswers }
-      );
-  
-      const updatedQuestion = response.data;
-  
-      // อัปเดต State ให้ UI แสดงผลทันที
-      setSections((prevSections) =>
-        prevSections.map((section) =>
-          section.section_id === sectionId
-            ? {
-                ...section,
-                questions: section.questions.map((question) =>
-                  question.question_id === questionId
-                    ? { ...question, correctAnswers: updatedCorrectAnswers }
-                    : question
-                ),
+      const updatedSections = sections.map((section) => {
+        if (section.section_id === sectionId) {
+          return {
+            ...section,
+            questions: section.questions.map((question) => {
+              if (question.question_id === questionId) {
+                const updatedAnswers = [...question.correct_answer];
+                updatedAnswers[idx] = value;
+                return { ...question, correct_answer: updatedAnswers };
               }
-            : section
-        )
-      );
+              return question;
+            }),
+          };
+        }
+        return section;
+      });
   
-      console.log("Correct answer updated successfully:", response.data);
+      setSections(updatedSections); // อัปเดต State ก่อน
+      await axios.patch(`http://localhost:3001/form/${sectionId}/questions/${questionId}`, {
+        correct_answer: updatedSections
+          .find((section) => section.section_id === sectionId)
+          ?.questions.find((question) => question.question_id === questionId)?.correct_answer,
+      });
     } catch (error) {
       console.error("Failed to update correct answer:", error);
     }
   };
   
-  
-
   const updatePoints = async (sectionId, questionId, value) => {
     // Update the local state
     console.log("sectionId:", sectionId);

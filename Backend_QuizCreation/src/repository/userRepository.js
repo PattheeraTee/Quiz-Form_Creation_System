@@ -1,4 +1,4 @@
-const myUser = require('../models/user');
+const myUser = require("../models/user");
 
 const repository = {
   createUser: async (userData) => {
@@ -26,7 +26,7 @@ const repository = {
   validateUserExistence: async (userId) => {
     const user = await myUser.findOne({ user_id: userId }).lean();
     if (!user) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
     return user;
   },
@@ -40,26 +40,35 @@ const repository = {
     );
 
     if (!updatedUser) {
-      throw new Error('User not found or failed to update');
+      throw new Error("User not found or failed to update");
     }
 
     return updatedUser;
   },
 
+  // ดึง forms ของ User
+  getFormsByUser: async (userId) => {
+    const user = await myUser.findOne({ user_id: userId }, { forms: 1 }).lean(); // ดึงเฉพาะฟิลด์ forms
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return user.forms || [];
+  },
+
   // ลบ form_id จาก User
   removeFormFromUser: async (userId, formId) => {
     const updatedUser = await myUser.findOneAndUpdate(
-        { user_id: userId },
-        { $pull: { forms: formId } }, // ลบ form_id จากฟิลด์ forms
-        { new: true }
+      { user_id: userId },
+      { $pull: { forms: formId } }, // ลบ form_id จากฟิลด์ forms
+      { new: true }
     );
 
     if (!updatedUser) {
-        throw new Error('User not found or failed to update');
+      throw new Error("User not found or failed to update");
     }
 
     return updatedUser;
-},
+  },
 };
 
 module.exports = repository;

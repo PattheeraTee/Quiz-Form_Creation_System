@@ -45,6 +45,21 @@ const repository = {
 
     return updatedUser;
   },
+
+  // ลบ form_id จาก User
+  removeFormFromUser: async (userId, formId) => {
+    const updatedUser = await myUser.findOneAndUpdate(
+        { user_id: userId },
+        { $pull: { forms: formId } }, // ลบ form_id จากฟิลด์ forms
+        { new: true }
+    );
+
+    if (!updatedUser) {
+        throw new Error('User not found or failed to update');
+    }
+
+    return updatedUser;
+},
 };
 
 module.exports = repository;

@@ -141,6 +141,9 @@ exports.deleteForm = async (formId) => {
         // ลบ Form
         await formRepository.deleteForm(formId);
 
+        // ลบ form_id จาก User
+        await userRepository.removeFormFromUser(form.user_id, formId);
+
         return { message: 'Form and related data deleted successfully' };
     } catch (error) {
         throw new Error(`Error deleting form: ${error.message}`);

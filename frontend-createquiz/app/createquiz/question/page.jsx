@@ -1,11 +1,13 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from 'react';
 import CoverPage from "./coverpage/page";
 import SectionQuiz from "./section-quiz/page";
 import SectionSurvey from "./section-survey/page";
 import SectionPsychology from "./section-psychology/page";
 import axios from "axios";
+import { QuizContext } from "../QuizContext"; // Import QuizProvider
+import BackgroundVertical from "../../components/images/backgroud-cloud-vertical.svg";
 
 export default function Question({ quizData }) {
   const searchParams = useSearchParams();
@@ -19,6 +21,7 @@ export default function Question({ quizData }) {
     { label: "วันที่", icon: "📅", value: "date" },
   ];
   const [sections, setSections] = useState(quizData?.sections || []);
+  const { primaryColor, setPrimaryColor } = useContext(QuizContext);
 
   useEffect(() => {
     if (quizData?.sections) {
@@ -870,9 +873,35 @@ export default function Question({ quizData }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <CoverPage coverPageData={quizData?.coverPage} theme={quizData?.theme} />
-      {renderSectionComponent()}
-    </div>
+<div className="relative min-h-screen py-8">
+  {/* Layer for gradient */}
+  <div
+    className="absolute inset-0"
+    style={{
+      background: `linear-gradient(to bottom, ${primaryColor}10, ${primaryColor})`, // สีอ่อนลงอีก 40%
+      zIndex: 0,
+    }}
+  ></div>
+
+  {/* Layer for background image */}
+  <div
+    className="absolute inset-0"
+    style={{
+      backgroundImage: `url('${BackgroundVertical.src}')`,
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      backgroundRepeat: "no-repeat",
+      zIndex: 1,
+    }}
+  ></div>
+
+  {/* Content */}
+  <div className="relative z-10">
+    <CoverPage coverPageData={quizData?.coverPage} theme={quizData?.theme} />
+    {renderSectionComponent()}
+  </div>
+</div>
+
+
   );
 }

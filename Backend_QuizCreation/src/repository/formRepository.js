@@ -1,5 +1,4 @@
 const Form = require('../models/form');
-const User = require('../models/user');
 
 // ---------- ฟังก์ชันสำหรับการตรวจสอบข้อมูล ----------
 // ตรวจสอบว่ามีแบบฟอร์มอยู่ในฐานข้อมูล
@@ -9,15 +8,6 @@ exports.validateFormExistence = async (formId) => {
         throw new Error('Form not found');
     }
     return form;
-};
-
-// ตรวจสอบว่ามี user_id อยู่ในฐานข้อมูลหรือไม่
-exports.validateUserExistence = async (userId) => {
-    const user = await User.findOne({ user_id: userId }).lean();
-    if (!user) {
-        throw new Error('User not found');
-    }
-    return user;
 };
 
 // ---------- ฟังก์ชันสำหรับการจัดการข้อมูล ----------

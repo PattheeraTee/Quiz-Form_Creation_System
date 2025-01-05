@@ -21,6 +21,30 @@ const repository = {
   updatePasswordByEmail: async (email, newPassword) => {
     return await myUser.updateOne({ email }, { password: newPassword });
   },
+
+  // ตรวจสอบว่ามี user_id อยู่ในฐานข้อมูลหรือไม่
+  validateUserExistence: async (userId) => {
+    const user = await myUser.findOne({ user_id: userId }).lean();
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return user;
+  },
+
+  // เพิ่ม form_id ใน User
+  addFormToUser: async (userId, formId) => {
+    const updatedUser = await myUser.findOneAndUpdate(
+      { user_id: userId },
+      { $push: { forms: formId } }, // เพิ่ม form_id ในฟิลด์ forms
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      throw new Error('User not found or failed to update');
+    }
+
+    return updatedUser;
+  },
 };
 
 module.exports = repository;

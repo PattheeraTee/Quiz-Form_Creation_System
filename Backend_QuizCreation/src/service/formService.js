@@ -8,6 +8,7 @@ const themeRepository = require('../repository/themeRepository');
 const questionRepository = require('../repository/questionRepository');
 const resultRepository = require('../repository/resultRepository');
 const responseRepository = require('../repository/responseReposity');
+const userRepository = require('../repository/userRepository');
 
 //สร้างฟอร์มใหม่
 exports.createNewForm = async (requestData) => {
@@ -46,6 +47,9 @@ exports.createNewForm = async (requestData) => {
             section_id: [sectionId],
             result_id: [], // ค่าเริ่มต้นสำหรับ result_id
         });
+
+        // อัปเดต forms array ใน User
+        await userRepository.addFormToUser(requestData.user_id, formId);
 
         // ส่งคืนผลลัพธ์
         return { form, coverPage, theme, section };
@@ -147,7 +151,7 @@ exports.deleteForm = async (formId) => {
 exports.getFormsByUser = async (userId) => {
     try {
         // ตรวจสอบว่า User มีอยู่ในระบบ
-        await formRepository.validateUserExistence(userId);
+        await userRepository.validateUserExistence(userId);
 
         // ดึง Forms ทั้งหมดของ User
         const forms = await formRepository.getFormsByUserId(userId);

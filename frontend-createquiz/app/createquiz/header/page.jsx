@@ -8,7 +8,7 @@ import { faPalette, faEye } from "@fortawesome/free-solid-svg-icons";
 import Theme from '../question/popup/theme/page';
 import axios from 'axios';
 
-export default function QuizHeader({ quizData }) {
+export default function CreateQuizHeader({ quizData }) {
     const { quizTitle,primaryColor } = useContext(QuizContext);
     const [isThemeVisible, setIsThemeVisible] = useState(false);
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);

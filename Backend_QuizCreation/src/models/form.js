@@ -40,8 +40,7 @@ const formSchema = new Schema({
     }],
     result_id: [{
         type: String,
-        ref: 'Result',
-        unique: true,
+        ref: 'Result'
     }],
     user_id: { // ใช้ user_id เพื่ออ้างอิง
         type: String,

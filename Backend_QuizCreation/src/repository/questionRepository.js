@@ -67,6 +67,16 @@ exports.deleteQuestion = async (questionId) => {
     await Question.deleteOne({ question_id: questionId });
 };
 
+// ดึง Question ตาม question_id
+exports.getQuestionById = async (questionId) => {
+    return await Question.findOne({ question_id: questionId }).lean();
+};
+
+// ดึง Question ตาม section_id
+exports.getQuestionsBySectionId = async (sectionId) => {
+    return await Question.find({ section_id: sectionId }).lean();
+};
+
 // ********** Option **********
 // เพิ่ม Option ใน Question
 exports.addOptionToQuestion = async (questionId, optionData) => {

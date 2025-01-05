@@ -1,8 +1,23 @@
-const responseService = require('../service/responseService');
+const responseService = require("../service/responseService");
+const formRepository = require('../repository/formRepository');
 
 exports.submitResponse = async (req, res) => {
   try {
-    const response = await responseService.submitResponse(req.body);
+    const { form_id } = req.body;
+
+    // ดึงประเภทของ Form
+    const form = await formRepository.getForm(form_id);
+
+    if (!form) {
+      return res.status(404).json({ error: "Form not found" });
+    }
+
+    // เรียกใช้ Service เพื่อบันทึก Response และคำนวณคะแนน
+    const response = await responseService.submitQuizResponse(
+      req.body,
+      form.form_type
+    );
+
     res.status(201).json(response);
   } catch (error) {
     res.status(400).json({ error: error.message });

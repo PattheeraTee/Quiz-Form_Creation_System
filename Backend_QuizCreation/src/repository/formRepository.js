@@ -47,6 +47,15 @@ exports.getForm = async (formId) => {
     return await Form.findOne({ form_id: formId });
 };
 
+// ดึงข้อมูลฟอร์ม จาก form_id
+exports.getFormById = async (formId) => {
+    const form = await Form.findOne({ form_id: formId }).lean();
+    if (!form) {
+      throw new Error('Form not found');
+    }
+    return form;
+};
+
 // ดึงข้อมูลฟอร์มทั้งหมด
 exports.getFormsByIds =  async (formIds) => {
         return await Form.find({ form_id: { $in: formIds } }).lean();
@@ -74,3 +83,5 @@ exports.removeSectionFromForm = async (formId, sectionId) => {
 exports.getFormsByUserId = async (userId) => {
     return await Form.find({ user_id: userId }).lean();
 };
+
+

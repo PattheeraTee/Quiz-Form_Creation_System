@@ -1,5 +1,5 @@
 const responseService = require("../service/responseService");
-const formRepository = require('../repository/formRepository');
+const formRepository = require("../repository/formRepository");
 
 exports.submitResponse = async (req, res) => {
   try {
@@ -28,8 +28,8 @@ exports.getResponsesByForm = async (req, res) => {
   const { formId } = req.params;
 
   try {
-    const responses = await responseService.getResponsesByForm(formId);
-    res.status(200).json(responses);
+    const responseSummary = await responseService.getResponsesByForm(formId);
+    res.status(200).json(responseSummary);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

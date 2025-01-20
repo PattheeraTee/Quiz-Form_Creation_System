@@ -87,8 +87,11 @@ exports.submitQuizResponse = async (responseData, formType) => {
 // ดึง Responses ตาม form_id
 const formatDate = (dateString) => {
   if (!dateString) return null;
-  const options = { year: "numeric", month: "long", day: "numeric" };
-  return new Date(dateString).toLocaleDateString("th-TH", options); // ใช้ 'th-TH' สำหรับภาษาไทย หรือ 'en-US' สำหรับภาษาอังกฤษ
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0"); // เดือนเริ่มจาก 0 ต้องบวก 1
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`; // รูปแบบ YYYY-MM-DD
 };
 
 exports.getResponsesByForm = async (formId) => {
@@ -195,7 +198,7 @@ exports.getResponsesByForm = async (formId) => {
             if (answer.answer_date) {
               questionSummary.recent_answers.push(
                 formatDate(answer.answer_date)
-              ); // แปลงรูปแบบวันที่
+              ); // แปลงวันที่เป็น YYYY-MM-DD
               if (questionSummary.recent_answers.length > 3) {
                 questionSummary.recent_answers.shift();
               }

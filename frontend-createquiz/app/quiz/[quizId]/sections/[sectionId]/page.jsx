@@ -6,6 +6,8 @@ import axios from "axios";
 import QuizHeader from "@/app/quiz/header/page";
 import { faStar } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import BackgroundHorizental from "../../../../components/images/backgroud-cloud-horizental.svg";
+import Image from "next/image";
 
 export default function SectionPage({ params,searchParams }) {
   const { quizId, sectionId } = params;
@@ -16,6 +18,26 @@ export default function SectionPage({ params,searchParams }) {
   const [allResponses, setAllResponses] = useState(
     searchParams.allResponses ? JSON.parse(searchParams.allResponses) : []
   );
+  const [theme, setTheme] = useState(
+    searchParams.theme ? JSON.parse(decodeURIComponent(searchParams.theme)) : null
+  );
+
+  const fetchTheme = async () => {
+    try {
+      const response = await axios.get(`http://localhost:3001/form/${quizId}`);
+      const data = response.data;
+
+      setTheme({
+        primaryColor: data.theme.primary_color,
+      });
+    } catch (error) {
+      console.error("Error fetching theme:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTheme();
+  }, [quizId]);
 
   useEffect(() => {
     const fetchSectionData = async () => {
@@ -128,9 +150,6 @@ export default function SectionPage({ params,searchParams }) {
     return currentResponses; // Return to pass along in query params
   };
 
-  useEffect(() => {
-    console.log("All responses:", allResponses);
-  }, [allResponses]);
 
   const handleNext = () => {
     if (validateResponses()) {
@@ -141,12 +160,13 @@ export default function SectionPage({ params,searchParams }) {
         const encodedResponses = encodeURIComponent(
           JSON.stringify([...allResponses, ...currentResponses])
         );
+        const encodedTheme = encodeURIComponent(JSON.stringify(theme));
         router.push(
-          `/quiz/${quizId}/sections/${nextSectionId}?allResponses=${encodedResponses}`
+          `/quiz/${quizId}/sections/${nextSectionId}?allResponses=${encodedResponses}&theme=${encodedTheme}`
         );
       }
     }
-  };  
+  }; 
 
   const handlePrevious = () => {
     const currentIndex = allSections.findIndex((sec) => sec.id === sectionId);
@@ -155,13 +175,14 @@ export default function SectionPage({ params,searchParams }) {
       const encodedResponses = encodeURIComponent(
         JSON.stringify(allResponses)
       );
+      const encodedTheme = encodeURIComponent(JSON.stringify(theme));
       router.push(
-        `/quiz/${quizId}/sections/${prevSectionId}?allResponses=${encodedResponses}`
+        `/quiz/${quizId}/sections/${prevSectionId}?allResponses=${encodedResponses}&theme=${encodedTheme}`
       );
     } else {
       router.push(`/quiz/${quizId}`);
     }
-  };  
+  };
 
   const handleSubmit = async () => {
     if (validateResponses()) {
@@ -203,18 +224,35 @@ export default function SectionPage({ params,searchParams }) {
     allSections.findIndex((sec) => sec.id === sectionId) ===
     allSections.length - 1;
 
+    const backgroundImageUrl = "@app/components/images/backgroud-cloud-vertical.svg";
+
   return (
-    <div>
+    <div  className="min-h-screen flex flex-col"
+    style={{
+      backgroundImage: `linear-gradient(to bottom, ${theme.primaryColor}10, ${theme.primaryColor}), url(${backgroundImageUrl})`,
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      backgroundRepeat: "no-repeat",
+    }}>
       <QuizHeader />
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-xl">
-          {section.title && (
+      <div
+        className="flex-grow flex items-center justify-center p-8"
+        style={{
+          backgroundImage: `url(${BackgroundHorizental.src})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+        
+      >     
+      {/* <Image src={BackgroundVertical} alt="background" layout="fill" objectFit="cover" />    */}
+        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl relative z-10">
+        {section.title && (
             <h1 className="text-xl font-bold mb-4">{section.title}</h1>
           )}
           {section.description && (
             <p className="text-gray-600 mb-6">{section.description}</p>
           )}
-
           {section.questions.map((question) => (
             <QuestionComponent
               key={question.id}

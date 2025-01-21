@@ -56,6 +56,9 @@ const formSchema = new Schema({
         type: String,
         ref: 'Response',
     }],
+    email_require: {
+        type: Boolean,
+    }
 }, { versionKey: false });
 
 //สร้าง model โดยใช้ schema ที่สร้างไว้

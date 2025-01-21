@@ -12,7 +12,6 @@ export default function Coverpage({ params }) {
   const [quiz, setQuiz] = useState(null);
   const [coverPage, setCoverPage] = useState(null);
   const [theme, setTheme] = useState(null);
-  const [answers, setAnswers] = useState({});
   const router = useRouter();
 
   const fetchCoverPage = async () => {
@@ -85,29 +84,6 @@ export default function Coverpage({ params }) {
     } else {
       console.error("No sections available to start the quiz.");
     }
-  };
-
-  const handleInputChange = (questionId, value) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: value }));
-  };
-
-  const handleDeleteQuiz = async () => {
-    try {
-      const response = await axios.delete(
-        `http://localhost:3001/form/${quizId}`
-      );
-      if (response.status === 200) {
-        alert("Quiz deleted successfully");
-      }
-      router.push("/home");
-    } catch (error) {
-      console.error("Error deleting quiz:", error);
-    }
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    console.log(answers);
   };
 
   // Show a loading state until all required data is fetched

@@ -40,9 +40,10 @@ export default function CreateQuiz() {
     initialPrimaryColor={quizData?.theme?.primary_color || "#FFFFFF"}
     >
       <div className="bg-gray-100 min-h-screen">
-        <HeaderQuiz
-          onSectionSelect={handleTabSelect}
+      <HeaderQuiz
           quizData={quizData}
+          selectedSection={selectedTab}
+          onSectionSelect={handleTabSelect}
         />
         {selectedTab === "คำถาม" && <Question quizData={quizData} />}
         {selectedTab === "การตอบกลับ" && <Response />}

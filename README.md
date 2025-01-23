@@ -55,7 +55,6 @@
 Quiz-Form_Creation_System
 ├── Backend_QuizCreation   # โฟลเดอร์ Backend พร้อมโค้ดฝั่งเซิร์ฟเวอร์
 ├── frontend-createquiz    # โฟลเดอร์ Frontend พร้อมโค้ดฝั่งผู้ใช้
-├── package-lock.json      # ไฟล์ล็อก dependencies ของ npm
 └── README.md              # เอกสารอธิบายโปรเจค
 ```
 

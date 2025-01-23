@@ -58,7 +58,13 @@ const formSchema = new Schema({
     }],
     email_require: {
         type: Boolean,
-    }
+    },
+    limit_one_response: {
+        type: Boolean,
+    },
+    shuffle_question: {
+        type: Boolean,
+    },
 }, { versionKey: false });
 
 //สร้าง model โดยใช้ schema ที่สร้างไว้

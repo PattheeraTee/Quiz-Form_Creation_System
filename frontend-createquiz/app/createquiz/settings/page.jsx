@@ -5,14 +5,34 @@ export default function SettingsForm() {
   const [emailIncluded, setEmailIncluded] = useState(false);
   const [limitToOneResponse, setLimitToOneResponse] = useState(false);
   const [allowResponse, setAllowResponse] = useState(false);
+  const [enableStartDate, setEnableStartDate] = useState(false);
   const [startDate, setStartDate] = useState('');
-  const [startTime, setStartTime] = useState('08:00');
+  const [startTime, setStartTime] = useState('00:00');
+  const [enableEndDate, setEnableEndDate] = useState(false);
   const [endDate, setEndDate] = useState('');
-  const [endTime, setEndTime] = useState('23:50');
+  const [endTime, setEndTime] = useState('00:00');
   const [shuffleQuestions, setShuffleQuestions] = useState(false);
 
+  const generateTimeOptions = () => {
+    const times = [];
+    for (let i = 0; i < 24; i++) {
+      for (let j = 0; j < 60; j += 15) {
+        const hour = i.toString().padStart(2, '0');
+        const minute = j.toString().padStart(2, '0');
+        times.push(`${hour}:${minute}`);
+      }
+    }
+    return times;
+  };
+
+  const isPastDateTime = (date, time) => {
+    const selectedDateTime = new Date(`${date}T${time}`);
+    const now = new Date();
+    return selectedDateTime < now;
+  };
+
   return (
-    <div className="bg-white text-black  max-w-2xl mx-auto p-6 rounded-xl shadow mt-6">
+    <div className="bg-white text-black max-w-2xl mx-auto p-6 rounded-xl shadow mt-6">
       <h2 className="text-lg font-semibold mb-4">การตั้งค่า</h2>
       <div className="mb-6 p-4 bg-gray-100 rounded-lg">
         <h3 className="text-xl font-medium mb-2">การตอบกลับ</h3>
@@ -37,7 +57,7 @@ export default function SettingsForm() {
       </div>
       <div className="mb-6 p-4 bg-gray-100 rounded-lg">
         <h3 className="text-xl font-medium mb-2">การตอบสนอง</h3>
-        <label className="flex items-center mb-2">
+        <label className="flex items-center mb-4">
           <input
             type="checkbox"
             checked={allowResponse}
@@ -46,47 +66,79 @@ export default function SettingsForm() {
           />
           ยอมรับการตอบกลับ
         </label>
-        <div className="mb-2">
-          <label className="block mb-1">วันที่เริ่มต้น</label>
-          <div className="flex items-center">
+        <div className="mb-4">
+          <label className="flex items-center mb-2">
             <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="mr-2 p-2 border rounded"
+              type="checkbox"
+              checked={enableStartDate}
+              onChange={() => setEnableStartDate(!enableStartDate)}
+              className="mr-2"
             />
-            <select
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className="p-2 border rounded"
-            >
-              <option value="08:00">08:00</option>
-              <option value="09:00">09:00</option>
-              <option value="10:00">10:00</option>
-              {/* Add more options as needed */}
-            </select>
-          </div>
+            ใช้วันที่เริ่มต้น
+          </label>
+          {enableStartDate && (
+            <div className="flex items-center mb-2">
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="mr-2 p-2 border rounded"
+                min={new Date().toISOString().split('T')[0]}
+              />
+              <select
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="p-2 border rounded"
+              >
+                {generateTimeOptions().map((time) => (
+                  <option
+                    key={time}
+                    value={time}
+                    disabled={startDate && isPastDateTime(startDate, time)}
+                  >
+                    {time}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
-        <div className="mb-2">
-          <label className="block mb-1">วันที่สิ้นสุด</label>
-          <div className="flex items-center">
+        <div className="mb-4">
+          <label className="flex items-center mb-2">
             <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="mr-2 p-2 border rounded"
+              type="checkbox"
+              checked={enableEndDate}
+              onChange={() => setEnableEndDate(!enableEndDate)}
+              className="mr-2"
             />
-            <select
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className="p-2 border rounded"
-            >
-              <option value="23:50">23:50</option>
-              <option value="22:00">22:00</option>
-              <option value="21:00">21:00</option>
-              {/* Add more options as needed */}
-            </select>
-          </div>
+            ใช้วันที่สิ้นสุด
+          </label>
+          {enableEndDate && (
+            <div className="flex items-center">
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="mr-2 p-2 border rounded"
+                min={new Date().toISOString().split('T')[0]}
+              />
+              <select
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="p-2 border rounded"
+              >
+                {generateTimeOptions().map((time) => (
+                  <option
+                    key={time}
+                    value={time}
+                    disabled={endDate && isPastDateTime(endDate, time)}
+                  >
+                    {time}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
         <label className="flex items-center">
           <input

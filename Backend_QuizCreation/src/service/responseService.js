@@ -5,19 +5,38 @@ const questionRepository = require("../repository/questionRepository");
 const formRepository = require("../repository/formRepository");
 const formService = require("./formService");
 
+const validateRequiredQuestions = (questions, answers) => {
+  // ค้นหา questions ที่ required แต่ไม่มีคำตอบใน answers
+  const missingRequiredQuestions = questions.filter(
+    (question) =>
+      question.required && !answers.some((answer) => answer.question_id === question.question_id)
+  );
+
+  if (missingRequiredQuestions.length > 0) {
+    throw new Error(
+      `Missing required answers for questions: ${missingRequiredQuestions
+        .map((q) => q.question)
+        .join(", ")}`
+    );
+  }
+};
+
 // บันทึก Response
 exports.submitQuizResponse = async (responseData, formType) => {
   try {
     let score = 0;
 
-    if (formType === "quiz") {
-      // ดึงคำถามทั้งหมดที่เกี่ยวข้อง
-      const questions = await Promise.all(
-        responseData.answers.map((answer) =>
-          questionRepository.getQuestionById(answer.question_id)
-        )
-      );
+    // ดึงคำถามทั้งหมดที่เกี่ยวข้อง
+    const questions = await Promise.all(
+      responseData.answers.map((answer) =>
+        questionRepository.getQuestionById(answer.question_id)
+      )
+    );
 
+    // ตรวจสอบคำถามที่ required
+    // validateRequiredQuestions(questions, responseData.answers);
+
+    if (formType === "quiz") {
       // คำนวณคะแนน
       for (const answer of responseData.answers) {
         const question = questions.find(
@@ -94,15 +113,22 @@ const formatDate = (dateString) => {
   return `${year}-${month}-${day}`; // รูปแบบ YYYY-MM-DD
 };
 
+// ดึงข้อมูลการตอบกลับ by form_id
 exports.getResponsesByForm = async (formId) => {
   try {
     const formDetails = await formService.getFormDetails(formId);
-    const questions = formDetails.sections.flatMap(
-      (section) => section.questions
-    );
+    const { coverPage } = formDetails; // ดึงข้อมูล title ของ coverPage
+    const sections = formDetails.sections || []; // ตรวจสอบว่ามี sections หรือไม่
+    const questions = sections.flatMap((section) => section.questions || []); // ตรวจสอบว่ามีคำถามใน section หรือไม่
 
     if (!questions || questions.length === 0) {
-      throw new Error("No questions found in the form");
+      // หากไม่มีคำถามในฟอร์ม
+      return {
+        message: "Responses retrieved successfully",
+        title: coverPage.title, // เพิ่ม title ของ coverPage
+        total_response: 0, // ไม่มีการตอบกลับ
+        questions: [], // รายละเอียดคำถามว่างเปล่า
+      };
     }
 
     const questionMap = {};
@@ -113,10 +139,12 @@ exports.getResponsesByForm = async (formId) => {
     const responses = await responseRepository.getResponsesByFormId(formId);
 
     if (!responses || responses.length === 0) {
+      // หากไม่มีการตอบกลับ (responses ว่าง)
       return {
-        message: "No responses found for the specified form",
-        total_response: 0,
-        questions: [],
+        message: "Responses retrieved successfully",
+        title: coverPage.title, // เพิ่ม title ของ coverPage
+        total_response: 0, // ไม่มีการตอบกลับ
+        questions: [], // รายละเอียดคำถามว่างเปล่า
       };
     }
 
@@ -127,9 +155,8 @@ exports.getResponsesByForm = async (formId) => {
         const questionId = answer.question_id;
 
         if (!questionMap[questionId]) {
-          throw new Error(
-            `Question with ID ${questionId} not found in the related sections of form`
-          );
+          // ข้ามคำตอบที่ไม่มีคำถามในคำถามที่กำหนด
+          return;
         }
 
         const question = questionMap[questionId];
@@ -232,6 +259,7 @@ exports.getResponsesByForm = async (formId) => {
 
     return {
       message: "Responses retrieved successfully",
+      title: coverPage.title, // เพิ่ม title ของ coverPage
       total_response: responses.length,
       questions: Object.values(questionSummaries),
     };
@@ -239,6 +267,7 @@ exports.getResponsesByForm = async (formId) => {
     throw new Error(`Error fetching responses: ${error.message}`);
   }
 };
+
 
 // ลบ Responses ตาม response_id
 exports.deleteResponses = async (responseIds) => {

@@ -46,7 +46,7 @@ export default function CreateQuiz() {
           onSectionSelect={handleTabSelect}
         />
         {selectedTab === "คำถาม" && <Question quizData={quizData} />}
-        {selectedTab === "การตอบกลับ" && <Response />}
+        {selectedTab === "การตอบกลับ" && <Response quizId={formId} />}
         {selectedTab === "ตั้งค่า" && <Setting />}
       </div>
     </QuizProvider>

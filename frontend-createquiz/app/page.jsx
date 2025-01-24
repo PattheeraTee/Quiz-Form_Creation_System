@@ -1,7 +1,7 @@
 // components/LoginForm.js
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter,useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Swal from "sweetalert2";
 import axios from "axios";
@@ -10,6 +10,8 @@ export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get("redirect") || "/home";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,7 +32,7 @@ export default function LoginForm() {
           text: "ยินดีต้อนรับ!",
           showConfirmButton: true,
         });
-        router.push("/home");
+        router.push(redirectPath);
       }
     } catch (error) {
       if (error.response && error.response.status === 401) {

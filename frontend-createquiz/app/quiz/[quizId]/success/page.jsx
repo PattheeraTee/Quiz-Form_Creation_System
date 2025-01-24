@@ -9,7 +9,7 @@ import Image from "next/image";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-export default function Coverpage({ params }) {
+export default function Success({ params }) {
   const { quizId } = params;
   const [quiz, setQuiz] = useState(null);
   const [coverPage, setCoverPage] = useState(null);

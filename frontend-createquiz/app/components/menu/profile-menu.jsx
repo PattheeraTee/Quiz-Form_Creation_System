@@ -1,7 +1,7 @@
 // components/ProfileMenu.js
-import Link from 'next/link';
-import axios from 'axios';
-import { useRouter } from 'next/navigation';
+import Link from "next/link";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 export default function ProfileMenu() {
   const router = useRouter();
@@ -9,19 +9,19 @@ export default function ProfileMenu() {
   const handleLogout = async () => {
     try {
       // เรียก API เพื่อ remove cookie
-      await axios.get('http://localhost:3000/api/removeCookie', {
+      await axios.get("http://localhost:3000/api/removeCookie", {
         withCredentials: true, // เพื่อส่ง cookie ไปด้วย
       });
 
       // เปลี่ยนเส้นทางไปยังหน้าแรก
-      router.push('/');
+      router.push("/");
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error("Error during logout:", error);
     }
   };
 
   return (
-    <div className="absolute right-2 mt-44 w-40 bg-white rounded-lg shadow-lg border border-gray-300">
+    <div className="absolute right-2 mt-44 w-40 bg-white rounded-lg shadow-lg border border-gray-300 z-50">
       <div className="flex flex-col text-start">
         <Link
           href="/profile"

@@ -29,14 +29,18 @@ export default function Question({ quizData }) {
         ...section,
         questions: section.questions.map((question) => ({
           ...question,
-          correct_answer: Array.isArray(question.correct_answer) ? question.correct_answer : [], // ตรวจสอบว่าเป็น Array จริง
-          maxSelect: question.maxSelect || 1, // ค่าเริ่มต้นสำหรับ maxSelect
-          ratingLevel: question.ratingLevel || 1, // ค่าเริ่มต้นสำหรับ ratingLevel
+          required: question.required || false, // ตรวจสอบให้แน่ใจว่า required ถูกกำหนดค่า
+          correct_answer: Array.isArray(question.correct_answer) ? question.correct_answer : [],
+          maxSelect: question.maxSelect || 1,
+          ratingLevel: question.ratingLevel || 1,
         })),
       }));
-      setSections(updatedSections); // อัปเดต State
+            console.log("updatedSections:",updatedSections);
+
+      setSections(updatedSections); // อัปเดต state
     }
   }, [quizData]);
+  
 
   useEffect(() => {
     if (quizData?.sections) {
@@ -56,7 +60,6 @@ export default function Question({ quizData }) {
   
   
   console.log("quizData:", quizData);
-  
 
   const addSection = async () => {
     const newSection = {
@@ -556,32 +559,46 @@ const toggleCorrectOption = async (sectionId, questionId, optionId) => {
   };
   
 
-  const toggleRequired = (sectionId, questionId) => {
-    const updatedSections = sections.map((section) => {
-      if (section.section_id === sectionId) {
-        return {
-          ...section,
-          questions: section.questions.map((question) => {
-            if (question.question_id === questionId) {
-              const updatedQuestion = {
-                ...question,
-                isRequired: !question.isRequired,
-              };
-              // Autosave question's required state
-              handleAutosaveForQuestion(sectionId, questionId, {
-                required: updatedQuestion.isRequired,
-              });
-              return updatedQuestion;
+  const toggleRequired = async (sectionId, questionId) => {
+    setSections((prevSections) =>
+      prevSections.map((section) =>
+        section.section_id === sectionId
+          ? {
+              ...section,
+              questions: section.questions.map((question) =>
+                question.question_id === questionId
+                  ? { ...question, required: !question.required }
+                  : question
+              ),
             }
-            return question;
-          }),
-        };
+          : section
+      )
+    );
+  
+    try {
+      const updatedQuestion = sections
+        .find((section) => section.section_id === sectionId)
+        ?.questions.find((question) => question.question_id === questionId);
+  
+      if (!updatedQuestion) {
+        console.error("Question not found");
+        return;
       }
-      return section;
-    });
-
-    setSections(updatedSections);
+  
+      console.log("Updating required to:", !updatedQuestion.required);
+  
+      await axios.patch(
+        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
+        { required: !updatedQuestion.required} // ส่งค่าไปยัง API
+      );
+  
+      console.log("Required status updated successfully");
+    } catch (error) {
+      console.error("Failed to update required status:", error);
+    }
   };
+  
+  
 
   const deleteQuestion = async (sectionId, questionId) => {
     try {

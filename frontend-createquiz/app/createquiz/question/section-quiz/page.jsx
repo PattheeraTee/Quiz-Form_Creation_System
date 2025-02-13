@@ -281,16 +281,13 @@ const Section = ({
                   {/* Required Toggle */}
                   <div className="flex items-center">
                     <span className="text-black mr-2">จำเป็น</span>
+                    <span className="text-gray-500 mr-2">
+                      </span>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={question.isRequired}
-                        onChange={() =>
-                          toggleRequired(
-                            section.section_id,
-                            question.question_id
-                          )
-                        }
+                        checked={question.required}
+                        onChange={() => toggleRequired(section.section_id, question.question_id)}
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-gray-300 rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#03A9F4]"></div>
@@ -452,7 +449,7 @@ const Section = ({
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={question.isRequired}
+                        checked={question.required}
                         onChange={() =>
                           toggleRequired(
                             section.section_id,
@@ -584,7 +581,7 @@ const Section = ({
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={question.isRequired}
+                        checked={question.required}
                         onChange={() =>
                           toggleRequired(
                             section.section_id,
@@ -776,7 +773,7 @@ const Section = ({
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={question.isRequired}
+                        checked={question.required}
                         onChange={() =>
                           toggleRequired(
                             section.section_id,
@@ -827,7 +824,7 @@ const Section = ({
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={question.isRequired}
+                        checked={question.required}
                         onChange={() =>
                           toggleRequired(
                             section.section_id,
@@ -895,7 +892,7 @@ const Section = ({
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={question.isRequired}
+                        checked={question.required}
                         onChange={() =>
                           toggleRequired(
                             section.section_id,

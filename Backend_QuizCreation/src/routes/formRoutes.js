@@ -6,7 +6,7 @@ const formController = require('../controller/formController');
 // ดึง Forms ทั้งหมดของ User
 router.get('/user/:userId', formController.getFormsByUser);
 
-// เส้นทางสำหรับดึงข้อมูลแบบฟอร์ม
+// เส้นทางสำหรับดึงข้อมูลแบบฟอร์
 router.get('/:formId', formController.getForm);
 // เส้นทางสำหรับสร้างแบบฟอร์มใหม่
 router.post('/create', formController.createForm);

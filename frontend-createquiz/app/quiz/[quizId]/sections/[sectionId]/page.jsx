@@ -187,15 +187,39 @@ export default function SectionPage({ params,searchParams }) {
   const handleSubmit = async () => {
     if (validateResponses()) {
       const finalResponses = saveCurrentResponses();
-      const payload = {
+      let payload = {
         form_id: quizId,
-        email: "testuser@example.com",
         answers: [...allResponses, ...finalResponses],
       };
-
+  
+      try {
+        // 🔹 ตรวจสอบ cookie ว่ามี userId หรือไม่
+        const cookieResponse = await axios.get("http://localhost:3000/api/getCookie", {
+          withCredentials: true,
+        });
+  
+        const userId = cookieResponse.data.userId;
+  
+        if (userId) {
+          // 🔹 ดึงข้อมูล user ถ้ามี userId
+          const userResponse = await axios.get(`http://localhost:3001/users/${userId}`, {
+            headers: { "Content-Type": "application/json" },
+            withCredentials: true,
+          });
+  
+          const userEmail = userResponse.data.email;
+          if (userEmail) {
+            payload.email = userEmail; // 🔹 เพิ่ม email ใน payload ถ้ามี
+          }
+        }
+      } catch (error) {
+        console.warn("No valid cookie or user data found, submitting without email.");
+      }
+  
       try {
         const response = await axios.post("http://localhost:3001/response/submit", payload);
         console.log("Submission response:", response.data);
+        // console.log("Submission payload:", payload);
         router.push(`/quiz/${quizId}/success`);
       } catch (error) {
         console.error("Error submitting responses:", error);
@@ -203,6 +227,7 @@ export default function SectionPage({ params,searchParams }) {
       }
     }
   };
+  
 
   const validateResponses = () => {
     const unansweredRequiredQuestions = section.questions.filter(
@@ -224,15 +249,10 @@ export default function SectionPage({ params,searchParams }) {
     allSections.findIndex((sec) => sec.id === sectionId) ===
     allSections.length - 1;
 
-    const backgroundImageUrl = "@app/components/images/backgroud-cloud-vertical.svg";
-
   return (
     <div  className="min-h-screen flex flex-col"
     style={{
-      backgroundImage: `linear-gradient(to bottom, ${theme.primaryColor}10, ${theme.primaryColor}), url(${backgroundImageUrl})`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-      backgroundRepeat: "no-repeat",
+      backgroundImage: `linear-gradient(to bottom, ${theme.primaryColor}10, ${theme.primaryColor})`,
     }}>
       <QuizHeader />
       <div
@@ -243,9 +263,7 @@ export default function SectionPage({ params,searchParams }) {
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
         }}
-        
       >     
-      {/* <Image src={BackgroundVertical} alt="background" layout="fill" objectFit="cover" />    */}
         <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl relative z-10">
         {section.title && (
             <h1 className="text-xl font-bold mb-4">{section.title}</h1>

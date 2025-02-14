@@ -17,10 +17,9 @@ export default function SettingsForm() {
   const [endTime, setEndTime] = useState("00:00");
   const [shuffleQuestions, setShuffleQuestions] = useState(false);
 
-  // Utility: Get current date and time adjusted to Thai timezone (GMT+7)
   const getCurrentThaiDateTime = () => {
     const now = new Date();
-    const offset = 7 * 60 * 60 * 1000; // GMT+7 in milliseconds
+    const offset = 7 * 60 * 60 * 1000;
     const thaiTime = new Date(now.getTime() + offset);
     const thaiDate = thaiTime.toISOString().split("T")[0];
     const thaiTimeString = thaiTime.toTimeString().split(" ")[0].slice(0, 5);
@@ -30,50 +29,36 @@ export default function SettingsForm() {
   const { thaiDate, thaiTimeString } = getCurrentThaiDateTime();
 
   const fetchFormData = async () => {
-    if (form_id) {
-      try {
-        const response = await axios.get(
-          `http://localhost:3001/form/${form_id}`
-        );
-        const formData = response.data;
+    if (!form_id) return;
 
-        // Update state based on fetched data
-        setEmailIncluded(!!formData.form.email_require);
-        setLimitToOneResponse(!!formData.form.limit_one_response);
-        setAllowResponse(!!formData.form.is_form_open);
+    try {
+      const response = await axios.get(`http://localhost:3001/form/${form_id}`);
+      const formData = response.data.form;
 
-        if (formData.form.start_date) {
-          const startDateTime = new Date(formData.form.start_date);
-          setEnableStartDate(true);
+      setEmailIncluded(!!formData.email_require);
+      setLimitToOneResponse(!!formData.limit_one_response);
+      setAllowResponse(!!formData.is_form_open);
+      setShuffleQuestions(!!formData.shuffle_question);
 
-          // Convert date to local format
-          const localStartDate = new Date(
-            startDateTime.getTime() - startDateTime.getTimezoneOffset() * 60000
-          );
-          setStartDate(localStartDate.toISOString().split("T")[0]);
-          setStartTime(localStartDate.toTimeString().split(" ")[0].slice(0, 5));
-        } else {
-          setEnableStartDate(false);
-        }
-
-        if (formData.form.end_date) {
-          const endDateTime = new Date(formData.form.end_date);
-          setEnableEndDate(true);
-
-          // Convert date to local format
-          const localEndDate = new Date(
-            endDateTime.getTime() - endDateTime.getTimezoneOffset() * 60000
-          );
-          setEndDate(localEndDate.toISOString().split("T")[0]);
-          setEndTime(localEndDate.toTimeString().split(" ")[0].slice(0, 5));
-        } else {
-          setEnableEndDate(false);
-        }
-
-        setShuffleQuestions(!!formData.form.shuffle_question);
-      } catch (error) {
-        console.error("Error fetching form data:", error);
+      if (formData.start_date) {
+        setEnableStartDate(true);
+        const [datePart, timePart] = formData.start_date.split("T");
+        setStartDate(datePart);
+        setStartTime(timePart.slice(0, 5));
+      } else {
+        setEnableStartDate(false);
       }
+
+      if (formData.end_date) {
+        setEnableEndDate(true);
+        const [datePart, timePart] = formData.end_date.split("T");
+        setEndDate(datePart);
+        setEndTime(timePart.slice(0, 5));
+      } else {
+        setEnableEndDate(false);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching form data:", error);
     }
   };
 
@@ -87,17 +72,42 @@ export default function SettingsForm() {
     fetchFormData();
   }, [form_id]);
 
-  // Update form data function
+  useEffect(() => {
+    if (enableStartDate && startDate && startTime) {
+      updateForm("start_date", { date: startDate, time: startTime });
+    }
+  }, [enableStartDate, startDate, startTime]);
+
+  // ✅ ส่งค่า end_date ไป API หลังจาก state อัปเดตแล้ว
+  useEffect(() => {
+    if (enableEndDate && endDate && endTime) {
+      updateForm("end_date", { date: endDate, time: endTime });
+    }
+  }, [enableEndDate, endDate, endTime]);
+
+  // ✅ ฟังก์ชันอัปเดตค่าไปยัง API
   const updateForm = (key, value) => {
+    let updateValue = value;
+
+    if (key === "start_date" || key === "end_date") {
+      if (!value || !value.date || !value.time) {
+        updateValue = null;
+      } else {
+        // ✅ สร้าง Date Object โดยใช้ค่า Local (ไม่ปรับเวลา)
+        const localDateTime = new Date(`${value.date}T${value.time}:00`);
+        const utcDateTime = new Date(
+          localDateTime.getTime() - localDateTime.getTimezoneOffset() * 60000
+        );
+        updateValue = utcDateTime.toISOString(); // ✅ ส่งเป็น ISO พร้อม `Z`
+      }
+    }
+
+    console.log(`🛠 [Debug] ${key} ส่งค่าไป API:`, updateValue);
+
     axios
-      .patch(`http://localhost:3001/form/${form_id}`, { [key]: value })
-      .then(() => {
-        console.log(`${key} updated successfully.`);
-        fetchFormData(); // Refresh state after update
-      })
-      .catch((error) => {
-        console.error(`Error updating ${key}:`, error);
-      });
+      .patch(`http://localhost:3001/form/${form_id}`, { [key]: updateValue })
+      .then(() => console.log(`${key} updated successfully.`))
+      .catch((error) => console.error(`❌ Error updating ${key}:`, error));
   };
 
   const generateTimeOptions = () => {
@@ -114,11 +124,8 @@ export default function SettingsForm() {
 
   const isPastDateTime = (date, time) => {
     const selectedDateTime = new Date(`${date}T${time}:00`);
-
-    // Adjust current time to Thai timezone (GMT+7)
     const now = new Date();
     const currentThaiTime = new Date(now.getTime());
-
     return selectedDateTime < currentThaiTime;
   };
 
@@ -172,12 +179,18 @@ export default function SettingsForm() {
               type="checkbox"
               checked={enableStartDate}
               onChange={(e) => {
-                setEnableStartDate(e.target.checked);
-                if (!e.target.checked) {
+                const checked = e.target.checked;
+                setEnableStartDate(checked);
+
+                if (!checked) {
                   setStartDate("");
                   setStartTime("00:00");
-                  updateForm("start_date", null);
                 }
+
+                updateForm(
+                  "start_date",
+                  checked ? { date: startDate, time: startTime } : null
+                );
               }}
               className="mr-2"
             />
@@ -190,17 +203,14 @@ export default function SettingsForm() {
                 value={startDate}
                 onChange={(e) => {
                   handleDateChange(setStartDate, e.target.value);
-                  updateForm("start_date", `${e.target.value}T${startTime}:00`);
                 }}
                 className="mr-2 p-2 border rounded"
                 min={thaiDate}
               />
-
               <select
                 value={startTime}
                 onChange={(e) => {
-                  setStartTime(e.target.value);
-                  updateForm("start_date", `${startDate}T${e.target.value}:00`);
+                  setStartTime(e.target.value); // ✅ อัปเดตค่าอย่างเดียว
                 }}
                 className="p-2 border rounded"
               >
@@ -223,17 +233,22 @@ export default function SettingsForm() {
               type="checkbox"
               checked={enableEndDate}
               onChange={(e) => {
-                setEnableEndDate(e.target.checked);
-                if (!e.target.checked) {
+                const isChecked = e.target.checked;
+                setEnableEndDate(isChecked);
+
+                if (!isChecked) {
                   setEndDate("");
                   setEndTime("00:00");
-                  updateForm("end_date", null);
+                  updateForm("end_date", null); // ✅ ส่งค่า `null` เมื่อ uncheck
+                } else {
+                  updateForm("end_date", { date: endDate, time: endTime });
                 }
               }}
               className="mr-2"
             />
             วันที่สิ้นสุด
           </label>
+
           {enableEndDate && (
             <div className="flex items-center">
               <input

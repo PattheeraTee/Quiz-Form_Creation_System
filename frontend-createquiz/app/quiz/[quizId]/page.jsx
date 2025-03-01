@@ -22,12 +22,19 @@ export default function Coverpage({ params }) {
       const formData = response.data;
 
       // Extract necessary fields
-      const { is_form_open, start_date, end_date, email_require } = formData.form;
+      const { is_form_open, start_date, end_date, email_require } =
+        formData.form;
 
       // Handle form conditions
       const now = new Date();
-      const startDate = start_date ? new Date(start_date) : null;
-      const endDate = end_date ? new Date(end_date) : null;
+      const timeZoneOffset = 7 * 60 * 60 * 1000; // GMT+7 (เวลาประเทศไทย)
+      
+      const startDate = start_date ? new Date(new Date(start_date).getTime() - timeZoneOffset) : null;
+      const endDate = end_date ? new Date(new Date(end_date).getTime() - timeZoneOffset) : null;
+  
+      console.log("Start date (TH):", startDate ? startDate.toLocaleString("th-TH", { hour12: false }) : "N/A");
+      console.log("End date (TH):", endDate ? endDate.toLocaleString("th-TH", { hour12: false }) : "N/A");
+  
 
       if (!is_form_open) {
         setFormStatus("closed");
@@ -38,9 +45,12 @@ export default function Coverpage({ params }) {
       } else {
         if (email_require) {
           try {
-            const cookieResponse = await axios.get("http://localhost:3000/api/getCookie", {
-              withCredentials: true,
-            });
+            const cookieResponse = await axios.get(
+              "http://localhost:3000/api/getCookie",
+              {
+                withCredentials: true,
+              }
+            );
             const userId = cookieResponse.data.userId;
 
             if (!userId) {
@@ -107,6 +117,10 @@ export default function Coverpage({ params }) {
     fetchFormData();
   }, [quizId]);
 
+  useEffect(() => {
+    console.log("Form status:", formStatus);
+  }, [formStatus]);
+
   const handleStartQuiz = () => {
     if (quiz && quiz.sections.length > 0) {
       const firstSectionId = quiz.sections[0].id;
@@ -151,6 +165,8 @@ export default function Coverpage({ params }) {
               <p className="text-gray-600 mb-6">
                 {formStatus === "closed"
                   ? "แบบฟอร์มนี้ไม่รับคำตอบแล้ว"
+                  : formStatus === "not_started"
+                  ? "แบบฟอร์มนี้ยังไม่เปิดให้ทำ"
                   : coverPage.description}
               </p>
               {formStatus === "open" && (

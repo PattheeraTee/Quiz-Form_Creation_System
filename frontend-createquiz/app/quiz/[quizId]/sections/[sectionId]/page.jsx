@@ -9,17 +9,19 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import BackgroundHorizental from "../../../../components/images/backgroud-cloud-horizental.svg";
 import Image from "next/image";
 
-export default function SectionPage({ params,searchParams }) {
+export default function SectionPage({ params, searchParams }) {
   const { quizId, sectionId } = params;
   const router = useRouter();
   const [section, setSection] = useState(null);
   const [allSections, setAllSections] = useState([]);
-  const [responses, setResponses] = useState({}); 
+  const [responses, setResponses] = useState({});
   const [allResponses, setAllResponses] = useState(
     searchParams.allResponses ? JSON.parse(searchParams.allResponses) : []
   );
   const [theme, setTheme] = useState(
-    searchParams.theme ? JSON.parse(decodeURIComponent(searchParams.theme)) : null
+    searchParams.theme
+      ? JSON.parse(decodeURIComponent(searchParams.theme))
+      : null
   );
 
   const fetchTheme = async () => {
@@ -39,6 +41,10 @@ export default function SectionPage({ params,searchParams }) {
     fetchTheme();
   }, [quizId]);
 
+  const shuffleArray = (array) => {
+    return array.sort(() => Math.random() - 0.5);
+  };
+
   useEffect(() => {
     const fetchSectionData = async () => {
       try {
@@ -47,22 +53,31 @@ export default function SectionPage({ params,searchParams }) {
         );
         const data = response.data;
 
-        const formattedSections = (data.sections || []).map((section) => ({
-          id: section.section_id || "unknown_id",
-          title: section.title || null, // Set null if no title
-          description: section.description || null, // Set null if no description
-          questions: (section.questions || []).map((question) => ({
-            id: question.question_id || "unknown_question_id",
-            text: question.question || "Untitled Question",
-            type: question.type || "unknown_type",
-            required: question.required || false, // Include required field
-            options: (question.options || []).map((option) => ({
-              id: option.option_id || "unknown_option_id",
-              text: option.text || "Untitled Option",
+        const formattedSections = (data.sections || []).map((section) => {
+          let questions = section.questions || [];
+
+          // เช็คว่าแบบฟอร์มตั้งค่าให้สุ่มคำถามหรือไม่
+          if (data.form.shuffle_question) {
+            questions = shuffleArray([...questions]);
+          }
+
+          return {
+            id: section.section_id || "unknown_id",
+            title: section.title || null,
+            description: section.description || null,
+            questions: questions.map((question) => ({
+              id: question.question_id || "unknown_question_id",
+              text: question.question || "Untitled Question",
+              type: question.type || "unknown_type",
+              required: question.required || false,
+              options: (question.options || []).map((option) => ({
+                id: option.option_id || "unknown_option_id",
+                text: option.text || "Untitled Option",
+              })),
+              limit: question.limit || null,
             })),
-            limit: question.limit || null, // Add limit for specific question types
-          })),
-        }));
+          };
+        });
 
         setAllSections(formattedSections);
 
@@ -150,7 +165,6 @@ export default function SectionPage({ params,searchParams }) {
     return currentResponses; // Return to pass along in query params
   };
 
-
   const handleNext = () => {
     if (validateResponses()) {
       const currentResponses = saveCurrentResponses();
@@ -166,15 +180,13 @@ export default function SectionPage({ params,searchParams }) {
         );
       }
     }
-  }; 
+  };
 
   const handlePrevious = () => {
     const currentIndex = allSections.findIndex((sec) => sec.id === sectionId);
     const prevSectionId = allSections[currentIndex - 1]?.id;
     if (prevSectionId) {
-      const encodedResponses = encodeURIComponent(
-        JSON.stringify(allResponses)
-      );
+      const encodedResponses = encodeURIComponent(JSON.stringify(allResponses));
       const encodedTheme = encodeURIComponent(JSON.stringify(theme));
       router.push(
         `/quiz/${quizId}/sections/${prevSectionId}?allResponses=${encodedResponses}&theme=${encodedTheme}`
@@ -191,33 +203,44 @@ export default function SectionPage({ params,searchParams }) {
         form_id: quizId,
         answers: [...allResponses, ...finalResponses],
       };
-  
+
       try {
         // 🔹 ตรวจสอบ cookie ว่ามี userId หรือไม่
-        const cookieResponse = await axios.get("http://localhost:3000/api/getCookie", {
-          withCredentials: true,
-        });
-  
+        const cookieResponse = await axios.get(
+          "http://localhost:3000/api/getCookie",
+          {
+            withCredentials: true,
+          }
+        );
+
         const userId = cookieResponse.data.userId;
-  
+
         if (userId) {
           // 🔹 ดึงข้อมูล user ถ้ามี userId
-          const userResponse = await axios.get(`http://localhost:3001/users/${userId}`, {
-            headers: { "Content-Type": "application/json" },
-            withCredentials: true,
-          });
-  
+          const userResponse = await axios.get(
+            `http://localhost:3001/users/${userId}`,
+            {
+              headers: { "Content-Type": "application/json" },
+              withCredentials: true,
+            }
+          );
+
           const userEmail = userResponse.data.email;
           if (userEmail) {
             payload.email = userEmail; // 🔹 เพิ่ม email ใน payload ถ้ามี
           }
         }
       } catch (error) {
-        console.warn("No valid cookie or user data found, submitting without email.");
+        console.warn(
+          "No valid cookie or user data found, submitting without email."
+        );
       }
-  
+
       try {
-        const response = await axios.post("http://localhost:3001/response/submit", payload);
+        const response = await axios.post(
+          "http://localhost:3001/response/submit",
+          payload
+        );
         console.log("Submission response:", response.data);
         // console.log("Submission payload:", payload);
         router.push(`/quiz/${quizId}/success`);
@@ -227,12 +250,13 @@ export default function SectionPage({ params,searchParams }) {
       }
     }
   };
-  
 
   const validateResponses = () => {
     const unansweredRequiredQuestions = section.questions.filter(
       (question) =>
-        question.required && (responses[question.id] === undefined || responses[question.id]?.length === 0)
+        question.required &&
+        (responses[question.id] === undefined ||
+          responses[question.id]?.length === 0)
     );
 
     if (unansweredRequiredQuestions.length > 0) {
@@ -250,10 +274,12 @@ export default function SectionPage({ params,searchParams }) {
     allSections.length - 1;
 
   return (
-    <div  className="min-h-screen flex flex-col"
-    style={{
-      backgroundImage: `linear-gradient(to bottom, ${theme.primaryColor}10, ${theme.primaryColor})`,
-    }}>
+    <div
+      className="min-h-screen flex flex-col"
+      style={{
+        backgroundImage: `linear-gradient(to bottom, ${theme.primaryColor}10, ${theme.primaryColor})`,
+      }}
+    >
       <QuizHeader />
       <div
         className="flex-grow flex items-center justify-center p-8"
@@ -263,9 +289,9 @@ export default function SectionPage({ params,searchParams }) {
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
         }}
-      >     
+      >
         <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl relative z-10">
-        {section.title && (
+          {section.title && (
             <h1 className="text-xl font-bold mb-4">{section.title}</h1>
           )}
           {section.description && (

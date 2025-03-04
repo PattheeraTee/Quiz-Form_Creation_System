@@ -13,46 +13,101 @@ const userRepository = require('../repository/userRepository');
 //สร้างฟอร์มใหม่
 exports.createNewForm = async (requestData) => {
     try {
-        // สร้าง ID ล่วงหน้า
         const formId = uuidv4();
         const coverPageId = uuidv4();
         const themeId = uuidv4();
-        const sectionId = uuidv4();
+        const sectionIds = []; // เก็บ section_id ทั้งหมด
+        const sections = [];
 
-        // สร้าง Coverpage
+        //สร้าง Coverpage
         const coverPage = await coverpageRepository.createCoverpage({
             cover_page_id: coverPageId,
-            form_id: formId
+            form_id: formId,
+            ...requestData.cover_page,
         });
 
-        // สร้าง Theme
+        //สร้าง Theme
         const theme = await themeRepository.createTheme({
             theme_id: themeId,
             form_id: formId,
+            ...requestData.theme,
         });
 
-        // สร้าง Section
-        const section = await sectionRepository.createSection({
-            section_id: sectionId,
-            form_id: formId
-        });
+        //ตรวจสอบว่ามี `sections` หรือไม่ ถ้าไม่มีให้สร้าง default section
+        const sectionsData = requestData.sections ?? []; // ถ้า sections เป็น undefined/null ให้ใช้ []
 
-        // สร้าง Form และเชื่อมโยงกับ Coverpage, Theme, และ Section
+        //ถ้าไม่มี sections ให้สร้าง section เปล่า 1 อัน **แต่ไม่ต้อง push เข้า sectionsData**
+        if (sectionsData.length === 0) {
+            const defaultSectionId = uuidv4();
+            sectionIds.push(defaultSectionId);
+
+            const defaultSection = await sectionRepository.createSection({
+                section_id: defaultSectionId,
+                form_id: formId,
+            });
+
+            sections.push(defaultSection);
+        }
+
+        //สร้าง Sections พร้อม Questions และ Options (เฉพาะที่ถูกส่งมา)
+        let sectionNumber = 1; // ใช้สำหรับกำหนดลำดับของ section
+        for (const sectionData of sectionsData) {
+            const sectionId = uuidv4();
+            sectionIds.push(sectionId);
+
+            const questionIds = [];
+
+            for (const questionData of sectionData.questions ?? []) { // ถ้าไม่มี questions ให้ใช้ []
+                const questionId = uuidv4();
+
+                //สร้างคำถาม
+                const question = await questionRepository.createQuestion({
+                    question_id: questionId,
+                    section_id: sectionId,
+                    ...questionData,
+                });
+
+                questionIds.push(questionId);
+
+                //ถ้ามี options ให้เพิ่ม
+                if (Array.isArray(questionData.options) && questionData.options.length > 0) {
+                    const optionList = questionData.options.map(option => ({
+                        option_id: uuidv4(),
+                        text: option.text,
+                        is_correct: option.is_correct || false,
+                    }));
+
+                    await questionRepository.updateQuestion(questionId, { options: optionList });
+                }
+            }
+
+            //สร้าง Section และบันทึกเฉพาะ question_id
+            const section = await sectionRepository.createSection({
+                section_id: sectionId,
+                form_id: formId,
+                number: sectionNumber++,
+                questions: questionIds,
+            });
+
+            sections.push(section);
+        }
+
+        //สร้าง Form และเชื่อมโยงกับ Coverpage, Theme, Sections
         const form = await formRepository.createForm({
             form_id: formId,
             user_id: requestData.user_id,
             form_type: requestData.form_type,
             cover_page_id: coverPageId,
             theme_id: themeId,
-            section_id: [sectionId],
-            result_id: [], // ค่าเริ่มต้นสำหรับ result_id
+            section_id: sectionIds,
+            result_id: [],
         });
 
-        // อัปเดต forms array ใน User
+        //อัปเดต forms array ใน User
         await userRepository.addFormToUser(requestData.user_id, formId);
 
-        // ส่งคืนผลลัพธ์
-        return { form, coverPage, theme, section };
+        //ส่งคืนผลลัพธ์
+        return { form, coverPage, theme, sections };
     } catch (error) {
         throw new Error(`เกิดข้อผิดพลาดในการสร้างฟอร์ม: ${error.message}`);
     }
@@ -116,35 +171,56 @@ exports.deleteForm = async (formId) => {
     try {
         // ตรวจสอบว่า Form มีอยู่
         const form = await formRepository.validateFormExistence(formId);
-
-        // ลบ Coverpage
-        await coverpageRepository.deleteCoverpage(form.cover_page_id);
-
-        // ลบ Sections ที่เกี่ยวข้อง
-        if (form.section_id && form.section_id.length > 0) {
-            await sectionRepository.deleteSections(form.section_id);
+        
+        if (!form) {
+            throw new Error(`Form with ID ${formId} not found`);
         }
 
-        // ลบ Results ที่เกี่ยวข้อง
-        if (form.result_id && form.result_id.length > 0) {
-            await resultRepository.deleteResults(form.result_id);
+        //ลบ Coverpage
+        if (form.cover_page_id) {
+            await coverpageRepository.deleteCoverpage(form.cover_page_id);
         }
 
-        // ลบ Theme
-        await themeRepository.deleteTheme(form.theme_id);
+        //ลบ Theme
+        if (form.theme_id) {
+            await themeRepository.deleteTheme(form.theme_id);
+        }
 
-        // ลบ Responses ที่เกี่ยวข้อง
+        //ลบ Responses ที่เกี่ยวข้อง
         if (form.response && form.response.length > 0) {
             await responseRepository.deleteResponses(form.response);
         }
 
-        // ลบ Form
+        //ลบ Results ที่เกี่ยวข้อง
+        if (form.result_id && form.result_id.length > 0) {
+            await resultRepository.deleteResults(form.result_id);
+        }
+
+        //ลบ Sections และ Questions ที่เกี่ยวข้อง
+        if (form.section_id && form.section_id.length > 0) {
+            for (const sectionId of form.section_id) {
+                // ดึง questions ใน section นี้
+                const section = await sectionRepository.getSectionById(sectionId);
+                
+                if (section && section.questions && section.questions.length > 0) {
+                    for (const questionId of section.questions) {
+                        // ลบ question
+                        await questionRepository.deleteQuestion(questionId);
+                    }
+                }
+
+                // ลบ Section
+                await sectionRepository.deleteSection(sectionId);
+            }
+        }
+
+        //ลบ Form
         await formRepository.deleteForm(formId);
 
-        // ลบ form_id จาก User
+        //ลบ form_id ออกจาก User
         await userRepository.removeFormFromUser(form.user_id, formId);
 
-        return { message: 'Form and related data deleted successfully' };
+        return { message: 'Form and all related data deleted successfully' };
     } catch (error) {
         throw new Error(`Error deleting form: ${error.message}`);
     }
@@ -201,5 +277,4 @@ exports.getFormsByUser = async (userId) => {
     } catch (error) {
       throw new Error(`Error fetching forms: ${error.message}`);
     }
-  };
-  
+};

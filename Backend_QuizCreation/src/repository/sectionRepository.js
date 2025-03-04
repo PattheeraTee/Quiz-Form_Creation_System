@@ -88,3 +88,8 @@ exports.removeQuestionFromSection = async (sectionId, questionId) => {
         { $pull: { questions: questionId } }
     );
 };
+
+// ดึง Section ตาม section_id
+exports.getSectionById = async (sectionId) => {
+    return await Section.findOne({ section_id: sectionId }).lean();
+};

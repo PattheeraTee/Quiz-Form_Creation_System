@@ -6,13 +6,14 @@ import { v4 as uuidv4 } from "uuid";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import Swal from "sweetalert2";
+import axios from "axios";
 
 export default function QuizUploadPage() {
   const [quiz, setQuiz] = useState([]);
   const [quizTitle, setQuizTitle] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [uploadedFileName, setUploadedFileName] = useState("");
-  const [selectedType, setSelectedType] = useState("แบบสำรวจ"); // Default to 'แบบสำรวจ' (survey)
+  const [selectedType, setSelectedType] = useState(""); // Default to 'แบบสำรวจ' (survey)
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -158,94 +159,92 @@ export default function QuizUploadPage() {
   };
 
   const handleSubmit = async () => {
-    // Check if a file has been uploaded
+    // ตรวจสอบว่าอัปโหลดไฟล์หรือยัง
     if (!uploadedFileName) {
-      // Show an alert using SweetAlert if no file is uploaded
       Swal.fire({
         icon: "warning",
         title: "กรุณาอัพโหลดไฟล์",
         text: "คุณต้องอัพโหลดไฟล์ก่อนที่จะดำเนินการสร้างแบบทดสอบ",
         confirmButtonText: "ตกลง",
       });
-      return; // Stop further execution if no file is uploaded
+      return;
     }
 
-    const quizId = uuidv4(); // Generate a unique ID for the quiz
-    const userId = "user2"; // Hardcoded userId for now
-    const type = "แบบสำรวจ"; // Quiz type (can be modified as needed)
-    const coverPageTitle = quizTitle; // Use file name as quiz title
-    const description = "คำอธิบาย"; // Description of the quiz
-    const buttonText = "เริ่มต้น"; // Button text for the quiz cover page
-
-    // Prepare a single section that contains all questions
-    const singleSection = {
-      sectionId: uuidv4(),
-      sectionNumber: 1, // Only one section
-      sectionTitle: "Quiz Section", // Title for the section
-      sectionDescription: "This section contains all the quiz questions.", // Description for the section
-      questions: quiz.map((question, questionIndex) => ({
-        questionId: uuidv4(),
-        text: question.text,
-        type: question.options.length > 0 ? "Multiple Choice" : "Text", // Dynamic type based on options
-        imagePath: question.imageUrl || null, // Image URL if available
-        required: true, // Assuming all questions are required
-        points: question.points || 5, // Default to 5 points if not specified
-        options: question.options.map((option) => ({
-          optionId: uuidv4(),
-          text: option.text,
-          imagePath: option.option_image_url || null, // Option image URL if available
-          isCorrect: null, // Assuming no correct answer for now
-          weight: null, // Assuming no weight for now
-        })),
-      })),
-    };
-
-    // The overall quiz data structure
-    const quizData = {
-      quizId: quizId,
-      userId: userId,
-      type: type,
-      coverPage: {
-        quizTitle: coverPageTitle,
-        description: description,
-        buttonText: buttonText,
-        imagePath: null, // Assuming no cover image for now
-      },
-      sections: [singleSection], // Include the single section with all questions
-    };
-
-    console.log("Quiz Data to be sent:", JSON.stringify(quizData, null, 2));
-
     try {
-      const response = await fetch("http://localhost:3001/quiz", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(quizData), // Sending the data as JSON
-      });
+      // 🔹 ดึง user_id จาก cookie API โดยใช้ Axios
+      const userResponse = await axios.get(
+        "http://localhost:3000/api/getCookie",
+        {
+          withCredentials: true, // สำคัญเพื่อให้ Axios ดึงค่า cookie ได้
+        }
+      );
 
-      if (!response.ok) {
-        throw new Error("Failed to create quiz");
+      const userId = userResponse.data.userId;
+
+      if (!userId) {
+        throw new Error("User ID not found in cookies");
       }
 
-      const result = await response.json();
-      console.log("Quiz created successfully:", result);
+      const formType = selectedType === "แบบสำรวจ" ? "survey" : "quiz";
+      // 🔹 แปลงข้อมูล Quiz ให้อยู่ในรูปแบบ JSON ที่ต้องการ
+      const formattedQuiz = {
+        user_id: userId,
+        form_type: formType,
+        sections: [
+          {
+            number: 1, // หน้าที่ 1
+            title: "แบบทดสอบ", // ตั้งชื่อ Section
+            description: "คำถามทั้งหมดจากไฟล์ที่อัปโหลด", // คำอธิบาย
+            questions: quiz.map((question) => ({
+              type:
+                question.options.length > 0 ? "multiple_choice" : "text_input",
+              question: question.text,
+              required: true,
+              points: question.points || 1,
+              options: question.options.map((option) => ({
+                text: option.text,
+                is_correct: false,
+              })),
+              ...(question.type === "text_input"
+                ? { correct_answer: [""] }
+                : {}),
+            })),
+          },
+        ],
+      };
 
-      // Show success message using SweetAlert
+      console.log(
+        "📌 JSON ที่จะส่งไป API:",
+        JSON.stringify(formattedQuiz, null, 2)
+      );
+
+      // 🔹 ส่งข้อมูลไปยัง API `/form/create` โดยใช้ Axios
+      const response = await axios.post(
+        "http://localhost:3001/form/create",
+        formattedQuiz,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      // console.log("🔹 สร้างแบบทดสอบ:", formattedQuiz);
+      const formId = response.data.form.form_id;
+      console.log("✅ Quiz created successfully:", response.data);
+      console.log("Form ID:", response.data.form.form_id);
+
+      // 🔹 แจ้งเตือนสำเร็จและเปลี่ยนหน้าไปยังแบบทดสอบที่สร้าง
       Swal.fire({
         icon: "success",
         title: "สร้างแบบทดสอบสำเร็จ!",
         text: "แบบทดสอบของคุณถูกสร้างเรียบร้อยแล้ว.",
         confirmButtonText: "ตกลง",
       }).then(() => {
-        // Redirect to the newly created quiz page
-        window.location.href = `http://localhost:3000/quiz/${quizId}`;
+        window.location.href = `http://localhost:3000/createquiz?type=${formType}&form_id=${formId}`;
       });
     } catch (error) {
-      console.error("Error creating quiz:", error.message);
+      console.error("❌ Error creating quiz:", error);
 
-      // Show error message using SweetAlert
       Swal.fire({
         icon: "error",
         title: "เกิดข้อผิดพลาด",
@@ -485,8 +484,8 @@ export default function QuizUploadPage() {
           onChange={handleFileUpload}
         />
 
-        {/* <p className="text-gray-500 mb-4">เลือกประเภทแบบทดสอบที่ต้องการสร้าง</p> */}
-        {/* <div className="flex space-x-4 mb-6">
+        <p className="text-gray-500 mb-4">เลือกประเภทแบบทดสอบที่ต้องการสร้าง</p>
+        <div className="flex space-x-4 mb-6">
           <button
             className={`border border-gray-300 rounded-lg py-2 px-4 flex items-center space-x-2 ${
               selectedType === "แบบทดสอบ"
@@ -509,7 +508,7 @@ export default function QuizUploadPage() {
             <span className="text-xl">📋</span>
             <span>สร้างแบบสำรวจ</span>
           </button>
-        </div> */}
+        </div>
 
         <div className="flex justify-center mt-6">
           <button

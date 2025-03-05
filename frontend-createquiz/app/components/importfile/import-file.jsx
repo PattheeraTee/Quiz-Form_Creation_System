@@ -199,7 +199,7 @@ export default function QuizUploadPage() {
               type:
                 question.options.length > 0 ? "multiple_choice" : "text_input",
               question: question.text,
-              required: true,
+              // required: true,
               points: question.points || 1,
               options: question.options.map((option) => ({
                 text: option.text,

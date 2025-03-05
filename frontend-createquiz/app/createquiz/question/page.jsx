@@ -152,7 +152,7 @@ export default function Question({ quizData }) {
     }
   };
 
-  const updateOption = (sectionId, questionId, optionId, value) => {
+  const updateOption = (sectionId, questionId, optionId, value = null, weight = null) => {
     setSections((prevSections) =>
       prevSections.map((section) =>
         section.section_id === sectionId
@@ -164,7 +164,11 @@ export default function Question({ quizData }) {
                       ...question,
                       options: question.options.map((option) =>
                         option.option_id === optionId
-                          ? { ...option, text: value }
+                          ? { 
+                              ...option, 
+                              ...(value !== null && { text: value }), // อัปเดตข้อความตัวเลือก
+                              ...(weight !== null && { weight }) // อัปเดต weight ถ้ามีค่า
+                            }
                           : option
                       ),
                     }
@@ -175,22 +179,18 @@ export default function Question({ quizData }) {
       )
     );
   
-    // Autosave the updated option using option_id
-    autosaveOption(questionId, optionId, { text: value });
+    // ส่งค่าไปยัง API เพื่ออัปเดตในฐานข้อมูล
+    autosaveOption(questionId, optionId, { ...(value !== null && { text: value }), ...(weight !== null && { weight }) });
   };
-  
   
   const autosaveOption = async (questionId, optionId, updates) => {
     try {
-      const response = await axios.patch(
-        `http://localhost:3001/form/${questionId}/options/${optionId}`,
-        updates
-      );
+      await axios.patch(`http://localhost:3001/form/${questionId}/options/${optionId}`, updates);
+      console.log("✅ Option updated successfully:", updates);
     } catch (error) {
-      console.error("Option autosave failed:", error);
+      console.error("❌ Option autosave failed:", error);
     }
   };
-  
   
 
   const updateRatingLevel = async (sectionId, questionId, value) => {
@@ -775,6 +775,16 @@ const toggleCorrectOption = async (sectionId, questionId, optionId) => {
       console.error("Question autosave failed:", error);
     }
   };
+
+  const handleWeightChange = async (sectionId, questionId, optionId, newWeight) => {
+    try {
+      console.log(`🔹 Updating weight for option ${optionId} to ${newWeight}`);
+      updateOption(sectionId, questionId, optionId, null, newWeight); // อัปเดต UI และส่ง API PATCH
+    } catch (error) {
+      console.error("❌ Error updating weight:", error);
+    }
+  };
+  
   
   
   const renderSectionComponent = () => {
@@ -844,20 +854,27 @@ const toggleCorrectOption = async (sectionId, questionId, optionId) => {
         case "psychology":
           return (
             <SectionPsychology
-              key={section.section_id}
-              section={section} /* other props */
-              questionTypes={questionTypes}
-              addQuestion={addQuestion}
-              updateOption={updateOption}
-              updateRatingLevel={updateRatingLevel}
-              addOption={addOption}
-              removeOption={removeOption}
-              updateMaxSelect={updateMaxSelect}
-              toggleRequired={toggleRequired}
-              deleteQuestion={deleteQuestion}
-              deleteSection={deleteSection}
-              toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
-              addSection={addSection}
+            key={section.section_id}
+            section={section}
+            questionTypes={questionTypes}
+            addQuestion={addQuestion}
+            updateOption={updateOption}
+            updateRatingLevel={updateRatingLevel}
+            addOption={addOption}
+            removeOption={removeOption}
+            updateMaxSelect={updateMaxSelect}
+            toggleRequired={toggleRequired}
+            deleteQuestion={deleteQuestion}
+            deleteSection={deleteSection}
+            toggleQuestionTypesVisibility={toggleQuestionTypesVisibility}
+            addSection={addSection}
+            handleUploadImage={handleUploadImage}
+            updateSectionTitle={updateSectionTitle}
+            updateSectionDescription={updateSectionDescription}
+            updateQuestion={updateQuestion}
+            handleAutosaveForQuestion={handleAutosaveForQuestion}
+            formId={quizData?.form?.form_id} 
+              handleWeightChange={handleWeightChange}
             />
           );
         default:

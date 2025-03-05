@@ -35,7 +35,7 @@ export default function LoginForm() {
         router.push(redirectPath);
       }
     } catch (error) {
-      if (error.response && error.response.status === 401) {
+      if (error.response && error.response.status === 401 || error.response.status === 404) {
         // Handle login failure
         Swal.fire({
           icon: "error",

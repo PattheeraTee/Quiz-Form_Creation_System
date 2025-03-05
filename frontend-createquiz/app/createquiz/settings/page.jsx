@@ -193,9 +193,11 @@ export default function SettingsForm() {
                 );
               }}
               className="mr-2"
+              disabled={!allowResponse} // ✅ ปิดการเลือกถ้าไม่เปิดรับคำตอบ
             />
             วันที่เริ่มต้น
           </label>
+
           {enableStartDate && (
             <div className="flex items-center mb-2">
               <input
@@ -239,12 +241,13 @@ export default function SettingsForm() {
                 if (!isChecked) {
                   setEndDate("");
                   setEndTime("00:00");
-                  updateForm("end_date", null); // ✅ ส่งค่า `null` เมื่อ uncheck
+                  updateForm("end_date", null);
                 } else {
                   updateForm("end_date", { date: endDate, time: endTime });
                 }
               }}
               className="mr-2"
+              disabled={!allowResponse} // ✅ ปิดการเลือกถ้าไม่เปิดรับคำตอบ
             />
             วันที่สิ้นสุด
           </label>

@@ -40,7 +40,6 @@ const questionSchema = new Schema({
         option_id: {
             type: String,
             required: true,
-            unique: true,
             default: uuidv4,
         },
         text: {

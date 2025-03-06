@@ -7,6 +7,7 @@ const cors = require("cors");
 const userRouter = require("./src/routes/userRoute");
 const formRouter = require("./src/routes/formRoutes");
 const responseRouter = require("./src/routes/responseRoutes");
+const generateFormRouter = require("./src/routes/geminiRoutes");
 const port = 3001;
 
 mongoose
@@ -29,4 +30,5 @@ app.use(cookieParser());
 app.use(express.json());
 app.use("/form", formRouter);
 app.use("/response", responseRouter);
+app.use("/", generateFormRouter);
 app.use("/",userRouter);

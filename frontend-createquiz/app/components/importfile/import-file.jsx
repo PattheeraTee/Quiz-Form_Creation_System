@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import mammoth from "mammoth";
 import JSZip from "jszip";
 import { v4 as uuidv4 } from "uuid";
@@ -190,6 +190,9 @@ export default function QuizUploadPage() {
       const formattedQuiz = {
         user_id: userId,
         form_type: formType,
+        cover_page: {
+          title: quizTitle,
+        },
         sections: [
           {
             number: 1, // หน้าที่ 1
@@ -412,6 +415,10 @@ export default function QuizUploadPage() {
 
     setQuiz(questions); // อัปเดตสถานะของ quiz
   };
+
+  useEffect(() => {
+    console.log("quiz title: ", quizTitle);
+  }, [quizTitle]);
 
   return (
     <div className="px-4 m-4 mt-6">

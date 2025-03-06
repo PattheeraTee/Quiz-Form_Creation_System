@@ -1,0 +1,84 @@
+{
+    "languages": [
+        {
+            "name": "Thai",
+            "native": "ไทย (Thai)"
+        },
+        {
+            "name": "English",
+            "native": "English"
+        },
+        {
+            "name": "Spanish",
+            "native": "Español"
+        },
+        {
+            "name": "French",
+            "native": "Français"
+        },
+        {
+            "name": "German",
+            "native": "Deutsch"
+        },
+        {
+            "name": "Chinese",
+            "native": "中文 (Zhōngwén)"
+        },
+        {
+            "name": "Japanese",
+            "native": "日本語 (Nihongo)"
+        },
+        {
+            "name": "Korean",
+            "native": "한국어 (Hangugeo)"
+        },
+        {
+            "name": "Russian",
+            "native": "Русский (Russkiy)"
+        },
+        {
+            "name": "Portuguese",
+            "native": "Português"
+        },
+        {
+            "name": "Arabic",
+            "native": "العربية (Al-‘Arabiyyah)"
+        },
+        {
+            "name": "Hindi",
+            "native": "हिन्दी (Hindi)"
+        },
+        {
+            "name": "Bengali",
+            "native": "বাংলা (Bangla)"
+        },
+        {
+            "name": "Italian",
+            "native": "Italiano"
+        },
+        {
+            "name": "Turkish",
+            "native": "Türkçe"
+        },
+        {
+            "name": "Vietnamese",
+            "native": "Tiếng Việt"
+        },
+        {
+            "name": "Persian",
+            "native": "فارسی (Fārsi)"
+        },
+        {
+            "name": "Swahili",
+            "native": "Kiswahili"
+        },
+        {
+            "name": "Dutch",
+            "native": "Nederlands"
+        },
+        {
+            "name": "Greek",
+            "native": "Ελληνικά (Elliniká)"
+        }
+    ]
+}

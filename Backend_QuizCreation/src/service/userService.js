@@ -82,6 +82,14 @@ const service = {
       throw new Error("โทเค็นไม่ถูกต้องหรือหมดอายุ");
     }
   },
+
+  getEmailByUserId: async (userId) => {
+    const email = await userRepository.getEmailByUserId(userId);
+    if (!email) {
+      throw new Error("ไม่พบอีเมลของผู้ใช้นี้");
+    }
+    return { email };
+  },
 };
 
 module.exports = service;

@@ -69,6 +69,12 @@ const repository = {
 
     return updatedUser;
   },
+
+  getEmailByUserId: async (userId) => {
+    const user = await User.findOne({ user_id: userId }, { email: 1 }).lean();
+    return user ? user.email : null;
+  },
+  
 };
 
 module.exports = repository;

@@ -30,6 +30,16 @@ const responseRepository = {
   getResponsesByFormId: async (formId) => {
     return await Response.find({ form_id: formId }).lean();
   },
+
+  // ตรวจสอบว่าอีเมลนี้เคยตอบแบบฟอร์มนี้หรือไม่
+  getResponseByEmail: async (formId, email) => {
+    return await Response.findOne({ form_id: formId, email }).lean();
+  },
+
+  // ดึง Response ทั้งหมดที่เกี่ยวข้องกับ form_id
+  getAllResponsesByFormId: async (formId) => {
+    return await Response.find({ form_id: formId }).lean();
+  },
 };
 
 module.exports = responseRepository;

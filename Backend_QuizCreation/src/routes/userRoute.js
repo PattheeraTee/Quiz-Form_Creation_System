@@ -12,4 +12,7 @@ router.get('/users/:id', verifyUser, userController.getUserById);
 router.post("/forgot-password", userController.forgotPassword);
 router.post("/change-password", userController.changePassword);
 
+// ดึงอีเมลจาก userId
+router.get("/user/:userId/email", userController.getEmailByUserId);
+
 module.exports = router;

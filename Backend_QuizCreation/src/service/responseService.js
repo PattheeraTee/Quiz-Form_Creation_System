@@ -278,3 +278,50 @@ exports.deleteResponses = async (responseIds) => {
     throw new Error(`Error deleting responses: ${error.message}`);
   }
 };
+
+exports.checkUserResponse = async (formId, email) => {
+  try {
+    const response = await responseRepository.getResponseByEmail(formId, email);
+
+    return {
+      alreadyResponded: !!response, // แปลงเป็น true/false
+    };
+  } catch (error) {
+    throw new Error(`Error checking user response: ${error.message}`);
+  }
+};
+
+exports.getAllResponsesByFormId = async (formId) => {
+  try {
+    // ดึงข้อมูล Responses ทั้งหมดที่เกี่ยวข้องกับ form_id
+    const responses = await responseRepository.getAllResponsesByFormId(formId);
+
+    if (!responses || responses.length === 0) {
+      return {
+        message: "No responses found for this form",
+        form_id: formId,
+        total_responses: 0,
+        responses: [],
+      };
+    }
+
+    // รวม responses ทั้งหมดเป็น array
+    const combinedResponses = responses.map(response => ({
+      response_id: response.response_id,
+      email: response.email,
+      answers: response.answers,
+      submitted_at: response.submitted_at,
+      score: response.score,
+      form_id: response.form_id,
+      result_id: response.result_id
+    }));
+
+    return {
+      form_id: formId,
+      total_responses: responses.length,
+      responses: combinedResponses,
+    };
+  } catch (error) {
+    throw new Error(`Error fetching responses: ${error.message}`);
+  }
+};

@@ -33,7 +33,6 @@ export default function GenerateQuizForm() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    // แสดง SweetAlert ขณะที่กำลังประมวลผล
     Swal.fire({
       title: 'Generating...',
       text: 'กรุณารอสักครู่ ขณะนี้กำลังสร้างแบบทดสอบ...',
@@ -43,43 +42,74 @@ export default function GenerateQuizForm() {
       }
     });
 
-    const response = await fetch("http://localhost:3001/generate-quiz", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        topic,
-        numQuestions,
-        language,
-        userId: "admin",
-        type: "quiz",
-        coverPage: {
-          quizTitle: `Untitled Quiz`,
-          description: ``,
-          buttonText: "Start",
+    try {
+      // ✅ 1. ดึง `user_id` จาก Cookie
+      const cookieResponse = await fetch("http://localhost:3000/api/getCookie", {
+        credentials: "include",
+      });
+
+      const cookieData = await cookieResponse.json();
+      const userId = cookieData?.userId || null;
+
+      if (!userId) {
+        Swal.fire({
+          icon: 'error',
+          title: 'ไม่พบข้อมูลผู้ใช้',
+          text: 'กรุณาเข้าสู่ระบบก่อนสร้างแบบทดสอบ',
+        });
+        return;
+      }
+
+      // ✅ 2. ส่ง `POST` ไปยัง `/generate-quiz`
+      const response = await fetch("http://localhost:3001/generate-quiz", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        sectionId: "section 1", // Example static sectionId for now
-        sectionTitle: "",
-        sectionDescription: "",
-      }),
-    });
+        body: JSON.stringify({
+          user_id: userId, // ✅ เปลี่ยนจาก userId -> user_id
+          form_type: "quiz", // ✅ เพิ่ม form_type
+          topic,
+          numQuestions,
+          language,
+          cover_page: { // ✅ แก้ key quizTitle -> title และ text_button
+            title: "Untitled Quiz",
+            text_button: "เริ่มทำ",
+            description: ""
+          },
+          theme: { // ✅ เพิ่ม theme
+            primary_color: "#03A9F4"
+          },
+          sections: [
+            {
+              title: "Quiz Section",
+              questions: [] // สร้างให้ Gemini เพิ่มเอง
+            }
+          ]
+        }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (response.ok) {
-      // เมื่อประมวลผลสำเร็จ ให้ปิด SweetAlert และนำทางไปหน้าแบบทดสอบที่สร้างแล้ว
-      Swal.close();
-      router.push(`/quiz/${data.quizId}`);
-    } else {
-      // กรณีมีข้อผิดพลาดแสดงข้อความแจ้ง
+      if (response.ok) {
+        Swal.close();
+        router.push(`/quiz/${data.form_id}`); // ✅ เปลี่ยน quizId -> form_id
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed to generate quiz',
+          text: data.message,
+        });
+      }
+    } catch (error) {
+      console.error("Error generating quiz:", error);
       Swal.fire({
         icon: 'error',
-        title: 'Failed to generate quiz',
-        text: data.message,
+        title: 'เกิดข้อผิดพลาด',
+        text: 'ไม่สามารถสร้างแบบทดสอบได้ กรุณาลองอีกครั้ง',
       });
     }
-  };
+};
 
   return (
     <div className="flex flex-col justify-start min-h-screen bg-[#F9F8F6] px-4 m-4 mt-6">

@@ -1,7 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const formService = require('../service/formService');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "AIzaSyDYI4F4leUEbhvkF5ER59AC8zi3uO6mGzQ");
+const genAI = new GoogleGenerativeAI("AIzaSyAOEzbP74dQnkwiWoHr9BHeQUbSzJ01e0Q");
 
 exports.generateQuizForm = async (req, res) => {
     try {

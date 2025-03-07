@@ -93,7 +93,7 @@ export default function GenerateQuizForm() {
 
       if (response.ok) {
         Swal.close();
-        router.push(`/quiz/${data.form_id}`); // ✅ เปลี่ยน quizId -> form_id
+        router.push(`/createquiz?type=quiz&form_id=${data.form_id}`); // ✅ เปลี่ยน quizId -> form_id
       } else {
         Swal.fire({
           icon: 'error',

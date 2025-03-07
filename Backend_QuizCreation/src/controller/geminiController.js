@@ -1,7 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const formService = require('../service/formService');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "AIzaSyDYI4F4leUEbhvkF5ER59AC8zi3uO6mGzQ");
+const genAI = new GoogleGenerativeAI("AIzaSyAXvPYCK4n1YO9UCpt6lnF7tWe7Eg_3qfg");
 
 exports.generateQuizForm = async (req, res) => {
     try {
@@ -26,7 +26,7 @@ exports.generateQuizForm = async (req, res) => {
                 {
                     "type": "multiple_choice",
                     "question": "string",
-                    "required": true,
+                    "required": boolean,
                     "points": 1,
                     "options": [
                     { "text": "string", "is_correct": true },

@@ -1,0 +1,21 @@
+{
+    "education_levels": [
+        { "id": "grade_1", "name": "ประถมศึกษาปีที่ 1 (Grade 1)" },
+        { "id": "grade_2", "name": "ประถมศึกษาปีที่ 2 (Grade 2)" },
+        { "id": "grade_3", "name": "ประถมศึกษาปีที่ 3 (Grade 3)" },
+        { "id": "grade_4", "name": "ประถมศึกษาปีที่ 4 (Grade 4)" },
+        { "id": "grade_5", "name": "ประถมศึกษาปีที่ 5 (Grade 5)" },
+        { "id": "grade_6", "name": "ประถมศึกษาปีที่ 6 (Grade 6)" },
+        { "id": "grade_7", "name": "มัธยมศึกษาปีที่ 1 (Grade 7)" },
+        { "id": "grade_8", "name": "มัธยมศึกษาปีที่ 2 (Grade 8)" },
+        { "id": "grade_9", "name": "มัธยมศึกษาปีที่ 3 (Grade 9)" },
+        { "id": "grade_10", "name": "มัธยมศึกษาปีที่ 4 (Grade 10)" },
+        { "id": "grade_11", "name": "มัธยมศึกษาปีที่ 5 (Grade 11)" },
+        { "id": "grade_12", "name": "มัธยมศึกษาปีที่ 6 (Grade 12)" },
+        { "id": "university_1", "name": "มหาวิทยาลัยปีที่ 1 (First Year / Freshman)" },
+        { "id": "university_2", "name": "มหาวิทยาลัยปีที่ 2 (Second Year / Sophomore)" },
+        { "id": "university_3", "name": "มหาวิทยาลัยปีที่ 3 (Third Year / Junior)" },
+        { "id": "university_4", "name": "มหาวิทยาลัยปีที่ 4 (Fourth Year / Senior)" },
+        { "id": "postgraduate", "name": "ระดับบัณฑิตศึกษา (Postgraduate / Graduate School)" }
+    ]
+}

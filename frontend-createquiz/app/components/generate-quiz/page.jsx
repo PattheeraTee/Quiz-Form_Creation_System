@@ -1,94 +1,119 @@
 "use client";
-
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
+import { faImage } from "@fortawesome/free-solid-svg-icons";
 
 export default function GenerateQuizForm() {
   const [topic, setTopic] = useState("");
   const [numQuestions, setNumQuestions] = useState(1);
   const [language, setLanguage] = useState("");
   const [languages, setLanguages] = useState([]);
+  const [educationLevel, setEducationLevel] = useState("");
+  const [educationLevels, setEducationLevels] = useState([]);
+  const [images, setImages] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchLanguages = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:3001/languages");
-        if (response.ok) {
-          const data = await response.json();
-          setLanguages(data);
-          setLanguage(data[0]); // ตั้งค่าเริ่มต้นเป็นตัวเลือกแรก
-        } else {
-          console.error("Failed to fetch languages");
+        // ✅ ดึงข้อมูลภาษา
+        const langResponse = await fetch("http://localhost:3001/languages");
+        if (langResponse.ok) {
+          const langData = await langResponse.json();
+          setLanguages(langData);
+          setLanguage(langData[0]); // ตั้งค่าภาษาเริ่มต้น
+        }
+
+        // ✅ ดึงข้อมูลระดับการศึกษา
+        const eduResponse = await fetch(
+          "http://localhost:3001/education-levels"
+        );
+        if (eduResponse.ok) {
+          const eduData = await eduResponse.json();
+          setEducationLevels(eduData);
+          setEducationLevel(eduData[0]?.id || ""); // ตั้งค่าระดับการศึกษาเริ่มต้น
         }
       } catch (error) {
-        console.error("Error fetching languages:", error);
+        console.error("Error fetching data:", error);
       }
     };
 
-    fetchLanguages();
+    fetchData();
   }, []);
+
+  const handleImageUpload = (event) => {
+    const files = Array.from(event.target.files);
+    if (images.length + files.length > 5) {
+      Swal.fire("อัปโหลดได้สูงสุด 5 รูป!", "", "warning");
+      return;
+    }
+
+    const newImages = files.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+
+    setImages([...images, ...newImages]);
+  };
+
+  // ✅ ฟังก์ชันลบรูปที่อัปโหลด
+  const removeImage = (index) => {
+    setImages(images.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     Swal.fire({
-      title: 'Generating...',
-      text: 'กรุณารอสักครู่ ขณะนี้กำลังสร้างแบบทดสอบ...',
+      title: "Generating...",
+      text: "กรุณารอสักครู่ ขณะนี้กำลังสร้างแบบทดสอบ...",
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
-      }
+      },
     });
 
     try {
       // ✅ 1. ดึง `user_id` จาก Cookie
-      const cookieResponse = await fetch("http://localhost:3000/api/getCookie", {
-        credentials: "include",
-      });
+      const cookieResponse = await fetch(
+        "http://localhost:3000/api/getCookie",
+        {
+          credentials: "include",
+        }
+      );
 
       const cookieData = await cookieResponse.json();
       const userId = cookieData?.userId || null;
 
       if (!userId) {
         Swal.fire({
-          icon: 'error',
-          title: 'ไม่พบข้อมูลผู้ใช้',
-          text: 'กรุณาเข้าสู่ระบบก่อนสร้างแบบทดสอบ',
+          icon: "error",
+          title: "ไม่พบข้อมูลผู้ใช้",
+          text: "กรุณาเข้าสู่ระบบก่อนสร้างแบบทดสอบ",
         });
         return;
       }
 
-      // ✅ 2. ส่ง `POST` ไปยัง `/generate-quiz`
+      const formData = new FormData();
+      formData.append("user_id", userId);
+      formData.append("form_type", "quiz");
+      formData.append("topic", topic);
+      formData.append("numQuestions", numQuestions);
+      formData.append("language", language);
+      formData.append("education_level", educationLevel);
+  
+      // ✅ 3. เพิ่มรูปภาพใน `FormData`
+      images.forEach((img) => formData.append("images", img.file));
+  
+      // ✅ 4. ส่ง `POST` ไปยัง `/generate-quiz`
       const response = await fetch("http://localhost:3001/generate-quiz", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: userId, // ✅ เปลี่ยนจาก userId -> user_id
-          form_type: "quiz", // ✅ เพิ่ม form_type
-          topic,
-          numQuestions,
-          language,
-          cover_page: { // ✅ แก้ key quizTitle -> title และ text_button
-            title: "Untitled Quiz",
-            text_button: "เริ่มทำ",
-            description: ""
-          },
-          theme: { // ✅ เพิ่ม theme
-            primary_color: "#03A9F4"
-          },
-          sections: [
-            {
-              title: "Quiz Section",
-              questions: [] // สร้างให้ Gemini เพิ่มเอง
-            }
-          ]
-        }),
+        body: formData, // ✅ ใช้ FormData แทน JSON
       });
 
+      
       const data = await response.json();
 
       if (response.ok) {
@@ -96,26 +121,24 @@ export default function GenerateQuizForm() {
         router.push(`/createquiz?type=quiz&form_id=${data.form_id}`); // ✅ เปลี่ยน quizId -> form_id
       } else {
         Swal.fire({
-          icon: 'error',
-          title: 'Failed to generate quiz',
+          icon: "error",
+          title: "Failed to generate quiz",
           text: data.message,
         });
       }
     } catch (error) {
       console.error("Error generating quiz:", error);
       Swal.fire({
-        icon: 'error',
-        title: 'เกิดข้อผิดพลาด',
-        text: 'ไม่สามารถสร้างแบบทดสอบได้ กรุณาลองอีกครั้ง',
+        icon: "error",
+        title: "เกิดข้อผิดพลาด",
+        text: "ไม่สามารถสร้างแบบทดสอบได้ กรุณาลองอีกครั้ง",
       });
     }
-};
+  };
 
   return (
     <div className="flex flex-col justify-start min-h-screen bg-[#F9F8F6] px-4 m-4 mt-6">
-      <h1 className="text-3xl font-semibold mb-6">
-      สร้างแบบทดสอบด้วย AI
-      </h1>
+      <h1 className="text-3xl font-semibold mb-6">สร้างแบบทดสอบด้วย AI</h1>
       <div className="w-full bg-white shadow-md rounded-xl p-6 border border-gray-200">
         <h2 className="text-2xl font-semibold mb-6 text-center">
           สร้างแบบทดสอบอัตโนมัติ
@@ -125,15 +148,53 @@ export default function GenerateQuizForm() {
             <label htmlFor="topic" className="block text-gray-700 mb-2">
               ใส่เนื้อหาหรือหัวข้อของแบบทดสอบที่คุณต้องการสร้าง
             </label>
-            <textarea
-              id="topic"
-              className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              rows="10"
-              placeholder="เช่น แมวในประเทศไทย..."
-              required
-            />
+            {images.length > 0 && (
+              <div className="flex flex-wrap gap-3 mb-4">
+                {images.map((img, index) => (
+                  <div key={index} className="relative">
+                    <img
+                      src={img.preview}
+                      alt="uploaded"
+                      className="w-24 h-24 object-cover rounded-md"
+                    />
+                    <button
+                      type="button"
+                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full"
+                      onClick={() => removeImage(index)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="relative w-full">
+              <textarea
+                id="topic"
+                className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                rows="10"
+                placeholder="เช่น แมวในประเทศไทย..."
+                required
+              />
+              <button
+                type="button"
+                className="absolute top-2 right-2 p-2 text-gray-700"
+                onClick={() => document.getElementById("imageUpload").click()}
+              >
+                <FontAwesomeIcon icon={faImage} className="w-6 h-6" />
+              </button>
+
+              <input
+                type="file"
+                id="imageUpload"
+                className="hidden"
+                multiple
+                accept="image/*"
+                onChange={handleImageUpload}
+              />
+            </div>
           </div>
 
           <div>
@@ -167,6 +228,28 @@ export default function GenerateQuizForm() {
               {languages.map((lang, index) => (
                 <option key={index} value={lang}>
                   {lang}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="educationLevel"
+              className="block text-gray-700 mb-2"
+            >
+              เลือกระดับการศึกษา
+            </label>
+            <select
+              id="educationLevel"
+              className="w-full border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-blue-500"
+              value={educationLevel}
+              onChange={(e) => setEducationLevel(e.target.value)}
+              required
+            >
+              {educationLevels.map((level) => (
+                <option key={level.id} value={level.id}>
+                  {level.name}
                 </option>
               ))}
             </select>

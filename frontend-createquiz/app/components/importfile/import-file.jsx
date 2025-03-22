@@ -464,6 +464,180 @@ export default function QuizUploadPage() {
     // console.log("✅ Question Saved:", questions[questions.length - 1]);
   };
 
+  const handleShowGuide = () => {
+    Swal.fire({
+      title: "คำแนะนำการนำเข้า",
+      width: "800px",
+      html: `
+        <div class="text-left text-gray-800">
+          <div class="px-4 py-2 rounded-lg mb-2">
+            <h3 class="text-xl font-semibold mb-3 t">รูปแบบที่รองรับ (Supported Formats)</h3>
+            <p class="text-gray-700 mb-3">
+              ระบบรองรับการนำเข้าข้อสอบทั้งในรูปแบบไฟล์ <span class="px-2 py-1 rounded font-mono text-sm">.docx</span>
+              <span class="px-2 py-1 rounded font-mono text-sm">.doc</span> และ 
+              <span class="px-2 py-1 rounded font-mono text-sm">.txt</span>
+              โดยสามารถสร้างคำถาม 2 ประเภท:
+            </p>
+            <ul class="list-disc pl-5 space-y-1 text-gray-700">
+  <li>คำถามแบบเลือกตอบ (Multiple Choice)</li>
+  <li>คำถามแบบเติมคำตอบ (Text Input)</li>
+</ul>
+          </div>
+          
+          <div class="tabs-container">
+            <div class="tabs-header">
+              <button id="tab-th" class="tab-btn active" onclick="switchTab('th')">
+                ตัวอย่างภาษาไทย
+              </button>
+              <button id="tab-en" class="tab-btn" onclick="switchTab('en')">
+                ตัวอย่างภาษาอังกฤษ
+              </button>
+            </div>
+            
+            <div id="content-th" class="tab-content active">
+              <h4 class="font-medium mb-1 flex items-center">
+                ตัวอย่างรูปแบบภาษาไทย
+              </h4>
+              <div class="px-4 py-1">
+                <p class="mb-1 text-gray-800">ดาวที่อยู่ใกล้โลกที่สุดคือดาวอะไร?</p>
+                <p class="text-green-600 font-medium flex items-center">
+                  เฉลย ดาวพุธ
+                </p>
+              </div>
+              <div class="px-4 py-1">
+                <p class="mb-1 text-gray-800">ข้อใดไม่ใช่ดาวเคราะห์ในระบบสุริยะ?</p>
+                <div class="space-y-1 pl-4">
+                  <p class="py-1 px-2">ก. โลก</p>
+                  <p class="py-1 px-2">ข. ดาวพลูโต</p>
+                  <p class="py-1 px-2">ค. ดาวพฤหัส</p>
+                  <p class="py-1 px-2">ง. ดาวอังคาร</p>
+                </div>
+                <p class="text-green-600 font-medium flex items-center">
+                  เฉลย ข
+                </p>
+              </div>
+            </div>
+            
+            <div id="content-en" class="tab-content hidden">
+             <h4 class="font-medium mb-1 flex items-center">
+                ตัวอย่างรูปแบบภาษาอังกฤษ
+              </h4>
+              <div class="px-4 py-1">
+                <p class="mb-1 text-gray-800">What is the closest planet to Earth?</p>
+                <p class="text-green-600 font-medium flex items-center">
+                  Answer Mercury
+                </p>
+              </div>
+              <div class="px-4 py-1">
+                <p class="mb-1 text-gray-800">Which of the following is NOT a planet in our solar system?</p>
+                <div class="space-y-1 pl-4">
+    <p class="py-1 px-2 ">a. Earth</p>
+                  <p class="py-1 px-2 ">b. Pluto</p>
+                  <p class="py-1 px-2">c. Jupiter</p>
+                  <p class="py-1 px-2 ">d. Mars</p>
+                </div>
+                <p class="text-green-600 font-medium flex items-center">
+                  Answer b
+                </p>
+              </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-2 px-4 py-1 rounded-lg">
+            <h4 class="font-medium mb-2 flex items-center">
+              หมายเหตุสำคัญ:
+            </h4>
+            <ul class="space-y-1 pl-6 text-gray-700 list-disc text-left">
+              <li class="">
+                <span>หากไม่มีตัวเลือก <span class="px-1.5 py-0.5 rounded text-sm">ก. ข. ค. ง.</span> หรือ 
+                <span class="px-1.5 py-0.5 text-sm">a. b. c. d.</span> ระบบจะจัดให้เป็น คำถามแบบเติมคำตอบ (Text Input)</span>
+              </li>
+              <li class="">
+                <span>หากไม่ระบุเฉลย ระบบจะบันทึกคำถามโดยไม่มีคำตอบที่ถูกต้อง</span>
+              </li>
+            </ul>
+            
+          </div>
+        </div>
+        
+        <style>
+          .tabs-container {
+            width: 100%;
+          }
+          .tabs-header {
+            display: flex;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 0;
+          }
+          .tab-btn {
+            padding: 0.75rem 1.25rem;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-bottom: none;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+            margin-right: 0.25rem;
+            cursor: pointer;
+            font-weight: 500;
+            color: #64748b;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+          }
+          .tab-btn:hover {
+            background-color: #f1f5f9;
+            color: #334155;
+          }
+          .tab-btn.active {
+            background-color: #fff;
+            border-bottom: 1px solid #fff;
+            margin-bottom: -1px;
+            color: #3b82f6;
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+          }
+          .tab-content {
+            display: none;
+            padding: 0.5rem 1.25rem 0.5rem 1.25rem;
+            background-color: #fff;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 0.5rem 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+          }
+          .tab-content.active {
+            display: block;
+          }
+          .tab-content.hidden {
+            display: none;
+          }
+        </style>
+      `,
+      confirmButtonText: "ปิด",
+      confirmButtonColor: "#3b82f6",
+      customClass: {
+        title: 'text-3xl text-gray-900',
+        confirmButton: 'px-6 py-2.5 rounded-lg font-medium transition-colors'
+      },
+      didOpen: () => {
+        window.switchTab = (tab) => {
+          document.getElementById("content-th").classList.remove("active");
+          document.getElementById("content-en").classList.remove("active");
+          document.getElementById("tab-th").classList.remove("active");
+          document.getElementById("tab-en").classList.remove("active");
+          
+          document.getElementById(`content-${tab}`).classList.add("active");
+          document.getElementById(`tab-${tab}`).classList.add("active");
+          
+          document.getElementById("content-th").classList.add("hidden");
+          document.getElementById("content-en").classList.add("hidden");
+          document.getElementById(`content-${tab}`).classList.remove("hidden");
+        };
+      }
+    });
+  };
+  
+
   useEffect(() => {
     console.log("quiz title: ", quizTitle);
     console.log("quiz: ", quiz);
@@ -482,10 +656,6 @@ export default function QuizUploadPage() {
         <p className="text-gray-700 mb-6">
           เลือกไฟล์ที่ต้องการนำเข้า รองรับเฉพาะไฟล์ <strong>.docx</strong> และ{" "}
           <strong>.txt</strong>
-          <br />
-          <span className="text-red-600 font-bold">
-            **รูปแบบที่รองรับเขียนไว้อยู่ด้านล่าง**
-          </span>
         </p>
 
         <label htmlFor="file-upload" className="cursor-pointer">
@@ -571,131 +741,24 @@ export default function QuizUploadPage() {
           </button>
         </div>
 
-        <div className="flex justify-center mt-6">
-          <button
-            onClick={handleSubmit}
-            className="bg-[#03A9F4] text-white py-2 px-6 text-lg rounded-full hover:bg-[#0B76BC] transition-colors shadow-md mx-auto block"
-          >
-            สร้าง{selectedType}
-          </button>
-        </div>
+        <div className="flex justify-between items-center mt-6">
+  <button
+    onClick={handleSubmit}
+    className="bg-[#03A9F4] text-white py-2 px-6 text-lg rounded-full hover:bg-[#0B76BC] transition-colors shadow-md mx-auto"
+  >
+    สร้าง{selectedType}
+  </button>
 
-        <div>
-          <div className="bg-white rounded-xl p-6 border border-gray-200 mt-6">
-            <h2 className="text-2xl font-semibold text-center mb-6 text-gray-800 pb-3">
-              รูปแบบที่รองรับ (Supported Formats)
-            </h2>
+  <button
+    onClick={handleShowGuide}
+    className="text-gray-700  underline font-bold cursor-pointer"
+  >
+    ดูคำแนะนำการนำเข้า
+  </button>
+</div>
 
-            <div className="mb-6">
-              <p className="text-gray-700 mb-3">
-                ระบบรองรับการนำเข้าข้อสอบทั้งในรูปแบบไฟล์ .docx, .doc และ .txt
-                โดยสามารถสร้างคำถามสองประเภท:
-              </p>
-              <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-1">
-                <li>คำถามแบบเลือกตอบ (Multiple Choice)</li>
-                <li>คำถามแบบเติมคำตอบ (Text Input)</li>
-              </ul>
-            </div>
+        
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* รูปแบบภาษาไทย */}
-              <div className="p-5">
-                <h3 className="text-xl font-semibold mb-4 ">รูปแบบภาษาไทย</h3>
-
-                <div className="mb-5">
-                  <h4 className="font-medium mb-2">
-                    คำถามแบบเติมคำตอบ (Text Input)
-                  </h4>
-                  <div className="mb-2 bg-white p-4 border border-gray-300 rounded-md shadow-sm">
-                    <p className="mb-3">ดาวที่อยู่ใกล้โลกที่สุดคือดาวอะไร?</p>
-                    <p className="text-green-600 font-medium border-t pt-2">
-                      เฉลย ดาวพุธ
-                    </p>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2 italic">
-                    * สามารถระบุหลายคำตอบได้โดยคั่นด้วยเครื่องหมายจุลภาค (,)
-                    เช่น{" "}
-                    <span className="font-medium">เฉลย ดาวพุธ, ดาวศุกร์</span>
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2 ">
-                    คำถามแบบเลือกตอบ (Multiple Choice)
-                  </h4>
-                  <div className="bg-white p-4 border border-gray-300 rounded-md shadow-sm">
-                    <p className="mb-3">ข้อใดไม่ใช่ดาวเคราะห์ในระบบสุริยะ?</p>
-                    <div className="space-y-1 mb-3 pl-4">
-                      <p>ก. โลก</p>
-                      <p>ข. ดาวพลูโต</p>
-                      <p>ค. ดาวพฤหัส</p>
-                      <p>ง. ดาวอังคาร</p>
-                    </div>
-                    <p className="text-green-600 font-medium border-t pt-2">
-                      เฉลย ข
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* English Format */}
-              <div className="p-5 rounded-lg">
-                <h3 className="text-xl font-semibold mb-4 ">English Format</h3>
-
-                <div className="mb-5">
-                  <h4 className="font-medium mb-2 ">Text Input Questions</h4>
-                  <div className="mb-2 bg-white p-4 border border-gray-300 rounded-md shadow-sm">
-                    <p className="mb-3">What is the closest planet to Earth?</p>
-                    <p className="text-green-600 font-medium border-t pt-2">
-                      Answer Mercury
-                    </p>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2 italic">
-                    * Multiple answers can be specified using commas, e.g.,{" "}
-                    <span className="font-medium">Answer Mercury, Venus</span>
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">
-                    Multiple Choice Questions
-                  </h4>
-                  <div className="bg-white p-4 border border-gray-300 rounded-md shadow-sm">
-                    <p className="mb-3">
-                      Which of the following is NOT a planet in our solar
-                      system?
-                    </p>
-                    <div className="space-y-1 mb-3 pl-4">
-                      <p>a. Earth</p>
-                      <p>b. Pluto</p>
-                      <p>c. Jupiter</p>
-                      <p>d. Mars</p>
-                    </div>
-                    <p className="text-green-600 font-medium border-t pt-2">
-                      Answer b
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* หมายเหตุ */}
-            <div className="mt-8 p-5 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <h3 className="text-lg font-semibold mb-3 text-yellow-800">
-                หมายเหตุสำคัญ:
-              </h3>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2">
-                <li>
-                  หากไม่มีตัวเลือก ก. ข. ค. ง. หรือ a. b. c. d.
-                  คำถามจะถูกจัดให้เป็นแบบเติมคำตอบ (Text Input)
-                </li>
-                <li>หากไม่ระบุเฉลย ระบบจะบันทึกคำถามโดยไม่มีคำตอบที่ถูกต้อง</li>
-                <li>คำถามจะถูกแยกอัตโนมัติจากไฟล์ตามรูปแบบที่กำหนด</li>
-                {/* <li>รูปภาพในไฟล์ .docx จะถูกนำเข้าพร้อมกับคำถามและตัวเลือก</li> */}
-              </ul>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

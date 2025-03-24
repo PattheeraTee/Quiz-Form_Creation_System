@@ -13,7 +13,7 @@ export default function QuizUploadPage() {
   const [quizTitle, setQuizTitle] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [uploadedFileName, setUploadedFileName] = useState("");
-  const [selectedType, setSelectedType] = useState(""); // Default to 'แบบสำรวจ' (survey)
+  const [selectedType, setSelectedType] = useState("แบบทดสอบ"); // Default to 'แบบสำรวจ' (survey)
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -198,20 +198,21 @@ export default function QuizUploadPage() {
             number: 1, // หน้าที่ 1
             title: "แบบทดสอบ", // ตั้งชื่อ Section
             description: "คำถามทั้งหมดจากไฟล์ที่อัปโหลด", // คำอธิบาย
-            questions: quiz.map((question) => ({
-              type:
-                question.options.length > 0 ? "multiple_choice" : "text_input",
-              question: question.text,
-              // required: true,
-              points: question.points || 1,
-              options: question.options.map((option) => ({
-                text: option.text,
-                is_correct: false,
-              })),
-              ...(question.type === "text_input"
-                ? { correct_answer: [""] }
-                : {}),
-            })),
+            questions: quiz.map((question) => {
+              const isTextInput = question.options.length === 0;
+              return {
+                type: isTextInput ? "text_input" : "multiple_choice",
+                question: question.text,
+                points: question.points || 1,
+                options: question.options.map((option) => ({
+                  text: option.text,
+                  is_correct: option.is_correct || false,
+                })),
+                ...(isTextInput && question.correct_answer
+                  ? { correct_answer: question.correct_answer }
+                  : {}),
+              };
+            }),
           },
         ],
       };
@@ -256,6 +257,69 @@ export default function QuizUploadPage() {
       });
     }
   };
+  const createQuizFromTxt = (textContent) => {
+    console.log("create from text");
+    const lines = textContent.split("\n");
+    const questions = [];
+    let currentQuestion = null;
+    let currentChoices = [];
+    let currentImageUrl = null;
+    let questionIndex = 0;
+    let correctAnswer = null;
+
+    lines.forEach((line) => {
+      const trimmedText = line.trim();
+      console.log("trimmedText", trimmedText);
+      if (trimmedText) {
+        // ตรวจสอบว่าเป็นคำตอบที่ถูกต้องหรือไม่
+        if (
+          trimmedText.toLowerCase().startsWith("answer") ||
+          trimmedText.startsWith("เฉลย")
+        ) {
+          correctAnswer = trimmedText.replace(/^(answer|เฉลย)/i, "").trim();
+          console.log("✅ Correct Answer Detected:", correctAnswer);
+        }
+        // ตรวจสอบว่าบรรทัดนี้เป็นคำถามใหม่หรือไม่
+        else if (isNewQuestion(trimmedText)) {
+          if (currentQuestion) {
+            // บันทึกคำถามก่อนหน้า
+            saveQuestion(
+              questions,
+              currentQuestion,
+              currentChoices,
+              currentImageUrl,
+              questionIndex,
+              correctAnswer
+            );
+            questionIndex++;
+          }
+          // เริ่มคำถามใหม่
+          currentQuestion = trimmedText;
+          currentChoices = [];
+          currentImageUrl = null;
+          correctAnswer = null;
+        }
+        // ตรวจสอบว่าบรรทัดนี้เป็นตัวเลือกหรือไม่
+        else if (isChoice(trimmedText)) {
+          currentChoices.push({ text: trimmedText, option_image_url: null });
+        }
+      }
+    });
+
+    // บันทึกคำถามสุดท้าย
+    if (currentQuestion) {
+      saveQuestion(
+        questions,
+        currentQuestion,
+        currentChoices,
+        currentImageUrl,
+        questionIndex,
+        correctAnswer
+      );
+    }
+
+    setQuiz(questions); // อัปเดตสถานะของ quiz
+  };
 
   const createQuizFromHtml = (html, images) => {
     const tempDiv = document.createElement("div");
@@ -267,54 +331,62 @@ export default function QuizUploadPage() {
     let currentChoices = [];
     let currentImageUrl = null;
     let questionIndex = 0;
+    let correctAnswer = null;
 
     paragraphs.forEach((element) => {
       if (element.tagName === "P") {
         const trimmedText = element.innerText.trim();
         if (trimmedText) {
-          // Check if it's a new question
-          if (isNewQuestion(trimmedText)) {
+          // ตรวจสอบว่าเป็นคำตอบที่ถูกต้องหรือไม่
+          if (
+            trimmedText.toLowerCase().startsWith("answer") ||
+            trimmedText.startsWith("เฉลย")
+          ) {
+            correctAnswer = trimmedText.replace(/^(answer|เฉลย)/i, "").trim();
+            console.log("✅ Correct Answer Detected:", correctAnswer);
+          }
+          // ตรวจสอบว่าเป็นคำถามใหม่
+          else if (isNewQuestion(trimmedText)) {
             if (currentQuestion) {
-              // Save previous question
-              // console.log(`Question: ${currentQuestion}`);
-              // console.log(`Choices:`, currentChoices.map(c => c.text));
               saveQuestion(
                 questions,
                 currentQuestion,
                 currentChoices,
                 currentImageUrl,
-                questionIndex
+                questionIndex,
+                correctAnswer
               );
               questionIndex++;
             }
-            // Start new question
+            // เริ่มคำถามใหม่
             currentQuestion = trimmedText;
             currentChoices = [];
             currentImageUrl = null;
+            correctAnswer = null;
           }
-          // Otherwise, treat it as a choice
+          // ตรวจสอบว่าเป็นตัวเลือก
           else if (isChoice(trimmedText)) {
-            currentChoices.push({ text: trimmedText, option_image_url: null }); // This is a choice
+            currentChoices.push({ text: trimmedText, option_image_url: null });
           }
         }
       } else if (element.tagName === "IMG") {
         if (currentQuestion && currentChoices.length === 0) {
-          currentImageUrl = element.src; // Image belongs to the question
+          currentImageUrl = element.src;
         } else if (currentChoices.length > 0 && currentChoices.length <= 4) {
           currentChoices[currentChoices.length - 1].option_image_url =
-            element.src; // Image belongs to the last choice
+            element.src;
         }
       }
     });
 
-    // Save the last question
     if (currentQuestion) {
       saveQuestion(
         questions,
         currentQuestion,
         currentChoices,
         currentImageUrl,
-        questionIndex
+        questionIndex,
+        correctAnswer
       );
     }
 
@@ -339,20 +411,45 @@ export default function QuizUploadPage() {
     currentQuestion,
     currentChoices,
     currentImageUrl,
-    questionIndex
+    questionIndex,
+    correctAnswer
   ) => {
     if (currentChoices.length === 0) {
-      // No choices, so display a text input
+      // ไม่มีตัวเลือก → เป็น Text Input
+      const answerArray = correctAnswer
+        ? correctAnswer.split(",").map((ans) => ans.trim())
+        : [];
+      console.log("✅ Correct Answer Array:", answerArray);
+
       questions.push({
         id: questionIndex + 1,
         quiz_id: uuidv4(),
         text: currentQuestion,
         type: "text",
-        answer: "",
+        correct_answer: answerArray, // เก็บเป็น array (รองรับหลายคำตอบ)
         options: [],
-        imageUrl: currentImageUrl, // Assign image to the question
+        imageUrl: currentImageUrl,
       });
     } else {
+      // ตรวจสอบว่าช้อยส์ไหนคือคำตอบที่ถูกต้อง
+      const hasCorrectAnswer = Boolean(correctAnswer?.trim());
+      // อัปเดตช้อยส์ โดยกำหนด is_correct = false ถ้าไม่มีเฉลย
+      const updatedChoices = currentChoices.map((choice) => {
+        const choiceText = choice.text.trim().toLowerCase();
+        const correctText = correctAnswer
+          ? correctAnswer.trim().toLowerCase()
+          : "";
+
+        const isCorrect =
+          hasCorrectAnswer &&
+          (choiceText.startsWith(correctText) || choiceText === correctText);
+
+        return {
+          text: choice.text,
+          is_correct: isCorrect,
+          option_image_url: choice.option_image_url || null,
+        };
+      });
       // Choices are present, so display radio buttons
       questions.push({
         id: questionIndex + 1,
@@ -360,65 +457,191 @@ export default function QuizUploadPage() {
         text: currentQuestion,
         type: "radio",
         answer: "",
-        options: [...currentChoices],
+        options: updatedChoices,
         imageUrl: currentImageUrl, // Assign image to the question
       });
     }
+    // console.log("✅ Question Saved:", questions[questions.length - 1]);
   };
 
-  const createQuizFromTxt = (textContent) => {
-    const lines = textContent.split("\n");
-    const questions = [];
-    let currentQuestion = null;
-    let currentChoices = [];
-    let currentImageUrl = null;
-    let questionIndex = 0;
-
-    lines.forEach((line) => {
-      const trimmedText = line.trim();
-      if (trimmedText) {
-        // ตรวจสอบว่าบรรทัดนี้เป็นคำถามใหม่หรือไม่
-        if (isNewQuestion(trimmedText)) {
-          if (currentQuestion) {
-            // บันทึกคำถามก่อนหน้า
-            saveQuestion(
-              questions,
-              currentQuestion,
-              currentChoices,
-              currentImageUrl,
-              questionIndex
-            );
-            questionIndex++;
+  const handleShowGuide = () => {
+    Swal.fire({
+      title: "คำแนะนำการนำเข้า",
+      width: "800px",
+      html: `
+        <div class="text-left text-gray-800">
+          <div class="px-4 py-2 rounded-lg mb-2">
+            <h3 class="text-xl font-semibold mb-3 t">รูปแบบที่รองรับ (Supported Formats)</h3>
+            <p class="text-gray-700 mb-3">
+              ระบบรองรับการนำเข้าข้อสอบทั้งในรูปแบบไฟล์ <span class="px-2 py-1 rounded font-mono text-sm">.docx</span>
+              <span class="px-2 py-1 rounded font-mono text-sm">.doc</span> และ 
+              <span class="px-2 py-1 rounded font-mono text-sm">.txt</span>
+              โดยสามารถสร้างคำถาม 2 ประเภท:
+            </p>
+            <ul class="list-disc pl-5 space-y-1 text-gray-700">
+  <li>คำถามแบบเลือกตอบ (Multiple Choice)</li>
+  <li>คำถามแบบเติมคำตอบ (Text Input)</li>
+</ul>
+          </div>
+          
+          <div class="tabs-container">
+            <div class="tabs-header">
+              <button id="tab-th" class="tab-btn active" onclick="switchTab('th')">
+                ตัวอย่างภาษาไทย
+              </button>
+              <button id="tab-en" class="tab-btn" onclick="switchTab('en')">
+                ตัวอย่างภาษาอังกฤษ
+              </button>
+            </div>
+            
+            <div id="content-th" class="tab-content active">
+              <h4 class="font-medium mb-1 flex items-center">
+                ตัวอย่างรูปแบบภาษาไทย
+              </h4>
+              <div class="px-4 py-1">
+                <p class="mb-1 text-gray-800">ดาวที่อยู่ใกล้โลกที่สุดคือดาวอะไร?</p>
+                <p class="text-green-600 font-medium flex items-center">
+                  เฉลย ดาวพุธ
+                </p>
+              </div>
+              <div class="px-4 py-1">
+                <p class="mb-1 text-gray-800">ข้อใดไม่ใช่ดาวเคราะห์ในระบบสุริยะ?</p>
+                <div class="space-y-1 pl-4">
+                  <p class="py-1 px-2">ก. โลก</p>
+                  <p class="py-1 px-2">ข. ดาวพลูโต</p>
+                  <p class="py-1 px-2">ค. ดาวพฤหัส</p>
+                  <p class="py-1 px-2">ง. ดาวอังคาร</p>
+                </div>
+                <p class="text-green-600 font-medium flex items-center">
+                  เฉลย ข
+                </p>
+              </div>
+            </div>
+            
+            <div id="content-en" class="tab-content hidden">
+             <h4 class="font-medium mb-1 flex items-center">
+                ตัวอย่างรูปแบบภาษาอังกฤษ
+              </h4>
+              <div class="px-4 py-1">
+                <p class="mb-1 text-gray-800">What is the closest planet to Earth?</p>
+                <p class="text-green-600 font-medium flex items-center">
+                  Answer Mercury
+                </p>
+              </div>
+              <div class="px-4 py-1">
+                <p class="mb-1 text-gray-800">Which of the following is NOT a planet in our solar system?</p>
+                <div class="space-y-1 pl-4">
+    <p class="py-1 px-2 ">a. Earth</p>
+                  <p class="py-1 px-2 ">b. Pluto</p>
+                  <p class="py-1 px-2">c. Jupiter</p>
+                  <p class="py-1 px-2 ">d. Mars</p>
+                </div>
+                <p class="text-green-600 font-medium flex items-center">
+                  Answer b
+                </p>
+              </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-2 px-4 py-1 rounded-lg">
+            <h4 class="font-medium mb-2 flex items-center">
+              หมายเหตุสำคัญ:
+            </h4>
+            <ul class="space-y-1 pl-6 text-gray-700 list-disc text-left">
+              <li class="">
+                <span>หากไม่มีตัวเลือก <span class="px-1.5 py-0.5 rounded text-sm">ก. ข. ค. ง.</span> หรือ 
+                <span class="px-1.5 py-0.5 text-sm">a. b. c. d.</span> ระบบจะจัดให้เป็น คำถามแบบเติมคำตอบ (Text Input)</span>
+              </li>
+              <li class="">
+                <span>หากไม่ระบุเฉลย ระบบจะบันทึกคำถามโดยไม่มีคำตอบที่ถูกต้อง</span>
+              </li>
+            </ul>
+            
+          </div>
+        </div>
+        
+        <style>
+          .tabs-container {
+            width: 100%;
           }
-          // เริ่มคำถามใหม่
-          currentQuestion = trimmedText;
-          currentChoices = [];
-          currentImageUrl = null;
-        }
-        // ตรวจสอบว่าบรรทัดนี้เป็นตัวเลือกหรือไม่
-        else if (isChoice(trimmedText)) {
-          currentChoices.push({ text: trimmedText, option_image_url: null });
-        }
+          .tabs-header {
+            display: flex;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 0;
+          }
+          .tab-btn {
+            padding: 0.75rem 1.25rem;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-bottom: none;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+            margin-right: 0.25rem;
+            cursor: pointer;
+            font-weight: 500;
+            color: #64748b;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+          }
+          .tab-btn:hover {
+            background-color: #f1f5f9;
+            color: #334155;
+          }
+          .tab-btn.active {
+            background-color: #fff;
+            border-bottom: 1px solid #fff;
+            margin-bottom: -1px;
+            color: #3b82f6;
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+          }
+          .tab-content {
+            display: none;
+            padding: 0.5rem 1.25rem 0.5rem 1.25rem;
+            background-color: #fff;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 0.5rem 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+          }
+          .tab-content.active {
+            display: block;
+          }
+          .tab-content.hidden {
+            display: none;
+          }
+        </style>
+      `,
+      confirmButtonText: "ปิด",
+      confirmButtonColor: "#3b82f6",
+      customClass: {
+        title: 'text-3xl text-gray-900',
+        confirmButton: 'px-6 py-2.5 rounded-lg font-medium transition-colors'
+      },
+      didOpen: () => {
+        window.switchTab = (tab) => {
+          document.getElementById("content-th").classList.remove("active");
+          document.getElementById("content-en").classList.remove("active");
+          document.getElementById("tab-th").classList.remove("active");
+          document.getElementById("tab-en").classList.remove("active");
+          
+          document.getElementById(`content-${tab}`).classList.add("active");
+          document.getElementById(`tab-${tab}`).classList.add("active");
+          
+          document.getElementById("content-th").classList.add("hidden");
+          document.getElementById("content-en").classList.add("hidden");
+          document.getElementById(`content-${tab}`).classList.remove("hidden");
+        };
       }
     });
-
-    // บันทึกคำถามสุดท้าย
-    if (currentQuestion) {
-      saveQuestion(
-        questions,
-        currentQuestion,
-        currentChoices,
-        currentImageUrl,
-        questionIndex
-      );
-    }
-
-    setQuiz(questions); // อัปเดตสถานะของ quiz
   };
+  
 
   useEffect(() => {
     console.log("quiz title: ", quizTitle);
-  }, [quizTitle]);
+    console.log("quiz: ", quiz);
+  }, [quizTitle, quiz]);
 
   return (
     <div className="px-4 m-4 mt-6">
@@ -431,7 +654,8 @@ export default function QuizUploadPage() {
           นำเข้าเอกสาร
         </h2>
         <p className="text-gray-700 mb-6">
-          เลือกไฟล์ที่ต้องการนำเข้า รองรับเฉพาะไฟล์ .docx และ .txt
+          เลือกไฟล์ที่ต้องการนำเข้า รองรับเฉพาะไฟล์ <strong>.docx</strong> และ{" "}
+          <strong>.txt</strong>
         </p>
 
         <label htmlFor="file-upload" className="cursor-pointer">
@@ -517,14 +741,24 @@ export default function QuizUploadPage() {
           </button>
         </div>
 
-        <div className="flex justify-center mt-6">
-          <button
-            onClick={handleSubmit}
-            className="bg-[#03A9F4] text-white py-2 px-6 text-lg rounded-full hover:bg-[#0B76BC] transition-colors shadow-md mx-auto block"
-          >
-            สร้างแบบทดสอบ
-          </button>
-        </div>
+        <div className="flex justify-between items-center mt-6">
+  <button
+    onClick={handleSubmit}
+    className="bg-[#03A9F4] text-white py-2 px-6 text-lg rounded-full hover:bg-[#0B76BC] transition-colors shadow-md mx-auto"
+  >
+    สร้าง{selectedType}
+  </button>
+
+  <button
+    onClick={handleShowGuide}
+    className="text-gray-700  underline font-bold cursor-pointer"
+  >
+    ดูคำแนะนำการนำเข้า
+  </button>
+</div>
+
+        
+
       </div>
     </div>
   );

@@ -19,7 +19,7 @@ export default function Sidebar({ selectedComponent, setSelectedComponent }) {
       </div>
 
       {/* Template button */}
-      <div
+      {/* <div
         className={`flex items-center space-x-2 p-4 mb-4 rounded-full px-6 cursor-pointer ${
           selectedComponent === "template" ? "bg-purple-200 text-purple-600" : "bg-gray-200 text-black"
         }`}
@@ -30,7 +30,7 @@ export default function Sidebar({ selectedComponent, setSelectedComponent }) {
           className={`w-6 h-6 ${selectedComponent === "template" ? "text-purple-600" : "text-black"}`}
         />
         <span className="text-xl font-semibold">เทมเพลต</span>
-      </div>
+      </div> */}
 
       <div className="border my-5"></div>
 

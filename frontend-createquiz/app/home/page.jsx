@@ -113,13 +113,13 @@ export default function Page() {
                 <FontAwesomeIcon icon={faClipboardList} className="text-lg" />
                 สร้างแบบสำรวจ
               </button>
-              <button
+              {/* <button
                 className="flex items-center gap-2 px-4 py-2 border border-black rounded-full hover:bg-gray-100"
                 onClick={() => handleCreateQuiz("psychology")}
               >
                 <FontAwesomeIcon icon={faBrain} className="text-lg" />
                 สร้างแบบทดสอบจิตวิทยา
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

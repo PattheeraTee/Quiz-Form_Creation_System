@@ -5,13 +5,13 @@ import dynamic from 'next/dynamic';
 const Pie = dynamic(() => import('chart.js/auto').then(() => import('react-chartjs-2').then((mod) => mod.Pie)), { ssr: false });
 const Bar = dynamic(() => import('chart.js/auto').then(() => import('react-chartjs-2').then((mod) => mod.Bar)), { ssr: false });
 
-const ResponsePage = ({ quizId }) => {
+const ResponsePage = ({ quizId, formType }) => {
   const [header, setHeader] = useState({ title: '', total_response: 0 });
   const [questions, setQuestions] = useState([]);
 
   useEffect(() => {
     if (quizId) {
-      fetch(`http://localhost:3001/response/form/${quizId}`)
+      fetch(`http://localhost:3001/response/form/${quizId}?type=${formType}`)
         .then((response) => response.json())
         .then((data) => {
           setHeader({ title: data.title, total_response: data.total_response });
@@ -21,13 +21,13 @@ const ResponsePage = ({ quizId }) => {
           console.error('Error fetching quiz data:', error);
         });
     }
-  }, [quizId]);
+  }, [quizId, formType]);
 
   const generateColors = (count) => {
     const colors = [];
     for (let i = 0; i < count; i++) {
       const hue = (i * (360 / count)) % 360; // กระจายสีในวงล้อสี
-      colors.push(`hsl(${hue}, 70%, 70%)`); // ความอิ่มตัว 50% และความสว่าง 80% สำหรับโทนพาสเทล
+      colors.push(`hsl(${hue}, 65%, 75%)`); // ความอิ่มตัว 50% และความสว่าง 80% สำหรับโทนพาสเทล
     }
     return colors;
   };
@@ -69,7 +69,7 @@ const ResponsePage = ({ quizId }) => {
                   backgroundColor: colors[idx],
                 }}
               ></span>
-              <span className="text-gray-700">{option.text}</span>
+              <span className="text-black">{option.text}</span>
             </span>
             <span className="ml-auto text-gray-900 font-bold">{option.count}</span>
           </li>
@@ -158,6 +158,12 @@ const ResponsePage = ({ quizId }) => {
           <div key={index} className="bg-white rounded shadow p-4 mb-4 flex">
             <div className="w-1/2 pr-4">
               <h3 className="text-lg font-semibold mb-2">{question.question_text}</h3>
+              {/* แสดงเปอร์เซ็นต์ตอบถูกเฉพาะ quiz */}
+              {formType === "quiz" && (
+                <p className="text-gray-600 text-xs pb-2">
+                  {question.correct_percentage} ของผู้ตอบแบบสอบถามตอบคำถามข้อนี้ถูกต้อง
+                </p>
+              )}
               {question.total_answer_option?.length > 0 ? (
                 renderOptionList(question.total_answer_option)
               ) : question.average_rating !== null ? (

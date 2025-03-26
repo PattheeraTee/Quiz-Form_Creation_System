@@ -14,20 +14,23 @@ export default function CreateQuiz() {
   const formId = searchParams.get("form_id");
   const [selectedTab, setSelectedTab] = useState("คำถาม");
   const [quizData, setQuizData] = useState(null);
-
+  const [sections, setSections] = useState([]);
+  
   useEffect(() => {
-    if (formId) {
-      const fetchQuizData = async () => {
-        try {
-          const res = await axios.get(`http://localhost:3001/form/${formId}`);
-          setQuizData(res.data);
-        } catch (error) {
-          console.error("Error fetching quiz data:", error);
-        }
-      };
+    const fetchQuizData = async () => {
+      try {
+        const res = await axios.get(`http://localhost:3001/form/${formId}`);
+        setQuizData(res.data);
+      } catch (error) {
+        console.error("Error fetching quiz data:", error);
+      }
+    };
+  
+    // โหลดข้อมูลใหม่ทุกครั้งที่กลับมา tab "คำถาม"
+    if (selectedTab === "คำถาม" && formId) {
       fetchQuizData();
     }
-  }, [formId]);
+  }, [selectedTab, formId]);
 
   const handleTabSelect = (tab) => {
     console.log("Selected Tab:", tab);

@@ -14,5 +14,7 @@ router.delete('/delete', responseController.deleteResponses);
 
 // ดึง responses detail แสดงในตาราง
 router.get("/form/:formId/detail", responseController.getDetailResponses);
+// ดาวน์โหลด Responses เป็น Excel
+router.get("/download/:formId", responseController.downloadResponses);
 
 module.exports = router;

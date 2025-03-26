@@ -4,6 +4,10 @@ const responseRepository = require("../repository/responseReposity");
 const questionRepository = require("../repository/questionRepository");
 const formRepository = require("../repository/formRepository");
 const formService = require("./formService");
+const fs = require("fs");
+const path = require("path");
+const os = require("os");
+const excelJS = require("exceljs");
 
 const validateRequiredQuestions = (questions, answers) => {
   // ค้นหา questions ที่ required แต่ไม่มีคำตอบใน answers
@@ -556,3 +560,122 @@ exports.getDetailResponsesByQuizForm = async (formId) => {
 };
 
 
+const getUniqueFilePath = (baseDir, baseName) => {
+  let counter = 1;
+  let filePath = path.join(baseDir, `${baseName}.xlsx`);
+
+  while (fs.existsSync(filePath)) {
+    filePath = path.join(baseDir, `${baseName}(${counter}).xlsx`);
+    counter++;
+  }
+
+  return filePath;
+};
+
+exports.downloadResponsesAsExcel = async (formId) => {
+  try {
+    console.log("📢 เริ่มสร้างไฟล์ Excel...");
+
+    const responses = await responseRepository.getResponsesForDownload(formId);
+    if (!responses.length) throw new Error("ไม่มีข้อมูลสำหรับฟอร์มนี้");
+
+    const sections = await questionRepository.getAllQuestionsByFormId(formId);
+
+    // ✅ สร้าง questionMap: { question_id: { question, options } }
+    const questionMap = {};
+    sections.forEach((section) => {
+      section.questions.forEach((q) => {
+        questionMap[q.question_id] = {
+          question: q.question,
+          options: q.options || [],
+        };
+      });
+    });
+
+    const workbook = new excelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Responses");
+
+    // ✅ Header
+    const headers = ["Email", "Total Score"];
+    Object.values(questionMap).forEach(({ question }) => headers.push(question));
+    worksheet.addRow(headers);
+
+    // ✅ ตอบกลับแต่ละคน
+    responses.forEach((response) => {
+      const row = [];
+      row.push(response.email || "anonymous");
+      row.push(response.score || 0);
+
+      Object.keys(questionMap).forEach((questionId) => {
+        const answer = response.answers.find(
+          (ans) => Array.isArray(ans.question_id) && ans.question_id.includes(questionId)
+        );
+
+        if (!answer) {
+          row.push(""); // ✅ เว้นว่างหากไม่ตอบ
+        } else {
+          switch (answer.type) {
+            case "text_input":
+              row.push(answer.answer_text || ""); // ✅ เว้นว่าง
+              break;
+
+            case "multiple_choice":
+            case "dropdown": {
+              const selectedId = Array.isArray(answer.option_id)
+                ? answer.option_id[0]
+                : answer.option_id;
+
+              const options = questionMap[questionId].options || [];
+              const option = options.find(opt => opt.option_id === selectedId);
+
+              row.push(option?.text || ""); // ✅ เว้นว่างถ้าไม่เจอ
+              break;
+            }
+
+            case "checkbox": {
+              const selectedIds = Array.isArray(answer.option_id)
+                ? answer.option_id
+                : [answer.option_id];
+
+              const options = questionMap[questionId].options || [];
+
+              const selectedTexts = selectedIds
+                .map(id => options.find(opt => opt.option_id === id)?.text)
+                .filter(Boolean);
+
+              row.push(selectedTexts.length ? selectedTexts.join(", ") : ""); // ✅ เว้นว่าง
+              break;
+            }
+
+            case "rating":
+              row.push(answer.answer_rating ?? ""); // ✅ เว้นว่าง
+              break;
+
+            case "date":
+              row.push(
+                answer.answer_date
+                  ? new Date(answer.answer_date).toISOString().split("T")[0]
+                  : ""
+              );
+              break;
+
+            default:
+              row.push(""); // ✅ fallback เว้นว่าง
+          }
+        }
+      });
+
+      worksheet.addRow(row);
+    });
+
+    const downloadDir = path.join(os.homedir(), "Downloads");
+    const baseName = `responses_${formId}`;
+    const filePath = getUniqueFilePath(downloadDir, baseName);
+    await workbook.xlsx.writeFile(filePath);
+
+    console.log("✅ ไฟล์ Excel ถูกสร้างแล้ว:", filePath);
+    return filePath;
+  } catch (error) {
+    throw new Error(`❌ Error generating Excel file: ${error.message}`);
+  }
+};

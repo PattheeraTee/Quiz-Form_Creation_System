@@ -30,6 +30,12 @@ const responseRepository = {
   getResponsesByFormId: async (formId) => {
     return await Response.find({ form_id: formId }).lean();
   },
+
+  // ดึงข้อมูล Response ตาม form_id
+  getResponsesForDownload: async (formId) => {
+    return await Response.find({ form_id: formId }).lean(); // ✅ ทำงานได้
+
+  },
 };
 
 module.exports = responseRepository;

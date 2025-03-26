@@ -70,3 +70,21 @@ exports.deleteResponses = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+exports.getDetailResponses = async (req, res) => {
+  const { formId } = req.params;
+  const { type } = req.query; // ✅ รับ form_type จาก query
+
+  try {
+    let formType = type;
+    if (!formType) {
+      return res.status(400).json({ error: "Missing formType in request" });
+    }
+
+    const responseDetail = await responseStrategy.getDetailResponsesByType(formType, formId);
+    res.status(200).json(responseDetail);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+

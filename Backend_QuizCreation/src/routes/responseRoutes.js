@@ -12,4 +12,7 @@ router.get('/form/:formId', responseController.getResponsesByForm);
 // ลบ Responses
 router.delete('/delete', responseController.deleteResponses);
 
+// ดึง responses detail แสดงในตาราง
+router.get("/form/:formId/detail", responseController.getDetailResponses);
+
 module.exports = router;

@@ -8,6 +8,10 @@ const Bar = dynamic(() => import('chart.js/auto').then(() => import('react-chart
 const ResponsePage = ({ quizId, formType }) => {
   const [header, setHeader] = useState({ title: '', total_response: 0 });
   const [questions, setQuestions] = useState([]);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailData, setDetailData] = useState([]);
+  const [selectedQuestionId, setSelectedQuestionId] = useState(null);
+
 
   useEffect(() => {
     if (quizId) {
@@ -22,6 +26,20 @@ const ResponsePage = ({ quizId, formType }) => {
         });
     }
   }, [quizId, formType]);
+
+  const fetchDetailResponses = async () => {
+    try {
+      const res = await fetch(`http://localhost:3001/response/form/${quizId}/detail?type=${formType}`);
+      const data = await res.json();
+  
+      if (data.userResponses) {
+        setDetailData(data.userResponses);
+        setShowDetailModal(true);
+      }
+    } catch (error) {
+      console.error('Error fetching detailed responses:', error);
+    }
+  };
 
   const generateColors = (count) => {
     const colors = [];
@@ -56,8 +74,7 @@ const ResponsePage = ({ quizId, formType }) => {
   };
 
   const renderOptionList = (options) => {
-    const colors = generateColors(options.length);
-
+  const colors = generateColors(options.length);
     return (
       <ul>
         {options.map((option, idx) => (
@@ -158,6 +175,19 @@ const ResponsePage = ({ quizId, formType }) => {
           <div key={index} className="bg-white rounded shadow p-4 mb-4 flex">
             <div className="w-1/2 pr-4">
               <h3 className="text-lg font-semibold mb-2">{question.question_text}</h3>
+              <button
+                className="mt-2 text-blue-600 text-sm underline hover:text-blue-800"
+                onClick={() => {
+                  const id = Array.isArray(question.question_id)
+                    ? question.question_id[0]
+                    : question.question_id;
+                
+                  setSelectedQuestionId(id);
+                  fetchDetailResponses();
+                }}                
+              >
+                ดูรายละเอียด
+              </button>
               {/* แสดงเปอร์เซ็นต์ตอบถูกเฉพาะ quiz */}
               {formType === "quiz" && (
                 <p className="text-gray-600 text-xs pb-2">
@@ -192,10 +222,61 @@ const ResponsePage = ({ quizId, formType }) => {
           </div>
         ))}
       </div>
+      {showDetailModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-3xl w-full shadow-lg overflow-y-auto max-h-[80vh]">
+            <h2 className="text-xl font-bold mb-4">รายละเอียดการตอบกลับ</h2>
+            <table className="w-full border-collapse border">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border p-2 text-left">ผู้ตอบ</th>
+                  <th className="border p-2 text-left">คำตอบ</th>
+                  {formType === "quiz" && (
+                    <th className="border p-2 text-left">คะแนน</th>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {detailData.map((user, idx) => {
+                  const target = user.responses.find((r) => {
+                    if (Array.isArray(r.question_id)) {
+                      return r.question_id.includes(selectedQuestionId);
+                    } else {
+                      return r.question_id === selectedQuestionId;
+                    }
+                  });                                    
+                  if (!target) return null;
+      
+                  return (
+                    <tr key={idx}>
+                      <td className="border p-2">{user.email || 'anonymous'}</td>
+                      <td className="border p-2">
+                        {target.response_text
+                          ? target.response_text
+                          : target.selected_options?.join(', ') || "-"}
+                      </td>
+                      {formType === "quiz" && (
+                        <td className="border p-2">{target.question_score ?? '-'}</td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+      
+            <div className="flex justify-end mt-4">
+              <button
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                onClick={() => setShowDetailModal(false)}
+              >
+                ปิด
+              </button>
+            </div>
+          </div>
+        </div>
+      )}  
     </div>
   );
-
-
 };
 
 export default ResponsePage;

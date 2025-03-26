@@ -11,7 +11,7 @@ const ResponsePage = ({ quizId, formType }) => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailData, setDetailData] = useState([]);
   const [selectedQuestionId, setSelectedQuestionId] = useState(null);
-
+  const [selectedQuestion, setSelectedQuestion] = useState(null);
 
   useEffect(() => {
     if (quizId) {
@@ -183,6 +183,7 @@ const ResponsePage = ({ quizId, formType }) => {
                     : question.question_id;
                 
                   setSelectedQuestionId(id);
+                  setSelectedQuestion(question);
                   fetchDetailResponses();
                 }}                
               >
@@ -222,10 +223,25 @@ const ResponsePage = ({ quizId, formType }) => {
           </div>
         ))}
       </div>
-      {showDetailModal && (
+      {showDetailModal && selectedQuestion && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg max-w-3xl w-full shadow-lg overflow-y-auto max-h-[80vh]">
-            <h2 className="text-xl font-bold mb-4">รายละเอียดการตอบกลับ</h2>
+            {/* ✅ แสดงคำถามและจำนวนการตอบกลับ */}
+            <h2 className="text-xl font-bold mb-1">คำถาม: {selectedQuestion.question_text}</h2>
+            <p className="text-gray-600 mb-4">
+              {(() => {
+                // ดึงจำนวนการตอบกลับจากข้อมูล selectedQuestion
+                if (selectedQuestion.total_answer_question !== undefined) {
+                  return `${selectedQuestion.total_answer_question} การตอบกลับ`;
+                } else if (selectedQuestion.total_answer_option?.length > 0) {
+                  return `${selectedQuestion.total_answer_option.reduce((sum, opt) => sum + opt.count, 0)} การตอบกลับ`;
+                } else {
+                  return '';
+                }
+              })()}
+            </p>
+
+            {/* ตารางคำตอบ */}
             <table className="w-full border-collapse border">
               <thead>
                 <tr className="bg-gray-100">
@@ -244,9 +260,9 @@ const ResponsePage = ({ quizId, formType }) => {
                     } else {
                       return r.question_id === selectedQuestionId;
                     }
-                  });                                    
+                  });
                   if (!target) return null;
-      
+
                   return (
                     <tr key={idx}>
                       <td className="border p-2">{user.email || 'anonymous'}</td>
@@ -263,18 +279,21 @@ const ResponsePage = ({ quizId, formType }) => {
                 })}
               </tbody>
             </table>
-      
+
             <div className="flex justify-end mt-4">
               <button
                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                onClick={() => setShowDetailModal(false)}
+                onClick={() => {
+                  setShowDetailModal(false);
+                  setSelectedQuestion(null);
+                }}
               >
                 ปิด
               </button>
             </div>
           </div>
         </div>
-      )}  
+      )}
     </div>
   );
 };

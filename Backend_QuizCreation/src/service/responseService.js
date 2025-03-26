@@ -482,10 +482,18 @@ exports.getDetailResponsesBySurveyForm = async (formId) => {
         const selectedOptionTexts = (answer.option_id || []).map((optId) =>
           question?.options?.find((opt) => opt.option_id === optId)?.text || optId
         );
-
+      
+        let responseDisplay = answer.answer_text || null;
+      
+        if (answer.type === "rating" && typeof answer.answer_rating === "number") {
+          responseDisplay = answer.answer_rating.toString();
+        } else if (answer.type === "date" && answer.answer_date) {
+          responseDisplay = new Date(answer.answer_date).toISOString().split("T")[0]; // YYYY-MM-DD
+        }
+      
         return {
           question_id: answer.question_id,
-          response_text: answer.answer_text || null,
+          response_text: responseDisplay,
           selected_options: selectedOptionTexts,
         };
       }),
@@ -537,11 +545,19 @@ exports.getDetailResponsesByQuizForm = async (formId) => {
             acc[option.option_id] = option.text;
             return acc;
           }, {}) || {};
-
+      
+        let responseDisplay = answer.answer_text || null;
+      
+        if (answer.type === "rating" && typeof answer.answer_rating === "number") {
+          responseDisplay = answer.answer_rating.toString();
+        } else if (answer.type === "date" && answer.answer_date) {
+          responseDisplay = new Date(answer.answer_date).toISOString().split("T")[0];
+        }
+      
         return {
           question_id: answer.question_id,
           question_score: answer.question_score || 0,
-          response_text: answer.answer_text || null,
+          response_text: responseDisplay,
           selected_options: (answer.option_id || []).map(
             (optId) => optionsMap[optId] || optId
           ),

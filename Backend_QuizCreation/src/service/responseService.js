@@ -33,57 +33,75 @@ exports.submitQuizResponse = async (responseData, formType) => {
       )
     );
 
-    // ตรวจสอบคำถามที่ required
-    // validateRequiredQuestions(questions, responseData.answers);
-
+    // ถ้าเป็นแบบทดสอบ (quiz) คำนวณคะแนน
     if (formType === "quiz") {
-      // คำนวณคะแนน
       for (const answer of responseData.answers) {
         const question = questions.find(
           (q) => q.question_id === answer.question_id
         );
-
-        if (!question) continue;
+        if (!question) {
+          answer.question_score = 0;
+          continue;
+        }
 
         const points = question.points || 0;
+        let earned = 0;
 
         switch (question.type) {
           case "text_input":
-            if (question.correct_answer.includes(answer.answer_text)) {
-              score += points;
+            if (typeof answer.answer_text === "string") {
+              const userAnswer = answer.answer_text.trim().toLowerCase();
+
+              if (typeof question.correct_answer === "string") {
+                if (userAnswer === question.correct_answer.trim().toLowerCase()) {
+                  earned = points;
+                }
+              } else if (Array.isArray(question.correct_answer)) {
+                const normalizedAnswers = question.correct_answer.map(ans =>
+                  typeof ans === "string" ? ans.trim().toLowerCase() : ""
+                );
+                if (normalizedAnswers.includes(userAnswer)) {
+                  earned = points;
+                }
+              }
             }
             break;
 
           case "multiple_choice":
           case "dropdown":
             if (
-              answer.option_id.length === 1 &&
-              question.options.some(
-                (option) =>
-                  option.option_id === answer.option_id[0] &&
-                  option.is_correct === true
-              )
+              Array.isArray(answer.option_id) &&
+              answer.option_id.length === 1
             ) {
-              score += points;
+              const selected = answer.option_id[0];
+              const correctOption = question.options.find(
+                (opt) => opt.option_id === selected && opt.is_correct
+              );
+              if (correctOption) earned = points;
             }
             break;
 
           case "checkbox":
             const correctOptions = question.options
-              .filter((option) => option.is_correct)
-              .map((option) => option.option_id);
+              .filter((opt) => opt.is_correct)
+              .map((opt) => opt.option_id)
+              .sort();
+
+            const selectedOptions = (answer.option_id || []).sort();
 
             if (
-              correctOptions.length === answer.option_id.length &&
-              correctOptions.every((id) => answer.option_id.includes(id))
+              JSON.stringify(correctOptions) === JSON.stringify(selectedOptions)
             ) {
-              score += points;
+              earned = points;
             }
             break;
 
           default:
             break;
         }
+
+        answer.question_score = earned; // ✅ เก็บคะแนนของข้อนี้
+        score += earned; // ✅ บวกคะแนนรวม
       }
     }
 
@@ -431,3 +449,110 @@ exports.getResponsesByQuizForm = async (formId) => {
     throw new Error(`Error fetching responses: ${error.message}`);
   }
 };
+
+// ดึงข้อมูลตารางผลการตอบกลับ สำหรับ survey
+exports.getDetailResponsesBySurveyForm = async (formId) => {
+  try {
+    const formDetails = await formService.getFormDetails(formId);
+    const sections = formDetails.sections || [];
+    const questions = sections.flatMap((section) => section.questions || []);
+
+    if (!questions.length) {
+      return { message: "No responses available", total_response: 0, responses: [] };
+    }
+
+    const questionMap = {};
+    questions.forEach((q) => {
+      questionMap[q.question_id] = q;
+    });
+
+    const responses = await responseRepository.getResponsesByFormId(formId);
+    if (!responses.length) {
+      return { message: "No responses available", total_response: 0, responses: [] };
+    }
+
+    const userResponses = responses.map((response) => ({
+      email: response.email || "anonymous",
+      responses: response.answers.map((answer) => {
+        const question = questionMap[answer.question_id];
+        const selectedOptionTexts = (answer.option_id || []).map((optId) =>
+          question?.options?.find((opt) => opt.option_id === optId)?.text || optId
+        );
+
+        return {
+          question_id: answer.question_id,
+          response_text: answer.answer_text || null,
+          selected_options: selectedOptionTexts,
+        };
+      }),
+    }));
+
+    return {
+      message: "Survey responses retrieved successfully",
+      total_response: responses.length,
+      userResponses,
+    };
+  } catch (error) {
+    throw new Error(`Error fetching survey responses: ${error.message}`);
+  }
+};
+
+// ดึงข้อมูลตารางผลการตอบกลับ สำหรับ quiz
+exports.getDetailResponsesByQuizForm = async (formId) => {
+  try {
+    const formDetails = await formService.getFormDetails(formId);
+    const sections = formDetails.sections || [];
+    const questions = sections.flatMap((section) => section.questions || []);
+
+    if (!questions.length) {
+      return {
+        message: "No responses available",
+        total_response: 0,
+        userResponses: [],
+      };
+    }
+
+    const questionMap = {};
+    questions.forEach((q) => (questionMap[q.question_id] = q));
+
+    const responses = await responseRepository.getResponsesByFormId(formId);
+    if (!responses.length) {
+      return {
+        message: "No responses available",
+        total_response: 0,
+        userResponses: [],
+      };
+    }
+
+    const userResponses = responses.map((response) => ({
+      email: response.email || "anonymous",
+      responses: response.answers.map((answer) => {
+        const question = questionMap[answer.question_id];
+        const optionsMap =
+          question?.options?.reduce((acc, option) => {
+            acc[option.option_id] = option.text;
+            return acc;
+          }, {}) || {};
+
+        return {
+          question_id: answer.question_id,
+          question_score: answer.question_score || 0,
+          response_text: answer.answer_text || null,
+          selected_options: (answer.option_id || []).map(
+            (optId) => optionsMap[optId] || optId
+          ),
+        };
+      }),
+    }));
+
+    return {
+      message: "Quiz responses retrieved successfully",
+      total_response: responses.length,
+      userResponses,
+    };
+  } catch (error) {
+    throw new Error(`Error fetching quiz responses: ${error.message}`);
+  }
+};
+
+

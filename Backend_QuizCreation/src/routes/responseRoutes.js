@@ -12,4 +12,7 @@ router.get('/form/:formId', responseController.getResponsesByForm);
 // ลบ Responses
 router.delete('/delete', responseController.deleteResponses);
 
+// ดาวน์โหลด Responses เป็น Excel
+router.get("/download/:formId", responseController.downloadResponses);
+
 module.exports = router;

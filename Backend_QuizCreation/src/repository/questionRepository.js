@@ -1,4 +1,6 @@
 const Question = require('../models/question');
+const Form = require("../models/form");
+const Section = require("../models/section");
 
 // ---------- ฟังก์ชันสำหรับการตรวจสอบข้อมูล ----------
 // ตรวจสอบการมีอยู่ของ Question
@@ -77,6 +79,38 @@ exports.getQuestionsBySectionId = async (sectionId) => {
     return await Question.find({ section_id: sectionId }).lean();
 };
 
+// ดึง Question ทั้งหมด ตาม form_id
+exports.getAllQuestionsByFormId = async (formId) => {
+    const form = await Form.findOne({ form_id: formId }).lean();
+    if (!form) {
+      throw new Error("Form not found");
+    }
+  
+    const sectionIds = form.section_id;
+  
+    const sections = await Section.find({ section_id: { $in: sectionIds } }).lean();
+  
+    const result = [];
+  
+    for (const section of sections) {
+      const questions = await Question.find({ section_id: section.section_id }).lean();
+  
+      result.push({
+        section_id: section.section_id,
+        section_title: section.title,
+        questions: questions.map((q) => ({
+          question_id: q.question_id,
+          question: q.question,
+          type: q.type,
+          options: q.options || [], // ✅ ดึง options ตรงนี้ไว้ใช้ mapping option_id → text
+        })),
+      });
+    }
+  
+    return result;
+  };
+  
+
 // ********** Option **********
 // เพิ่ม Option ใน Question
 exports.addOptionToQuestion = async (questionId, optionData) => {
@@ -124,3 +158,4 @@ exports.deleteOption = async (questionId, optionId) => {
     }
     return updatedQuestion;
 };
+

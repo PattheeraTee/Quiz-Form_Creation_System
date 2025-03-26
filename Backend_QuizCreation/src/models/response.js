@@ -23,7 +23,7 @@ const responseSchema = new Schema({
             required: true,
         },
         answer_text: {
-            type: String // รองรับ JSON หรือค่าหลากหลายรูปแบบ
+            type: String 
         },
         answer_date: {
             type: Date,
@@ -34,6 +34,9 @@ const responseSchema = new Schema({
         option_id: [{
             type: String,
         }],
+        question_score: {
+            type: Number,
+        },
     }],
     submitted_at: {
         type: Date,

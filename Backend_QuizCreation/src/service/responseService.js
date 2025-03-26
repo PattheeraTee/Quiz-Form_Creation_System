@@ -599,9 +599,11 @@ exports.downloadResponsesAsExcel = async (formId) => {
     const sections = await questionRepository.getAllQuestionsByFormId(formId);
 
     // ✅ ดึงข้อมูลฟอร์มเพื่อดูประเภท
-    const form = await coverpageRepository.getCoverpage(formId);
+    const coverpage = await coverpageRepository.getCoverpage(formId);
+    const form = await formRepository.getForm(formId);
     const formType = form?.form_type || "survey";
-    const formTitle = form?.title || `form_${formId}`;
+    console.log("form type: ", formType);
+    const formTitle = coverpage?.title || `form_${formId}`;
     const safeTitle = formTitle.replace(/[^a-zA-Z0-9ก-๙\s_-]/g, "").replace(/\s+/g, "_");
 
     // ✅ เตรียม questionMap

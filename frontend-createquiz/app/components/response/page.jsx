@@ -12,7 +12,10 @@ const ResponsePage = ({ quizId, formType }) => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailData, setDetailData] = useState([]);
   const [selectedQuestionId, setSelectedQuestionId] = useState(null);
-
+  const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const [evaluation, setEvaluation] = useState(null);
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  const [isAccepted, setIsAccepted] = useState(false);
 
   useEffect(() => {
     if (quizId) {
@@ -192,6 +195,53 @@ const ResponsePage = ({ quizId, formType }) => {
     </div>
   );
 
+  const handleEvaluateWithAI = async () => {
+    if (!selectedQuestionId) return;
+    setIsEvaluating(true);
+  
+    try {
+      const response = await fetch(`http://localhost:3001/response/text-input/${selectedQuestionId}`);
+      const questionData = await response.json();
+  
+      const previewRes = await fetch(`http://localhost:3001/evaluate-preview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(questionData),
+      });
+  
+      const result = await previewRes.json();
+
+      console.log("AI Evaluation Preview:", result);
+
+      setEvaluation(result.evaluation);
+      setIsEvaluating(false);
+    } catch (error) {
+      console.error("AI Evaluation error:", error);
+      setIsEvaluating(false);
+    }
+  };
+  
+  const handleAcceptEvaluation = async () => {
+    try {
+      const res = await fetch(`http://localhost:3001/accept-evaluation`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question_id: selectedQuestionId,
+          evaluation,
+        }),
+      });
+  
+      const result = await res.json();
+      setIsAccepted(true);
+  
+      // ✅ อัปเดตข้อมูลใหม่ และซ่อน evaluation
+      await fetchDetailResponses();
+      setEvaluation(null); // ซ่อนผล AI หลังอัปเดตเสร็จ
+    } catch (error) {
+      console.error("Error accepting evaluation:", error);
+    }
+  };
 
   return (
     <div className="p-4 bg-[#F9F8F6] flex justify-center">
@@ -212,6 +262,7 @@ const ResponsePage = ({ quizId, formType }) => {
                     : question.question_id;
                 
                   setSelectedQuestionId(id);
+                  setSelectedQuestion(question);
                   fetchDetailResponses();
                 }}                
               >
@@ -251,10 +302,37 @@ const ResponsePage = ({ quizId, formType }) => {
           </div>
         ))}
       </div>
-      {showDetailModal && (
+      {showDetailModal && selectedQuestion && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg max-w-3xl w-full shadow-lg overflow-y-auto max-h-[80vh]">
-            <h2 className="text-xl font-bold mb-4">รายละเอียดการตอบกลับ</h2>
+            {/* ✅ ปุ่มตรวจสอบ AI เฉพาะ text_input */}
+            {formType === "quiz" && selectedQuestion?.type === "text_input" && (
+              <div className="flex justify-end mb-2">
+                <button
+                  className="bg-[#03A9F4] text-white px-4 py-1 rounded hover:bg-[#0B76BC] text-sm"
+                  onClick={handleEvaluateWithAI}
+                  disabled={isEvaluating}
+                >
+                  {isEvaluating ? "กำลังประเมิน..." : "ตรวจสอบคำตอบด้วย AI"}
+                </button>
+              </div>
+            )}
+            {/* ✅ แสดงคำถามและจำนวนการตอบกลับ */}
+            <h2 className="text-xl font-bold mb-1">คำถาม: {selectedQuestion.question_text}</h2>
+            <p className="text-gray-600 mb-4">
+              {(() => {
+                // ดึงจำนวนการตอบกลับจากข้อมูล selectedQuestion
+                if (selectedQuestion.total_answer_question !== undefined) {
+                  return `${selectedQuestion.total_answer_question} การตอบกลับ`;
+                } else if (selectedQuestion.total_answer_option?.length > 0) {
+                  return `${selectedQuestion.total_answer_option.reduce((sum, opt) => sum + opt.count, 0)} การตอบกลับ`;
+                } else {
+                  return '';
+                }
+              })()}
+            </p>
+
+            {/* ตารางคำตอบ */}
             <table className="w-full border-collapse border">
               <thead>
                 <tr className="bg-gray-100">
@@ -273,9 +351,9 @@ const ResponsePage = ({ quizId, formType }) => {
                     } else {
                       return r.question_id === selectedQuestionId;
                     }
-                  });                                    
+                  });
                   if (!target) return null;
-      
+
                   return (
                     <tr key={idx}>
                       <td className="border p-2">{user.email || 'anonymous'}</td>
@@ -292,18 +370,59 @@ const ResponsePage = ({ quizId, formType }) => {
                 })}
               </tbody>
             </table>
-      
+
+            {/* ✅ แสดงผล AI Evaluation ถ้ามี */}
+            {evaluation && (
+              <div className="mt-6 border-t pt-4">
+                <h3 className="text-lg font-bold mb-2">ผลการประเมินด้วย AI</h3>
+                <ul className="mb-4">
+                  {evaluation.map((item, idx) => (
+                    <li key={idx} className="flex justify-between items-center mb-1">
+                      <span>{item.answer}</span>
+                      <span className={item.is_correct ? "text-green-600 font-semibold" : "text-red-600"}>
+                        {item.is_correct ? "✔️ ถูกต้อง" : "❌ ไม่ถูกต้อง"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {!isAccepted ? (
+                <div className="flex items-center gap-3">
+                  <button
+                    className="bg-[#9D9D9D] text-white px-4 py-2 rounded hover:bg-[#434146]"
+                    onClick={handleEvaluateWithAI}
+                    disabled={isEvaluating}
+                  >
+                    {isEvaluating ? "กำลังประเมินใหม่..." : "ประเมินใหม่"}
+                  </button>
+                  <button
+                    className="bg-[#03A9F4] text-white px-4 py-2 rounded hover:bg-[#0B76BC]"
+                    onClick={handleAcceptEvaluation}
+                  >
+                    ยืนยันการตรวจคำตอบ
+                  </button>
+                </div>
+              ) : (
+                <p className="text-green-700 font-medium">อัปเดตคะแนนเรียบร้อยแล้ว</p>
+              )}
+              </div>
+            )}
+
             <div className="flex justify-end mt-4">
               <button
                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                onClick={() => setShowDetailModal(false)}
+                onClick={() => {
+                  setShowDetailModal(false);
+                  setSelectedQuestion(null);
+                  setEvaluation(null); // ซ่อนผล AI เมื่อปิด
+                  setIsAccepted(false); // รีเซ็ตปุ่มยืนยัน
+                }}
               >
                 ปิด
               </button>
             </div>
           </div>
         </div>
-      )}  
+      )}
     </div>
   );
 };

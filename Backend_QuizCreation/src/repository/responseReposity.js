@@ -36,6 +36,18 @@ const responseRepository = {
     return await Response.find({ form_id: formId }).lean(); // ✅ ทำงานได้
 
   },
+
+  // ดึง Response ทั้งหมดที่มีคำตอบของ question_id ที่ระบุ
+  getResponsesByQuestionId: async (questionId) => {
+    return await Response.find({
+      "answers.question_id": questionId
+    }).lean();
+  },
+
+  updateResponseById: async (id, update) => {
+    return await Response.findByIdAndUpdate(id, update, { new: true });
+  }  
 };
+
 
 module.exports = responseRepository;

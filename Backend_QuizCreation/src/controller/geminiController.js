@@ -1,5 +1,6 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const formService = require('../service/formService');
+const responseService = require('../service/responseService');
 
 const genAI = new GoogleGenerativeAI("AIzaSyAXvPYCK4n1YO9UCpt6lnF7tWe7Eg_3qfg");
 const multer = require("multer");
@@ -127,4 +128,72 @@ exports.generateQuizForm = async (req, res) => {
             res.status(500).json({ message: "Failed to generate quiz form." });
         }
     });
+};
+
+exports.evaluateTextInputPreview = async (req, res) => {
+    const { question_id, question_text, correct_answer, student_answers } = req.body;
+  
+    if (!question_id || !question_text || !correct_answer || !student_answers) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
+  
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  
+      const correctAnswerText = Array.isArray(correct_answer)
+        ? correct_answer.map((a, i) => `${i + 1}. ${a}`).join('\n')
+        : correct_answer;
+  
+      const prompt = `
+  You are evaluating answers to a quiz question.
+  
+  Question: "${question_text}"
+  Correct Answers:
+  ${correctAnswerText}
+  
+  Determine which of the following student answers are semantically equivalent to any of the correct answers above:
+  ${student_answers.map((ans, i) => `${i + 1}. ${ans}`).join('\n')}
+  
+  Respond in JSON format:
+  {
+    "results": [
+      { "answer": "string", "is_correct": true|false },
+      ...
+    ]
+  }
+      `.trim();
+  
+      const result = await model.generateContent(prompt);
+      const raw = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+      const cleaned = raw.replace(/```json|```/g, "").trim();
+      const evaluation = JSON.parse(cleaned);
+  
+      res.json({
+        message: "Evaluation preview generated",
+        question_id,
+        evaluation: evaluation.results,
+      });
+    } catch (err) {
+      res.status(500).json({ message: "Gemini failed to evaluate", error: err.message });
+    }
+};
+
+exports.applyTextInputEvaluation = async (req, res) => {
+    const { question_id, evaluation } = req.body;
+
+    if (!question_id || !evaluation) {
+        return res.status(400).json({ message: "Missing fields." });
+    }
+
+    try {
+      // 👇 ใช้ผ่าน service เท่านั้น
+        const updatedCount = await responseService.applyGeminiEvaluation(question_id, evaluation);
+
+        res.json({
+        message: "Responses updated successfully.",
+        updated_responses: updatedCount,
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Failed to update responses", error: err.message });
+    }
 };

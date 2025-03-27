@@ -733,4 +733,69 @@ exports.downloadResponsesAsExcel = async (formId) => {
   }
 };
 
+exports.applyGeminiEvaluation = async (questionId, evaluation) => {
+  const allResponses = await responseRepository.getResponsesByQuestionId(questionId);
+  const question = await questionRepository.getQuestionById(questionId);
+  const points = question?.points || 1;
+
+  let updatedCount = 0;
+
+  for (const response of allResponses) {
+    let changed = false;
+
+    for (const answer of response.answers) {
+      const matchQuestion = Array.isArray(answer.question_id)
+        ? answer.question_id.includes(questionId)
+        : answer.question_id === questionId;
+
+      if (matchQuestion && answer.type === 'text_input') {
+        const match = evaluation.find(e => e.answer === answer.answer_text);
+        if (match) {
+          answer.question_score = match.is_correct ? points : 0;
+          changed = true;
+        }
+      }
+    }
+
+    if (changed) {
+      await responseRepository.updateResponseById(response._id, { answers: response.answers });
+      updatedCount++;
+    }
+  }
+
+  return updatedCount;
+};
+
+exports.getTextInputAnswersByQuestionId = async (questionId) => {
+  const question = await questionRepository.getQuestionById(questionId);
+  if (!question || question.type !== 'text_input') {
+    throw new Error("Question not found or not of type text_input");
+  }
+
+  const responses = await responseRepository.getResponsesByQuestionId(questionId);
+
+  const uniqueAnswersSet = new Set();
+
+  responses.forEach((response) => {
+    response.answers.forEach((answer) => {
+      const matchQuestion = Array.isArray(answer.question_id)
+        ? answer.question_id.includes(questionId)
+        : answer.question_id === questionId;
+
+      if (matchQuestion && answer.type === "text_input" && answer.answer_text) {
+        uniqueAnswersSet.add(answer.answer_text.trim());
+      }
+    });
+  });
+
+  return {
+    question_id: questionId,
+    question_text: question.question,
+    correct_answer: Array.isArray(question.correct_answer)
+      ? question.correct_answer
+      : question.correct_answer,
+    student_answers: Array.from(uniqueAnswersSet),
+  };
+};
+
 

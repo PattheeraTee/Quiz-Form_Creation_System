@@ -20,77 +20,21 @@ export default function Coverpage({ params }) {
     try {
       const response = await axios.get(`http://localhost:3001/form/${quizId}`);
       const formData = response.data;
-
-      // Extract necessary fields
-      const { is_form_open, start_date, end_date, email_require } =
-        formData.form;
-
-      // Handle form conditions
+  
       const now = new Date();
-      const timeZoneOffset = 7 * 60 * 60 * 1000; // GMT+7 (เวลาประเทศไทย)
-      
-      const startDate = start_date ? new Date(new Date(start_date).getTime() - timeZoneOffset) : null;
-      const endDate = end_date ? new Date(new Date(end_date).getTime() - timeZoneOffset) : null;
+      const timeZoneOffset = 7 * 60 * 60 * 1000;
+      const startDate = formData.form.start_date ? new Date(new Date(formData.form.start_date).getTime() - timeZoneOffset) : null;
+      const endDate = formData.form.end_date ? new Date(new Date(formData.form.end_date).getTime() - timeZoneOffset) : null;
   
-      console.log("Start date (TH):", startDate ? startDate.toLocaleString("th-TH", { hour12: false }) : "N/A");
-      console.log("End date (TH):", endDate ? endDate.toLocaleString("th-TH", { hour12: false }) : "N/A");
-  
-
-      if (!is_form_open) {
-        setFormStatus("closed");
-      } else if (startDate && now < startDate) {
-        setFormStatus("not_started");
-      } else if (endDate && now > endDate) {
-        setFormStatus("closed");
-      } else {
-        if (email_require) {
-          try {
-            const cookieResponse = await axios.get(
-              "http://localhost:3000/api/getCookie",
-              {
-                withCredentials: true,
-              }
-            );
-            const userId = cookieResponse.data.userId;
-
-            if (!userId) {
-              Swal.fire({
-                icon: "warning",
-                title: "กรุณาล็อกอิน",
-                text: "คุณต้องล็อกอินก่อนทำแบบฟอร์มนี้",
-                confirmButtonText: "ไปที่หน้าล็อกอิน",
-                allowOutsideClick: false,
-              }).then(() => {
-                window.location.href = `http://localhost:3000?redirect=/quiz/${quizId}`;
-              });
-              return;
-            }
-          } catch (error) {
-            console.error("Error fetching cookie or user ID:", error);
-            Swal.fire({
-              icon: "error",
-              title: "เกิดข้อผิดพลาด",
-              text: "ไม่สามารถตรวจสอบสถานะการเข้าสู่ระบบได้",
-              confirmButtonText: "ไปที่หน้าล็อกอิน",
-              allowOutsideClick: false,
-            }).then(() => {
-              window.location.href = `http://localhost:3000?redirect=/quiz/${quizId}`;
-            });
-            return;
-          }
-        }
-        setFormStatus("open");
-      }
-
-      // Set cover page and theme
+      // ✅ ตั้งค่า coverPage และ theme ก่อนเสมอ
       setCoverPage({
         title: formData.coverPage.title,
         description: formData.coverPage.description,
         textButton: formData.coverPage.text_button,
       });
       setTheme({ primaryColor: formData.theme.primary_color });
-
-      // Set quiz data
+  
+      // ✅ ตั้งค่า quiz
       const formattedQuiz = {
         sections: formData.sections.map((section) => ({
           id: section.section_id,
@@ -108,10 +52,76 @@ export default function Coverpage({ params }) {
         })),
       };
       setQuiz(formattedQuiz);
+  
+      // ✅ ตรวจสอบสถานะฟอร์ม
+      if (!formData.form.is_form_open) {
+        setFormStatus("closed");
+        return;
+      } else if (startDate && now < startDate) {
+        setFormStatus("not_started");
+        return;
+      } else if (endDate && now > endDate) {
+        setFormStatus("closed");
+        return;
+      }
+  
+      // ✅ ตรวจสอบ email_require หรือ limit_one_response
+      if (formData.form.email_require || formData.form.limit_one_response) {
+        try {
+          const cookieResponse = await axios.get("http://localhost:3000/api/getCookie", {
+            withCredentials: true,
+          });
+          const userId = cookieResponse.data.userId;
+  
+          if (!userId) {
+            Swal.fire({
+              icon: "warning",
+              title: "กรุณาล็อกอิน",
+              text: "คุณต้องล็อกอินก่อนทำแบบฟอร์มนี้",
+              confirmButtonText: "ไปที่หน้าล็อกอิน",
+              allowOutsideClick: false,
+            }).then(() => {
+              window.location.href = `http://localhost:3000?redirect=/quiz/${quizId}`;
+            });
+            return;
+          }
+  
+          if (formData.form.limit_one_response) {
+            const userResponse = await axios.get(`http://localhost:3001/users/${userId}`, {
+              headers: { "Content-Type": "application/json" },
+              withCredentials: true,
+            });
+  
+            const userEmail = userResponse.data.email;
+  
+            const detailResponse = await axios.get(
+              `http://localhost:3001/response/form/${quizId}/detail?type=${formData.form.form_type}`
+            );
+  
+            const allUserResponses = detailResponse.data.userResponses || [];
+  
+            const alreadyAnswered = allUserResponses.some(
+              (entry) => entry.email === userEmail
+            );
+  
+            if (alreadyAnswered) {
+              setFormStatus("already_answered"); // ✅ ตั้งค่า แต่ไม่ return
+              return;
+            }
+          }
+        } catch (error) {
+          console.error("Error checking login or duplicate response:", error);
+        }
+      }
+  
+      // ✅ ถ้ายังไม่เคยตอบเลย
+      setFormStatus("open");
+  
     } catch (error) {
       console.error("Error fetching form data:", error);
     }
   };
+  
 
   useEffect(() => {
     fetchFormData();
@@ -167,6 +177,8 @@ export default function Coverpage({ params }) {
                   ? "แบบฟอร์มนี้ไม่รับคำตอบแล้ว"
                   : formStatus === "not_started"
                   ? "แบบฟอร์มนี้ยังไม่เปิดให้ทำ"
+                  : formStatus === "already_answered"
+                  ? "คุณได้ตอบแบบฟอร์มนี้ไปแล้ว"              
                   : coverPage.description}
               </p>
               {formStatus === "open" && (

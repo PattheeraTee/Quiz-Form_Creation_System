@@ -94,26 +94,30 @@ exports.downloadResponses = async (req, res) => {
   try {
     console.log("📢 กำลังเตรียมไฟล์สำหรับดาวน์โหลด...");
     const { formId } = req.params;
-    const filePath = await responseService.downloadResponsesAsExcel(formId);
+    const { filePath, safeTitle } = await responseService.downloadResponsesAsExcel(formId);
 
-    // ตรวจสอบว่าไฟล์มีอยู่จริงหรือไม่
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: "ไฟล์ไม่พบ หรือไม่มีข้อมูล" });
     }
-
-    // ✅ กำหนด Header เพื่อให้เบราว์เซอร์เข้าใจว่าเป็นไฟล์ Excel
-    res.setHeader("Content-Disposition", `attachment; filename=responses_${formId}.xlsx`);
+    
+    const filename = `response_${safeTitle}.xlsx`;
+    
+    // ✅ Encode ชื่อไฟล์ให้เป็น UTF-8
+    const encodedFilename = encodeURIComponent(filename);
+    
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-
-    // ✅ ส่งไฟล์ให้ผู้ใช้ดาวน์โหลด
-    res.download(filePath, (err) => {
+    res.setHeader("Content-Disposition", `attachment; filename*=UTF-8''${encodedFilename}`);
+    
+    res.download(filePath, filename, (err) => {
       if (err) {
         console.error("❌ Error downloading file:", err);
         return res.status(500).json({ error: "เกิดข้อผิดพลาดในการดาวน์โหลดไฟล์" });
       }
-
-      console.log(`✅ ไฟล์ถูกส่งไปยังผู้ใช้: ${filePath}`);
+    
+      console.log(`✅ ไฟล์ถูกส่งไปยังผู้ใช้: ${filename}`);
     });
+    
+    
 
   } catch (error) {
     console.error("❌ Error:", error.message);

@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import axios from 'axios';
 
 const Pie = dynamic(() => import('chart.js/auto').then(() => import('react-chartjs-2').then((mod) => mod.Pie)), { ssr: false });
 const Bar = dynamic(() => import('chart.js/auto').then(() => import('react-chartjs-2').then((mod) => mod.Bar)), { ssr: false });
@@ -151,6 +152,33 @@ const ResponsePage = ({ quizId, formType }) => {
   //   </div>
   // );
 
+  const downloadExcelFile = async () => {
+    try {
+      const response = await axios.get(`http://localhost:3001/response/download/${quizId}`, {
+        responseType: 'blob',
+      });
+  
+      // ตั้งชื่อไฟล์โดยใช้ header.title
+      const rawTitle = header.title || "responses";
+      const safeTitle = rawTitle.replace(/[^a-zA-Z0-9ก-๙\s_-]/g, "").replace(/\s+/g, "_");
+      const fileName = `response_${safeTitle}.xlsx`;
+  
+      // สร้าง blob URL
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url); // cleanup
+    } catch (error) {
+      console.error("❌ Error downloading file:", error);
+    }
+  };
+  
+  
+
   // ฟังก์ชันสร้างกล่องแสดงหัวข้อและจำนวนการตอบกลับ
   const renderHeaderSummary = () => (
     <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow mb-4">
@@ -160,8 +188,9 @@ const ResponsePage = ({ quizId, formType }) => {
           <span className="text-2xl font-bold text-black">{header.total_response}</span> การตอบกลับ
         </p>
       </div>
-      <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-        เปิดใน Sheet
+      <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"       onClick={downloadExcelFile}
+      >
+        ดาวโหลด excel
       </button>
     </div>
   );

@@ -3,6 +3,7 @@ const { responseRestrictedFields } = require("../constants/restrictedFields");
 const responseRepository = require("../repository/responseReposity");
 const questionRepository = require("../repository/questionRepository");
 const formRepository = require("../repository/formRepository");
+const coverpageRepository = require("../repository/coverpageRepository");
 const formService = require("./formService");
 const fs = require("fs");
 const path = require("path");
@@ -597,14 +598,24 @@ exports.downloadResponsesAsExcel = async (formId) => {
 
     const sections = await questionRepository.getAllQuestionsByFormId(formId);
 
-    // ✅ สร้าง questionMap: { question_id: { question, options } }
+    // ✅ ดึงข้อมูลฟอร์มเพื่อดูประเภท
+    const coverpage = await coverpageRepository.getCoverpage(formId);
+    const form = await formRepository.getForm(formId);
+    const formType = form?.form_type || "survey";
+    console.log("form type: ", formType);
+    const formTitle = coverpage?.title || `form_${formId}`;
+    const safeTitle = formTitle.replace(/[^a-zA-Z0-9ก-๙\s_-]/g, "").replace(/\s+/g, "_");
+
+    // ✅ เตรียม questionMap
     const questionMap = {};
+    const questionIds = [];
     sections.forEach((section) => {
       section.questions.forEach((q) => {
         questionMap[q.question_id] = {
           question: q.question,
           options: q.options || [],
         };
+        questionIds.push(q.question_id);
       });
     });
 
@@ -612,27 +623,54 @@ exports.downloadResponsesAsExcel = async (formId) => {
     const worksheet = workbook.addWorksheet("Responses");
 
     // ✅ Header
-    const headers = ["Email", "Total Score"];
-    Object.values(questionMap).forEach(({ question }) => headers.push(question));
+    const headers = ["Email"];
+    if (formType === "quiz") headers.push("Total Score");
+    headers.push("Submitted At");
+
+    questionIds.forEach((qid) => {
+      headers.push(questionMap[qid].question);
+      if (formType === "quiz") {
+        headers.push(`score ของ ${questionMap[qid].question}`);
+      }
+    });
+
     worksheet.addRow(headers);
 
-    // ✅ ตอบกลับแต่ละคน
+    // ✅ Responses
     responses.forEach((response) => {
       const row = [];
       row.push(response.email || "anonymous");
-      row.push(response.score || 0);
+      if (formType === "quiz") row.push(response.score || 0);
+      row.push(
+        response.submitted_at
+          ? new Date(response.submitted_at).toLocaleString("en-GB", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              hour12: false,
+              timeZone: "Asia/Bangkok",
+            }).replace(",", "")
+          : ""
+      );
 
-      Object.keys(questionMap).forEach((questionId) => {
+      questionIds.forEach((questionId) => {
         const answer = response.answers.find(
           (ans) => Array.isArray(ans.question_id) && ans.question_id.includes(questionId)
         );
 
         if (!answer) {
-          row.push(""); // ✅ เว้นว่างหากไม่ตอบ
+          row.push("");
+          if (formType === "quiz") row.push("");
         } else {
+          const options = questionMap[questionId].options || [];
+
+          // ✅ คำตอบ
           switch (answer.type) {
             case "text_input":
-              row.push(answer.answer_text || ""); // ✅ เว้นว่าง
+              row.push(answer.answer_text || "");
               break;
 
             case "multiple_choice":
@@ -640,11 +678,8 @@ exports.downloadResponsesAsExcel = async (formId) => {
               const selectedId = Array.isArray(answer.option_id)
                 ? answer.option_id[0]
                 : answer.option_id;
-
-              const options = questionMap[questionId].options || [];
-              const option = options.find(opt => opt.option_id === selectedId);
-
-              row.push(option?.text || ""); // ✅ เว้นว่างถ้าไม่เจอ
+              const option = options.find((opt) => opt.option_id === selectedId);
+              row.push(option?.text || "");
               break;
             }
 
@@ -652,19 +687,15 @@ exports.downloadResponsesAsExcel = async (formId) => {
               const selectedIds = Array.isArray(answer.option_id)
                 ? answer.option_id
                 : [answer.option_id];
-
-              const options = questionMap[questionId].options || [];
-
               const selectedTexts = selectedIds
-                .map(id => options.find(opt => opt.option_id === id)?.text)
+                .map((id) => options.find((opt) => opt.option_id === id)?.text)
                 .filter(Boolean);
-
-              row.push(selectedTexts.length ? selectedTexts.join(", ") : ""); // ✅ เว้นว่าง
+              row.push(selectedTexts.length ? selectedTexts.join(", ") : "");
               break;
             }
 
             case "rating":
-              row.push(answer.answer_rating ?? ""); // ✅ เว้นว่าง
+              row.push(answer.answer_rating ?? "");
               break;
 
             case "date":
@@ -676,7 +707,12 @@ exports.downloadResponsesAsExcel = async (formId) => {
               break;
 
             default:
-              row.push(""); // ✅ fallback เว้นว่าง
+              row.push("");
+          }
+
+          // ✅ คะแนนของคำถาม (เฉพาะ quiz)
+          if (formType === "quiz") {
+            row.push(answer.question_score ?? "");
           }
         }
       });
@@ -684,13 +720,14 @@ exports.downloadResponsesAsExcel = async (formId) => {
       worksheet.addRow(row);
     });
 
+    // ✅ Save ไฟล์
     const downloadDir = path.join(os.homedir(), "Downloads");
-    const baseName = `responses_${formId}`;
+    const baseName = `response_${safeTitle}`;
     const filePath = getUniqueFilePath(downloadDir, baseName);
     await workbook.xlsx.writeFile(filePath);
 
     console.log("✅ ไฟล์ Excel ถูกสร้างแล้ว:", filePath);
-    return filePath;
+    return { filePath, safeTitle };
   } catch (error) {
     throw new Error(`❌ Error generating Excel file: ${error.message}`);
   }

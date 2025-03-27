@@ -18,11 +18,64 @@ export default function SectionPage({ params, searchParams }) {
   const [allResponses, setAllResponses] = useState(
     searchParams.allResponses ? JSON.parse(searchParams.allResponses) : []
   );
+
   const [theme, setTheme] = useState(
     searchParams.theme
       ? JSON.parse(decodeURIComponent(searchParams.theme))
       : null
   );
+  useEffect(() => {
+    if (searchParams.allResponses) {
+      const parsed = JSON.parse(searchParams.allResponses);
+      setAllResponses(parsed);
+    }
+  }, [searchParams.allResponses]);
+
+  useEffect(() => {
+    if (!section || !section.questions) return;
+
+    const newResponses = {};
+    for (const question of section.questions) {
+      const matched = allResponses.find(
+        (res) => res.question_id === question.id
+      );
+      if (!matched) continue;
+
+      switch (question.type) {
+        case "multiple_choice":
+        case "dropdown":
+          const optionText = question.options.find(
+            (opt) => opt.id === matched.option_id?.[0]
+          )?.text;
+          if (optionText) newResponses[question.id] = optionText;
+          break;
+
+        case "checkbox":
+          const selectedTexts = question.options
+            .filter((opt) => matched.option_id?.includes(opt.id))
+            .map((opt) => opt.text);
+          if (selectedTexts.length) newResponses[question.id] = selectedTexts;
+          break;
+
+        case "rating":
+          newResponses[question.id] = matched.answer_rating || 0;
+          break;
+
+        case "text_input":
+          newResponses[question.id] = matched.answer_text || "";
+          break;
+
+        case "date":
+          newResponses[question.id] = matched.answer_date || "";
+          break;
+
+        default:
+          break;
+      }
+    }
+
+    setResponses(newResponses);
+  }, [section, allResponses]);
 
   const fetchTheme = async () => {
     try {
@@ -45,6 +98,25 @@ export default function SectionPage({ params, searchParams }) {
     return array.sort(() => Math.random() - 0.5);
   };
 
+  const getOrShuffleQuestions = (formId, sectionId, questions) => {
+    const key = `quiz-${formId}-section-${sectionId}-questions`;
+    const saved = sessionStorage.getItem(key);
+
+    if (saved) {
+      // 🔁 ใช้ลำดับเดิมที่เคยสุ่มไว้
+      const savedOrder = JSON.parse(saved);
+      return savedOrder
+        .map((id) => questions.find((q) => q.question_id === id))
+        .filter(Boolean);
+    } else {
+      // 🎲 สุ่มคำถาม และบันทึกลำดับไว้
+      const shuffled = [...questions].sort(() => Math.random() - 0.5);
+      const order = shuffled.map((q) => q.question_id);
+      sessionStorage.setItem(key, JSON.stringify(order));
+      return shuffled;
+    }
+  };
+
   useEffect(() => {
     const fetchSectionData = async () => {
       try {
@@ -56,9 +128,13 @@ export default function SectionPage({ params, searchParams }) {
         const formattedSections = (data.sections || []).map((section) => {
           let questions = section.questions || [];
 
-          // เช็คว่าแบบฟอร์มตั้งค่าให้สุ่มคำถามหรือไม่
+          // ✅ ใช้ getOrShuffleQuestions เฉพาะเมื่อเปิดการสุ่ม
           if (data.form.shuffle_question) {
-            questions = shuffleArray([...questions]);
+            questions = getOrShuffleQuestions(
+              quizId,
+              section.section_id,
+              questions
+            );
           }
 
           return {
@@ -118,10 +194,8 @@ export default function SectionPage({ params, searchParams }) {
     const currentResponses = section.questions
       .map((question) => {
         const response = responses[question.id];
-
-        if (!response || (Array.isArray(response) && response.length === 0)) {
+        if (!response || (Array.isArray(response) && response.length === 0))
           return null;
-        }
 
         switch (question.type) {
           case "multiple_choice":
@@ -159,20 +233,35 @@ export default function SectionPage({ params, searchParams }) {
             return null;
         }
       })
-      .filter((answer) => answer !== null);
+      .filter(Boolean);
 
-    setAllResponses((prev) => [...prev, ...currentResponses]);
-    return currentResponses; // Return to pass along in query params
+    return currentResponses;
+  };
+
+  const mergeResponses = (baseResponses, newResponses) => {
+    const merged = [...baseResponses];
+    newResponses.forEach((res) => {
+      const idx = merged.findIndex((r) => r.question_id === res.question_id);
+      if (idx !== -1) {
+        merged[idx] = res;
+      } else {
+        merged.push(res);
+      }
+    });
+    return merged;
   };
 
   const handleNext = () => {
     if (validateResponses()) {
       const currentResponses = saveCurrentResponses();
+      const updatedResponses = mergeResponses(allResponses, currentResponses);
+      setAllResponses(updatedResponses); // อัปเดต state ด้วย
+
       const currentIndex = allSections.findIndex((sec) => sec.id === sectionId);
       const nextSectionId = allSections[currentIndex + 1]?.id;
       if (nextSectionId) {
         const encodedResponses = encodeURIComponent(
-          JSON.stringify([...allResponses, ...currentResponses])
+          JSON.stringify(updatedResponses)
         );
         const encodedTheme = encodeURIComponent(JSON.stringify(theme));
         router.push(
@@ -183,10 +272,17 @@ export default function SectionPage({ params, searchParams }) {
   };
 
   const handlePrevious = () => {
+    const currentResponses = saveCurrentResponses(); // ดึงคำตอบของ section ปัจจุบัน
+    const updatedResponses = mergeResponses(allResponses, currentResponses); // รวมกับคำตอบเดิม
+    setAllResponses(updatedResponses); // อัปเดต state
+
     const currentIndex = allSections.findIndex((sec) => sec.id === sectionId);
     const prevSectionId = allSections[currentIndex - 1]?.id;
+
     if (prevSectionId) {
-      const encodedResponses = encodeURIComponent(JSON.stringify(allResponses));
+      const encodedResponses = encodeURIComponent(
+        JSON.stringify(updatedResponses)
+      );
       const encodedTheme = encodeURIComponent(JSON.stringify(theme));
       router.push(
         `/quiz/${quizId}/sections/${prevSectionId}?allResponses=${encodedResponses}&theme=${encodedTheme}`
@@ -358,11 +454,12 @@ function QuestionComponent({
                   type="radio"
                   name={question.id}
                   value={option.text}
-                  className="form-radio h-4 w-4 text-blue-600"
+                  checked={responses[question.id] === option.text}
                   onChange={(e) =>
                     handleInputChange(question.id, e.target.value)
                   }
                 />
+
                 <span className="ml-2">{option.text}</span>
               </label>
             </div>
@@ -387,7 +484,7 @@ function QuestionComponent({
                 <input
                   type="checkbox"
                   value={option.text}
-                  className="form-checkbox h-4 w-4 text-blue-600"
+                  checked={(responses[question.id] || []).includes(option.text)}
                   onChange={(e) =>
                     handleCheckboxChange(
                       question.id,
@@ -395,8 +492,8 @@ function QuestionComponent({
                       question.limit || Infinity
                     )
                   }
-                  checked={(responses[question.id] || []).includes(option.text)}
                 />
+
                 <span className="ml-2">{option.text}</span>
               </label>
             </div>
@@ -412,6 +509,7 @@ function QuestionComponent({
           </p>
           <select
             className="form-select block w-full mt-1 border border-gray-300 rounded px-2 py-1.5"
+            value={responses[question.id] || ""}
             onChange={(e) => handleInputChange(question.id, e.target.value)}
           >
             <option value="">เลือกคำตอบ</option>
@@ -438,9 +536,11 @@ function QuestionComponent({
                     type="radio"
                     name={question.id}
                     value={rating}
-                    className="hidden"
+                    checked={responses[question.id] === rating}
                     onChange={() => handleInputChange(question.id, rating)}
+                    className="hidden"
                   />
+
                   <FontAwesomeIcon
                     icon={faStar}
                     className={`cursor-pointer ${
@@ -464,6 +564,7 @@ function QuestionComponent({
           </p>
           <textarea
             className="form-textarea block w-full mt-1 border border-gray-300 rounded"
+            value={responses[question.id] || ""}
             onChange={(e) => handleInputChange(question.id, e.target.value)}
           />
         </div>
@@ -478,6 +579,7 @@ function QuestionComponent({
           <input
             type="date"
             className="form-input block w-full mt-1 border border-gray-300 rounded px-2 py-1.5"
+            value={responses[question.id] || ""}
             onChange={(e) => handleInputChange(question.id, e.target.value)}
           />
         </div>

@@ -29,35 +29,15 @@ export default function Question({ quizData }) {
         ...section,
         questions: section.questions.map((question) => ({
           ...question,
-          required: question.required || false, // ตรวจสอบให้แน่ใจว่า required ถูกกำหนดค่า
+          required: question.required || false,
           correct_answer: Array.isArray(question.correct_answer) ? question.correct_answer : [],
           maxSelect: question.maxSelect || 1,
-          ratingLevel: question.ratingLevel || 1,
+          ratingLevel: question.type === "rating" ? question.limit || 1 : null,
         })),
       }));
-            console.log("updatedSections:",updatedSections);
-
-      setSections(updatedSections); // อัปเดต state
+      setSections(updatedSections);
     }
-  }, [quizData]);
-  
-
-  useEffect(() => {
-    if (quizData?.sections) {
-      const updatedSections = quizData.sections.map((section) => ({
-        ...section,
-        questions: section.questions.map((question) => ({
-          ...question,
-          options: question.options.map((option) => ({
-            ...option,
-            is_correct: option.is_correct || false, // ดึงค่า is_correct หรือกำหนดค่าเริ่มต้น
-          })),
-        })),
-      }));
-      setSections(updatedSections); // อัปเดต State
-    }
-  }, [quizData]);
-  
+  }, [quizData]); // ✅ ต้องมี dependency ที่ถูกต้อง
   
   console.log("quizData:", quizData);
 

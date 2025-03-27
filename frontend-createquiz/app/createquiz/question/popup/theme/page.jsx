@@ -60,7 +60,7 @@ export default function ThemeCustomizer({ quizData }) {
           <h2 className="text-lg font-semibold">ธีม</h2>
           <button className="text-xl cursor-pointer" onClick={() => setShowThemeCustomizer(false)}>X</button>
         </div>
-        <div className="mt-5">
+        {/* <div className="mt-5">
           <label className="block mb-2">พื้นหลัง</label>
           <div className="grid grid-cols-3 gap-3">
             <img src="https://www.freevector.com/uploads/vector/preview/28148/EducationBackground_Preview_03.jpg" alt="India" className="w-20 h-16 object-cover cursor-pointer rounded-xl" />
@@ -77,7 +77,7 @@ export default function ThemeCustomizer({ quizData }) {
               <img src={uploadedImage} alt="Uploaded Background" className="w-20 h-16 object-cover cursor-pointer rounded-xl mt-3" />
             )}
           </div>
-        </div>
+        </div> */}
         <div className="mt-5 space-y-3">
           <div>
             <label htmlFor="background-color" className="block mb-2">สีพื้นหลัง</label>

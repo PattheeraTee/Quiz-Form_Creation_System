@@ -68,10 +68,12 @@ export default function Coverpage({ params }) {
       // ✅ ตรวจสอบ email_require หรือ limit_one_response
       if (formData.form.email_require || formData.form.limit_one_response) {
         try {
+          console.log("==================")
           const cookieResponse = await axios.get("http://localhost:3000/api/getCookie", {
             withCredentials: true,
           });
           const userId = cookieResponse.data.userId;
+          console.log("User ID:", userId);
   
           if (!userId) {
             Swal.fire({

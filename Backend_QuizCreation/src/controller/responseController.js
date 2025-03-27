@@ -120,3 +120,19 @@ exports.downloadResponses = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+exports.getTextInputAnswersByQuestionId = async (req, res) => {
+  const { questionId } = req.params;
+
+  if (!questionId) {
+    return res.status(400).json({ message: "Missing question_id" });
+  }
+
+  try {
+    const result = await responseService.getTextInputAnswersByQuestionId(questionId);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to retrieve answers", error: error.message });
+  }
+};
+

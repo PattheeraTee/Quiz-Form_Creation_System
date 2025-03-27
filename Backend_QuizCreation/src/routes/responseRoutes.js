@@ -17,4 +17,7 @@ router.get("/form/:formId/detail", responseController.getDetailResponses);
 // ดาวน์โหลด Responses เป็น Excel
 router.get("/download/:formId", responseController.downloadResponses);
 
+// ดึงคำตอบแบบ text_input เพื่อใช้กับ Gemini Evaluation
+router.get("/text-input/:questionId", responseController.getTextInputAnswersByQuestionId);
+
 module.exports = router;

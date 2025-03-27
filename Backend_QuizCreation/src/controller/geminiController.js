@@ -144,24 +144,32 @@ exports.evaluateTextInputPreview = async (req, res) => {
         ? correct_answer.map((a, i) => `${i + 1}. ${a}`).join('\n')
         : correct_answer;
   
-      const prompt = `
-  You are evaluating answers to a quiz question.
-  
-  Question: "${question_text}"
-  Correct Answers:
-  ${correctAnswerText}
-  
-  Determine which of the following student answers are semantically equivalent to any of the correct answers above:
-  ${student_answers.map((ans, i) => `${i + 1}. ${ans}`).join('\n')}
-  
-  Respond in JSON format:
-  {
-    "results": [
-      { "answer": "string", "is_correct": true|false },
-      ...
-    ]
-  }
-      `.trim();
+        const prompt = `
+        You are an intelligent evaluator. Your task is to determine whether each student's answer is semantically appropriate and relevant for the given question.
+        
+        Question:
+        "${question_text}"
+        
+        ${Array.isArray(correct_answer) && correct_answer.length > 0 ? `
+        The question has the following correct answers as reference:
+        ${correct_answer.map((a, i) => `${i + 1}. ${a}`).join('\n')}
+        ` : `
+        There is no predefined correct answer. Please use your best judgment based on the question context.
+        `}
+        
+        Now review each student's answer and decide whether it is a good and meaningful answer to the question.
+        
+        Student Answers:
+        ${student_answers.map((ans, i) => `${i + 1}. ${ans}`).join('\n')}
+        
+        Respond strictly in this JSON format:
+        {
+          "results": [
+            { "answer": "string", "is_correct": true|false },
+            ...
+          ]
+        }
+        `.trim();        
   
       const result = await model.generateContent(prompt);
       const raw = result.response.candidates?.[0]?.content?.parts?.[0]?.text || "{}";

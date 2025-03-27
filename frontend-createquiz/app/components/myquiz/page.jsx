@@ -104,8 +104,8 @@ export default function MyQuizzesPage() {
             >
               <div
                 className="flex space-x-8"
-                onClick={() => handleQuizClick(quiz.form_id)}
-              >
+                onClick={() => handleEditQuiz(quiz.form_type, quiz.form_id)}
+                >
                 <div
                   className="w-60 h-40 object-cover rounded-xl bg-red-200 relative"
                   style={{ backgroundColor: quiz.theme?.primary_color }}

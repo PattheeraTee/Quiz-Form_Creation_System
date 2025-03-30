@@ -128,10 +128,10 @@ const Section = ({
                     .click()
                 }
               >
-                <FontAwesomeIcon
+                {/* <FontAwesomeIcon
                   icon={faImage}
                   className="w-6 h-6 text-gray-500"
-                />
+                /> */}
               </button>
               {/* Hidden File Input */}
               <input
@@ -241,7 +241,7 @@ const Section = ({
                           document.getElementById(`file-upload-${idx}`).click()
                         }
                       >
-                        <FontAwesomeIcon icon={faImage} className="w-6 h-6" />
+                        {/* <FontAwesomeIcon icon={faImage} className="w-6 h-6" /> */}
                       </button>
 
                       {/* Hidden File Input */}
@@ -477,7 +477,7 @@ const Section = ({
                               .click()
                           }
                         >
-                          <FontAwesomeIcon icon={faImage} className="w-6 h-6" />
+                          {/* <FontAwesomeIcon icon={faImage} className="w-6 h-6" /> */}
                         </button>
 
                         {/* Hidden File Input */}

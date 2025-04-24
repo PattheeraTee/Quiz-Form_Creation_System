@@ -79,7 +79,7 @@ export default function SectionPage({ params, searchParams }) {
 
   const fetchTheme = async () => {
     try {
-      const response = await axios.get(`${process.env.API_BASE_URL}/form/${quizId}`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/form/${quizId}`);
       const data = response.data;
 
       setTheme({
@@ -121,7 +121,7 @@ export default function SectionPage({ params, searchParams }) {
     const fetchSectionData = async () => {
       try {
         const response = await axios.get(
-          `${process.env.API_BASE_URL}/form/${quizId}`
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/form/${quizId}`
         );
         const data = response.data;
 
@@ -314,7 +314,7 @@ export default function SectionPage({ params, searchParams }) {
         if (userId) {
           // 🔹 ดึงข้อมูล user ถ้ามี userId
           const userResponse = await axios.get(
-            `${process.env.API_BASE_URL}/users/${userId}`,
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/${userId}`,
             {
               headers: { "Content-Type": "application/json" },
               withCredentials: true,
@@ -334,7 +334,7 @@ export default function SectionPage({ params, searchParams }) {
 
       try {
         const response = await axios.post(
-          "${process.env.API_BASE_URL}/response/submit",
+          "${process.env.NEXT_PUBLIC_API_BASE_URL}/response/submit",
           payload
         );
         console.log("Submission response:", response.data);

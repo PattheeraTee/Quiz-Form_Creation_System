@@ -18,7 +18,7 @@ export default function Success({ params }) {
 
   const fetchCoverPage = async () => {
     try {
-      const response = await axios.get(`${process.env.API_BASE_URL}/form/${quizId}`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/form/${quizId}`);
       const data = response.data;
 
       setCoverPage({
@@ -33,7 +33,7 @@ export default function Success({ params }) {
 
   const fetchQuiz = async () => {
     try {
-      const response = await axios.get(`${process.env.API_BASE_URL}/form/${quizId}`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/form/${quizId}`);
       const data = response.data;
 
       const formattedQuiz = {
@@ -61,7 +61,7 @@ export default function Success({ params }) {
 
   const fetchTheme = async () => {
     try {
-      const response = await axios.get(`${process.env.API_BASE_URL}/form/${quizId}`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/form/${quizId}`);
       const data = response.data;
 
       setTheme({

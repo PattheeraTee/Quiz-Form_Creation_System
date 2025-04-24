@@ -33,7 +33,7 @@ export default function ThemeCustomizer({ quizData }) {
     const themeId = quizData.theme?.theme_id;
     if (themeId) {
       try {
-        await axios.patch(`${process.env.API_BASE_URL}/form/theme/${themeId}`, {
+        await axios.patch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/form/theme/${themeId}`, {
           primary_color: newColor,
         });
         setPrimaryColor(newColor); // Update the context

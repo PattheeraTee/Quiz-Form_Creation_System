@@ -18,7 +18,7 @@ export default function Coverpage({ params }) {
 
   const fetchFormData = async () => {
     try {
-      const response = await axios.get(`${process.env.API_BASE_URL}/form/${quizId}`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/form/${quizId}`);
       const formData = response.data;
   
       const now = new Date();
@@ -128,7 +128,7 @@ export default function Coverpage({ params }) {
           }
   
           if (formData.form.limit_one_response) {
-            const userResponse = await axios.get(`${process.env.API_BASE_URL}/users/${userId}`, {
+            const userResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/${userId}`, {
               headers: { "Content-Type": "application/json" },
               withCredentials: true,
             });
@@ -136,7 +136,7 @@ export default function Coverpage({ params }) {
             const userEmail = userResponse.data.email;
   
             const detailResponse = await axios.get(
-              `${process.env.API_BASE_URL}/response/form/${quizId}/detail?type=${formData.form.form_type}`
+              `${process.env.NEXT_PUBLIC_API_BASE_URL}/response/form/${quizId}/detail?type=${formData.form.form_type}`
             );
   
             const allUserResponses = detailResponse.data.userResponses || [];

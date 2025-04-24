@@ -63,7 +63,7 @@ export default function MyQuizzesPage() {
       if (result.isConfirmed) {
         try {
           const response = await axios.delete(
-            `${process.env.API_BASE_URL}/form/${quizId}`
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}/form/${quizId}`
           );
 
           if (response.status === 200) {

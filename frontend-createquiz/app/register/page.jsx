@@ -22,7 +22,7 @@ export default function Register() {
     const { email, password, confirmPassword } = formData;
 
     try {
-      const response = await fetch(`${process.env.API_BASE_URL}/register`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -108,7 +108,7 @@ export default function GenerateQuizForm() {
       images.forEach((img) => formData.append("images", img.file));
   
       // ✅ 4. ส่ง `POST` ไปยัง `/generate-quiz`
-      const response = await fetch(`${process.env.API_BASE_URL}/generate-quiz`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/generate-quiz`, {
         method: "POST",
         body: formData, // ✅ ใช้ FormData แทน JSON
       });

@@ -23,7 +23,7 @@ export default function QuizHeader() {
                     return;
                 }
 
-                const response = await axios.get(`${process.env.API_BASE_URL}/users/${userId}`, {
+                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/${userId}`, {
                     headers: { "Content-Type": "application/json" },
                     withCredentials: true,
                 });

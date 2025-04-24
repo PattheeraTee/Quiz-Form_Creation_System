@@ -37,7 +37,7 @@ export default function Page() {
     try {
       console.log("Creating quiz with type:", type);
       console.log("UserId:", userId);
-      const res = await axios.post(`${process.env.API_BASE_URL}/form/create`, {
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/form/create`, {
         user_id: userId,
         form_type: type,
       });

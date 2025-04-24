@@ -37,7 +37,7 @@ export default function QuizHeader({ quizData, selectedSection, onSectionSelect 
         }
 
         const response = await axios.get(
-          `${process.env.API_BASE_URL}/users/${userId}`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/${userId}`,
           {
             headers: { "Content-Type": "application/json" },
             withCredentials: true,

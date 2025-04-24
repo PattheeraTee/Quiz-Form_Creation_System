@@ -26,7 +26,7 @@ export default function ProfilePage() {
         }
 
         // ดึงข้อมูลผู้ใช้จาก API
-        const response = await axios.get(`${process.env.API_BASE_URL}/users/${userId}`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/${userId}`, {
           headers: {
             "Content-Type": "application/json",
           },

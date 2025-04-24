@@ -217,11 +217,6 @@ export default function QuizUploadPage() {
         ],
       };
 
-      console.log(
-        "📌 JSON ที่จะส่งไป API:",
-        JSON.stringify(formattedQuiz, null, 2)
-      );
-
       // 🔹 ส่งข้อมูลไปยัง API `/form/create` โดยใช้ Axios
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/form/create`,
@@ -232,10 +227,7 @@ export default function QuizUploadPage() {
           },
         }
       );
-      // console.log("🔹 สร้างแบบทดสอบ:", formattedQuiz);
       const formId = response.data.form.form_id;
-      console.log("✅ Quiz created successfully:", response.data);
-      console.log("Form ID:", response.data.form.form_id);
 
       // 🔹 แจ้งเตือนสำเร็จและเปลี่ยนหน้าไปยังแบบทดสอบที่สร้าง
       Swal.fire({
@@ -258,7 +250,6 @@ export default function QuizUploadPage() {
     }
   };
   const createQuizFromTxt = (textContent) => {
-    console.log("create from text");
     const lines = textContent.split("\n");
     const questions = [];
     let currentQuestion = null;
@@ -269,7 +260,6 @@ export default function QuizUploadPage() {
 
     lines.forEach((line) => {
       const trimmedText = line.trim();
-      console.log("trimmedText", trimmedText);
       if (trimmedText) {
         // ตรวจสอบว่าเป็นคำตอบที่ถูกต้องหรือไม่
         if (
@@ -277,7 +267,6 @@ export default function QuizUploadPage() {
           trimmedText.startsWith("เฉลย")
         ) {
           correctAnswer = trimmedText.replace(/^(answer|เฉลย)/i, "").trim();
-          console.log("✅ Correct Answer Detected:", correctAnswer);
         }
         // ตรวจสอบว่าบรรทัดนี้เป็นคำถามใหม่หรือไม่
         else if (isNewQuestion(trimmedText)) {
@@ -343,7 +332,6 @@ export default function QuizUploadPage() {
             trimmedText.startsWith("เฉลย")
           ) {
             correctAnswer = trimmedText.replace(/^(answer|เฉลย)/i, "").trim();
-            console.log("✅ Correct Answer Detected:", correctAnswer);
           }
           // ตรวจสอบว่าเป็นคำถามใหม่
           else if (isNewQuestion(trimmedText)) {
@@ -419,7 +407,6 @@ export default function QuizUploadPage() {
       const answerArray = correctAnswer
         ? correctAnswer.split(",").map((ans) => ans.trim())
         : [];
-      console.log("✅ Correct Answer Array:", answerArray);
 
       questions.push({
         id: questionIndex + 1,
@@ -461,7 +448,6 @@ export default function QuizUploadPage() {
         imageUrl: currentImageUrl, // Assign image to the question
       });
     }
-    // console.log("✅ Question Saved:", questions[questions.length - 1]);
   };
 
   const handleShowGuide = () => {
@@ -636,12 +622,6 @@ export default function QuizUploadPage() {
       }
     });
   };
-  
-
-  useEffect(() => {
-    console.log("quiz title: ", quizTitle);
-    console.log("quiz: ", quiz);
-  }, [quizTitle, quiz]);
 
   return (
     <div className="px-4 m-4 mt-6">

@@ -304,10 +304,10 @@ const Section = ({
                 <div key={option.option_id} className="flex flex-col mb-4">
                   <div className="flex items-center mb-2">
                     {/* Drag Handle */}
-                    <FontAwesomeIcon
+                    {/* <FontAwesomeIcon
                       icon={faGripVertical}
                       className="mr-2 text-gray-400"
-                    />
+                    /> */}
 
                     {/* Correct/Incorrect Option Indicator */}
                     <button
@@ -483,10 +483,10 @@ const Section = ({
               {/* Options List */}
               {question.options.map((option, idx) => (
                 <div key={option.option_id} className="flex items-center mb-2">
-                  <FontAwesomeIcon
+                  {/* <FontAwesomeIcon
                     icon={faGripVertical}
                     className="mr-2 text-gray-400"
-                  />
+                  /> */}
                   <button
                     className="mr-2"
                     onClick={() =>
@@ -606,10 +606,10 @@ const Section = ({
                   <div key={option.option_id} className="flex flex-col mb-4">
                     <div className="flex items-center mb-2">
                       <div className="relative flex items-center w-full">
-                        <FontAwesomeIcon
+                        {/* <FontAwesomeIcon
                           icon={faGripVertical}
                           className="mr-2 text-gray-400"
-                        />{" "}
+                        />{" "} */}
                         {/* Correct Answer Toggle */}
                         <button
                           className="mr-2"

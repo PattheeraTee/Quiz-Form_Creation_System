@@ -22,7 +22,8 @@ mongoose
 
 app.use(
   cors({
-    origin: "http://localhost:3000", // ระบุโดเมนที่อนุญาต
+    // origin: "http://localhost:3000", // ระบุโดเมนที่อนุญาต
+    origin: "http://10.198.200.33:3000", // ระบุโดเมนที่อนุญาต
     credentials: true,
   })
 );

@@ -334,7 +334,7 @@ export default function SectionPage({ params, searchParams }) {
 
       try {
         const response = await axios.post(
-          "${process.env.NEXT_PUBLIC_API_BASE_URL}/response/submit",
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/response/submit`,
           payload
         );
         console.log("Submission response:", response.data);

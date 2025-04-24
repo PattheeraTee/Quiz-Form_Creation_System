@@ -29,12 +29,6 @@ export default function ProfileMenu() {
         >
           ข้อมูลผู้ใช้
         </Link>
-        <Link
-          href="/change-password"
-          className="px-4 py-2 text-gray-700 hover:bg-gray-100"
-        >
-          เปลี่ยนรหัสผ่าน
-        </Link>
         <button
           onClick={handleLogout}
           className="px-4 py-2 text-gray-700 hover:bg-gray-100 text-left"

@@ -224,7 +224,7 @@ export default function QuizUploadPage() {
 
       // 🔹 ส่งข้อมูลไปยัง API `/form/create` โดยใช้ Axios
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}1/form/create`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/form/create`,
         formattedQuiz,
         {
           headers: {

@@ -13,7 +13,7 @@ export default function ProfilePage() {
     const fetchUserData = async () => {
       try {
         // ดึง userId จาก API
-        const cookieResponse = await axios.get("http://localhost:3000/api/getCookie", {
+        const cookieResponse = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/getCookie`, {
           withCredentials: true,
         });
         console.log("cookieResponse : ", cookieResponse.data.userId);
@@ -26,7 +26,7 @@ export default function ProfilePage() {
         }
 
         // ดึงข้อมูลผู้ใช้จาก API
-        const response = await axios.get(`http://localhost:3001/users/${userId}`, {
+        const response = await axios.get(`${process.env.API_BASE_URL}/users/${userId}`, {
           headers: {
             "Content-Type": "application/json",
           },

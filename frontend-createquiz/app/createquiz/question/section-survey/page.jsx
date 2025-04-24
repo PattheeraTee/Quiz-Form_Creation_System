@@ -34,7 +34,7 @@ const Section = ({
     try {
       const payload = { [field]: value };
       const response = await axios.patch(
-        `http://localhost:3001/form/${formId}/sections/${sectionId}`,
+        `${process.env.API_BASE_URL}/form/${formId}/sections/${sectionId}`,
         payload
       );
       console.log("Autosave successful:", response.data);

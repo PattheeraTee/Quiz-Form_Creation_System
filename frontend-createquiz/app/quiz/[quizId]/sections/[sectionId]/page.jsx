@@ -79,7 +79,7 @@ export default function SectionPage({ params, searchParams }) {
 
   const fetchTheme = async () => {
     try {
-      const response = await axios.get(`http://localhost:3001/form/${quizId}`);
+      const response = await axios.get(`${process.env.API_BASE_URL}/form/${quizId}`);
       const data = response.data;
 
       setTheme({
@@ -121,7 +121,7 @@ export default function SectionPage({ params, searchParams }) {
     const fetchSectionData = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:3001/form/${quizId}`
+          `${process.env.API_BASE_URL}/form/${quizId}`
         );
         const data = response.data;
 
@@ -303,7 +303,7 @@ export default function SectionPage({ params, searchParams }) {
       try {
         // 🔹 ตรวจสอบ cookie ว่ามี userId หรือไม่
         const cookieResponse = await axios.get(
-          "http://localhost:3000/api/getCookie",
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/getCookie`,
           {
             withCredentials: true,
           }
@@ -314,7 +314,7 @@ export default function SectionPage({ params, searchParams }) {
         if (userId) {
           // 🔹 ดึงข้อมูล user ถ้ามี userId
           const userResponse = await axios.get(
-            `http://localhost:3001/users/${userId}`,
+            `${process.env.API_BASE_URL}/users/${userId}`,
             {
               headers: { "Content-Type": "application/json" },
               withCredentials: true,
@@ -334,7 +334,7 @@ export default function SectionPage({ params, searchParams }) {
 
       try {
         const response = await axios.post(
-          "http://localhost:3001/response/submit",
+          "${process.env.API_BASE_URL}/response/submit",
           payload
         );
         console.log("Submission response:", response.data);

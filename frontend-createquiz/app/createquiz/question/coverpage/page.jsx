@@ -29,7 +29,7 @@ export default function CoverPage({ coverPageData, theme }) {
 
     try {
       const response = await axios.patch(
-        `http://localhost:3001/form/coverpage/${coverpageId}`,
+        `${process.env.API_BASE_URL}/form/coverpage/${coverpageId}`,
         data
       );
     } catch (error) {

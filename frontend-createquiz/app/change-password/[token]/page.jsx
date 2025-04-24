@@ -28,7 +28,7 @@ export default function ChangePassword({params}) {
     }
 
     try {
-      const response = await axios.post("http://localhost:3001/change-password", {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/change-password`, {
         token,
         newPassword: password,
         confirmPassword: confirmPassword

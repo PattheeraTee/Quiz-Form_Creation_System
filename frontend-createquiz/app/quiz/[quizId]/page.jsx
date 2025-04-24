@@ -18,7 +18,7 @@ export default function Coverpage({ params }) {
 
   const fetchFormData = async () => {
     try {
-      const response = await axios.get(`http://localhost:3001/form/${quizId}`);
+      const response = await axios.get(`${process.env.API_BASE_URL}/form/${quizId}`);
       const formData = response.data;
   
       const now = new Date();
@@ -63,13 +63,52 @@ export default function Coverpage({ params }) {
       } else if (endDate && now > endDate) {
         setFormStatus("closed");
         return;
+      } else {
+        if (formData.form.email_require|| formData.form.limit_one_response) {
+          try {
+            const cookieResponse = await axios.get(
+              `${process.env.NEXT_PUBLIC_BASE_URL}/api/getCookie`,
+              {
+                withCredentials: true,
+              }
+            );
+            const userId = cookieResponse.data.userId;
+
+            if (!userId) {
+              Swal.fire({
+                icon: "warning",
+                title: "กรุณาล็อกอิน",
+                text: "คุณต้องล็อกอินก่อนทำแบบฟอร์มนี้",
+                confirmButtonText: "ไปที่หน้าล็อกอิน",
+                allowOutsideClick: false,
+              }).then(() => {
+                window.location.href = `${process.env.NEXT_PUBLIC_BASE_URL}?redirect=/quiz/${quizId}`;
+              });
+              return;
+            }
+          } catch (error) {
+            console.error("Error fetching cookie or user ID:", error);
+            Swal.fire({
+              icon: "error",
+              title: "เกิดข้อผิดพลาด",
+              text: "ไม่สามารถตรวจสอบสถานะการเข้าสู่ระบบได้",
+              confirmButtonText: "ไปที่หน้าล็อกอิน",
+              allowOutsideClick: false,
+            }).then(() => {
+              window.location.href = `${process.env.NEXT_PUBLIC_BASE_URL}?redirect=/quiz/${quizId}`;
+            });
+            return;
+          }
+        }
+        setFormStatus("open");
       }
+
   
       // ✅ ตรวจสอบ email_require หรือ limit_one_response
       if (formData.form.email_require || formData.form.limit_one_response) {
         try {
           console.log("==================")
-          const cookieResponse = await axios.get("http://localhost:3000/api/getCookie", {
+          const cookieResponse = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/getCookie`, {
             withCredentials: true,
           });
           const userId = cookieResponse.data.userId;
@@ -83,13 +122,13 @@ export default function Coverpage({ params }) {
               confirmButtonText: "ไปที่หน้าล็อกอิน",
               allowOutsideClick: false,
             }).then(() => {
-              window.location.href = `http://localhost:3000?redirect=/quiz/${quizId}`;
+              window.location.href = `${process.env.NEXT_PUBLIC_BASE_URL}?redirect=/quiz/${quizId}`;
             });
             return;
           }
   
           if (formData.form.limit_one_response) {
-            const userResponse = await axios.get(`http://localhost:3001/users/${userId}`, {
+            const userResponse = await axios.get(`${process.env.API_BASE_URL}/users/${userId}`, {
               headers: { "Content-Type": "application/json" },
               withCredentials: true,
             });
@@ -97,7 +136,7 @@ export default function Coverpage({ params }) {
             const userEmail = userResponse.data.email;
   
             const detailResponse = await axios.get(
-              `http://localhost:3001/response/form/${quizId}/detail?type=${formData.form.form_type}`
+              `${process.env.API_BASE_URL}/response/form/${quizId}/detail?type=${formData.form.form_type}`
             );
   
             const allUserResponses = detailResponse.data.userResponses || [];

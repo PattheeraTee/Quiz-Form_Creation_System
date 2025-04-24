@@ -24,7 +24,7 @@ export default function QuizHeader({ quizData, selectedSection, onSectionSelect 
     const fetchUserData = async () => {
       try {
         const cookieResponse = await axios.get(
-          "http://localhost:3000/api/getCookie",
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/getCookie`,
           {
             withCredentials: true,
           }
@@ -37,7 +37,7 @@ export default function QuizHeader({ quizData, selectedSection, onSectionSelect 
         }
 
         const response = await axios.get(
-          `http://localhost:3001/users/${userId}`,
+          `${process.env.API_BASE_URL}/users/${userId}`,
           {
             headers: { "Content-Type": "application/json" },
             withCredentials: true,
@@ -75,7 +75,7 @@ export default function QuizHeader({ quizData, selectedSection, onSectionSelect 
   };
 
   const handleCopyLink = () => {
-    const formUrl = `http://localhost:3000/quiz/${
+    const formUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/quiz/${
       quizData?.form.form_id || ""
     }`;
     navigator.clipboard.writeText(formUrl); // Copy the link to clipboard
@@ -113,7 +113,7 @@ export default function QuizHeader({ quizData, selectedSection, onSectionSelect 
             className="p-2"
             onClick={() =>
               window.open(
-                `http://localhost:3000/quiz/${quizData?.form.form_id || ""}`,
+                `${process.env.NEXT_PUBLIC_BASE_URL}/quiz/${quizData?.form.form_id || ""}`,
                 "_blank"
               )
             }
@@ -189,7 +189,7 @@ export default function QuizHeader({ quizData, selectedSection, onSectionSelect 
             </div>
             <input
               type="text"
-              value={`http://localhost:3000/quiz/${
+              value={`${process.env.NEXT_PUBLIC_BASE_URL}/quiz/${
                 quizData?.form.form_id || ""
               }`}
               readOnly

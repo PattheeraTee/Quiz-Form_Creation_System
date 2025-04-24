@@ -59,7 +59,7 @@ export default function Question({ quizData }) {
       console.log("Form ID:", formId);
 
       const response = await axios.post(
-        `http://localhost:3001/form/${formId}/sections`,
+       `${process.env.API_BASE_URL}/form/${formId}/sections`,
         {
           title: newSection.title,
           description: newSection.description,
@@ -105,7 +105,7 @@ export default function Question({ quizData }) {
 
       // ส่งคำขอไปยัง API
       const response = await axios.post(
-        `http://localhost:3001/form/${sectionId}/questions`,
+        `${process.env.API_BASE_URL}/form/${sectionId}/questions`,
         payload
       );
 
@@ -165,7 +165,7 @@ export default function Question({ quizData }) {
   
   const autosaveOption = async (questionId, optionId, updates) => {
     try {
-      await axios.patch(`http://localhost:3001/form/${questionId}/options/${optionId}`, updates);
+      await axios.patch(`${process.env.API_BASE_URL}/form/${questionId}/options/${optionId}`, updates);
       console.log("✅ Option updated successfully:", updates);
     } catch (error) {
       console.error("❌ Option autosave failed:", error);
@@ -194,7 +194,7 @@ export default function Question({ quizData }) {
     // Save to server
     try {
       const response = await axios.patch(
-        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
+        `${process.env.API_BASE_URL}/form/${sectionId}/questions/${questionId}`,
         { limit: value }
       );
       console.log("RatingLevel updated successfully:", response.data);
@@ -216,7 +216,7 @@ export default function Question({ quizData }) {
   
       // เรียก API เพื่อเพิ่ม Option
       const response = await axios.post(
-        `http://localhost:3001/form/${questionId}/options`,
+        `${process.env.API_BASE_URL}/form/${questionId}/options`,
         payload
       );
   
@@ -254,7 +254,7 @@ export default function Question({ quizData }) {
     try {
       // ส่งคำขอ DELETE ไปยัง API
       const response = await axios.delete(
-        `http://localhost:3001/form/${questionId}/options/${optionId}`
+        `${process.env.API_BASE_URL}/form/${questionId}/options/${optionId}`
       );
 
       if (response.status === 200) {
@@ -309,7 +309,7 @@ export default function Question({ quizData }) {
     // Save to server
     try {
       const response = await axios.patch(
-        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
+        `${process.env.API_BASE_URL}/form/${sectionId}/questions/${questionId}`,
         { limit: value }
       );
       console.log("MaxSelect updated successfully:", response.data);
@@ -351,7 +351,7 @@ const toggleCorrectOption = async (sectionId, questionId, optionId) => {
       ];
 
     await axios.patch(
-      `http://localhost:3001/form/${questionId}/options/${optionId}`,
+      `${process.env.API_BASE_URL}/form/${questionId}/options/${optionId}`,
       { is_correct: updatedOption.is_correct }
     );
 
@@ -384,7 +384,7 @@ const toggleCorrectOption = async (sectionId, questionId, optionId) => {
       await Promise.all(
         updatedOptions.map((option) =>
           axios.patch(
-            `http://localhost:3001/form/${questionId}/options/${option.option_id}`,
+            `${process.env.API_BASE_URL}/form/${questionId}/options/${option.option_id}`,
             { is_correct: option.is_correct }
           )
         )
@@ -436,7 +436,7 @@ const toggleCorrectOption = async (sectionId, questionId, optionId) => {
       });
   
       setSections(updatedSections); // อัปเดต State ก่อน
-      await axios.patch(`http://localhost:3001/form/${sectionId}/questions/${questionId}`, {
+      await axios.patch(`${process.env.API_BASE_URL}/form/${sectionId}/questions/${questionId}`, {
         correct_answer: updatedSections
           .find((section) => section.section_id === sectionId)
           ?.questions.find((question) => question.question_id === questionId)?.correct_answer,
@@ -467,7 +467,7 @@ const toggleCorrectOption = async (sectionId, questionId, optionId) => {
       });
   
       setSections(updatedSections); // อัปเดต State ก่อน
-      await axios.patch(`http://localhost:3001/form/${sectionId}/questions/${questionId}`, {
+      await axios.patch(`${process.env.API_BASE_URL}/form/${sectionId}/questions/${questionId}`, {
         correct_answer: updatedSections
           .find((section) => section.section_id === sectionId)
           ?.questions.find((question) => question.question_id === questionId)?.correct_answer,
@@ -497,7 +497,7 @@ const toggleCorrectOption = async (sectionId, questionId, optionId) => {
       });
   
       setSections(updatedSections); // อัปเดต State ก่อน
-      await axios.patch(`http://localhost:3001/form/${sectionId}/questions/${questionId}`, {
+      await axios.patch(`${process.env.API_BASE_URL}/form/${sectionId}/questions/${questionId}`, {
         correct_answer: updatedSections
           .find((section) => section.section_id === sectionId)
           ?.questions.find((question) => question.question_id === questionId)?.correct_answer,
@@ -529,7 +529,7 @@ const toggleCorrectOption = async (sectionId, questionId, optionId) => {
     // Save to the server
     try {
       const response = await axios.patch(
-        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
+        `${process.env.API_BASE_URL}/form/${sectionId}/questions/${questionId}`,
         { points: parseInt(value) || 0 } // Send points as part of the payload
       );
       console.log("Points updated successfully:", response.data);
@@ -568,7 +568,7 @@ const toggleCorrectOption = async (sectionId, questionId, optionId) => {
       console.log("Updating required to:", !updatedQuestion.required);
   
       await axios.patch(
-        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
+        `${process.env.API_BASE_URL}/form/${sectionId}/questions/${questionId}`,
         { required: !updatedQuestion.required} // ส่งค่าไปยัง API
       );
   
@@ -583,7 +583,7 @@ const toggleCorrectOption = async (sectionId, questionId, optionId) => {
   const deleteQuestion = async (sectionId, questionId) => {
     try {
       // สร้าง URL ที่รวม sectionId และ questionId
-      const url = `http://localhost:3001/form/${sectionId}/questions/${questionId}`;
+      const url = `${process.env.API_BASE_URL}/form/${sectionId}/questions/${questionId}`;
       console.log("Deleting question:", url);
 
       // ส่งคำขอ DELETE
@@ -623,7 +623,7 @@ const toggleCorrectOption = async (sectionId, questionId, optionId) => {
     try {
       // ส่งคำขอลบ section ไปยัง API
       const response = await axios.delete(
-        `http://localhost:3001/form/${formId}/sections/${sectionId}`
+        `${process.env.API_BASE_URL}/form/${formId}/sections/${sectionId}`
       );
 
       if (response.status === 200) {
@@ -716,7 +716,7 @@ const toggleCorrectOption = async (sectionId, questionId, optionId) => {
   const handleAutosaveForQuestion = async (sectionId, questionId, updates) => {
     try {
       const response = await axios.patch(
-        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
+        `${process.env.API_BASE_URL}/form/${sectionId}/questions/${questionId}`,
         updates
       );
     } catch (error) {
@@ -747,7 +747,7 @@ const toggleCorrectOption = async (sectionId, questionId, optionId) => {
   const autosaveQuestion = async (sectionId, questionId, updates) => {
     try {
       const response = await axios.patch(
-        `http://localhost:3001/form/${sectionId}/questions/${questionId}`,
+        `${process.env.API_BASE_URL}/form/${sectionId}/questions/${questionId}`,
         updates
       );
       console.log("Question autosave successful:", response.data);

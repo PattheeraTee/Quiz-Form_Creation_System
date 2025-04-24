@@ -173,7 +173,7 @@ export default function QuizUploadPage() {
     try {
       // 🔹 ดึง user_id จาก cookie API โดยใช้ Axios
       const userResponse = await axios.get(
-        "http://localhost:3000/api/getCookie",
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/getCookie`,
         {
           withCredentials: true, // สำคัญเพื่อให้ Axios ดึงค่า cookie ได้
         }
@@ -224,7 +224,7 @@ export default function QuizUploadPage() {
 
       // 🔹 ส่งข้อมูลไปยัง API `/form/create` โดยใช้ Axios
       const response = await axios.post(
-        "http://localhost:3001/form/create",
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}1/form/create`,
         formattedQuiz,
         {
           headers: {
@@ -244,7 +244,7 @@ export default function QuizUploadPage() {
         text: "แบบทดสอบของคุณถูกสร้างเรียบร้อยแล้ว.",
         confirmButtonText: "ตกลง",
       }).then(() => {
-        window.location.href = `http://localhost:3000/createquiz?type=${formType}&form_id=${formId}`;
+        window.location.href = `${process.env.NEXT_PUBLIC_BASE_URL}/createquiz?type=${formType}&form_id=${formId}`;
       });
     } catch (error) {
       console.error("❌ Error creating quiz:", error);

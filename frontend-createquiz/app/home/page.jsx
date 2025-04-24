@@ -20,7 +20,7 @@ export default function Page() {
   useEffect(() => {
     const fetchUserId = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/api/getCookie");
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/getCookie`);
         setUserId(res.data.userId);
       } catch (error) {
         console.error("Error fetching userId:", error);
@@ -37,7 +37,7 @@ export default function Page() {
     try {
       console.log("Creating quiz with type:", type);
       console.log("UserId:", userId);
-      const res = await axios.post("http://localhost:3001/form/create", {
+      const res = await axios.post(`${process.env.API_BASE_URL}/form/create`, {
         user_id: userId,
         form_type: type,
       });

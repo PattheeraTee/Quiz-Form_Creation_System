@@ -18,7 +18,7 @@ export default function ResetPassword() {
     setIsSubmitting(true); // ตั้งสถานะว่ากำลังส่งข้อมูล
 
     try {
-      const response = await fetch("http://localhost:3001/forgot-password", {
+      const response = await fetch(`${process.env.API_BASE_URL}/forgot-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

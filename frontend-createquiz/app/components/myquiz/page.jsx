@@ -18,14 +18,14 @@ export default function MyQuizzesPage() {
       try {
         // Fetch user ID from the API
         const userResponse = await axios.get(
-          "http://localhost:3000/api/getCookie"
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/getCookie`
         );
         const userId = userResponse.data.userId;
         setUserId(userId);
 
         // Fetch all quizzes using the user ID
         const quizzesResponse = await axios.get(
-          `http://localhost:3001/form/user/${userId}`
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/form/user/${userId}`
         );
 
         // Extract quizzes from response
@@ -63,7 +63,7 @@ export default function MyQuizzesPage() {
       if (result.isConfirmed) {
         try {
           const response = await axios.delete(
-            `http://localhost:3001/form/${quizId}`
+            `${process.env.API_BASE_URL}/form/${quizId}`
           );
 
           if (response.status === 200) {

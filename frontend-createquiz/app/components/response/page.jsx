@@ -19,7 +19,7 @@ const ResponsePage = ({ quizId, formType }) => {
 
   useEffect(() => {
     if (quizId) {
-      fetch(`http://localhost:3001/response/form/${quizId}?type=${formType}`)
+      fetch(`${process.env.API_BASE_URL}/response/form/${quizId}?type=${formType}`)
         .then((response) => response.json())
         .then((data) => {
           setHeader({ title: data.title, total_response: data.total_response });
@@ -33,7 +33,7 @@ const ResponsePage = ({ quizId, formType }) => {
 
   const fetchDetailResponses = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/response/form/${quizId}/detail?type=${formType}`);
+      const res = await fetch(`${process.env.API_BASE_URL}/response/form/${quizId}/detail?type=${formType}`);
       const data = await res.json();
   
       if (data.userResponses) {
@@ -154,7 +154,7 @@ const ResponsePage = ({ quizId, formType }) => {
 
   const downloadExcelFile = async () => {
     try {
-      const response = await axios.get(`http://localhost:3001/response/download/${quizId}`, {
+      const response = await axios.get(`${process.env.API_BASE_URL}/response/download/${quizId}`, {
         responseType: 'blob',
       });
   
@@ -200,10 +200,10 @@ const ResponsePage = ({ quizId, formType }) => {
     setIsEvaluating(true);
   
     try {
-      const response = await fetch(`http://localhost:3001/response/text-input/${selectedQuestionId}`);
+      const response = await fetch(`${process.env.API_BASE_URL}/response/text-input/${selectedQuestionId}`);
       const questionData = await response.json();
   
-      const previewRes = await fetch(`http://localhost:3001/evaluate-preview`, {
+      const previewRes = await fetch(`${process.env.API_BASE_URL}/evaluate-preview`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(questionData),
@@ -223,7 +223,7 @@ const ResponsePage = ({ quizId, formType }) => {
   
   const handleAcceptEvaluation = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/accept-evaluation`, {
+      const res = await fetch(`${process.env.API_BASE_URL}/accept-evaluation`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

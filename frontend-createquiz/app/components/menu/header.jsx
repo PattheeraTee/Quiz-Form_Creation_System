@@ -12,7 +12,7 @@ export default function Header() {
     const fetchUserData = async () => {
       try {
         // ดึง userId จาก API
-        const cookieResponse = await axios.get("http://localhost:3000/api/getCookie", {
+        const cookieResponse = await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/getCookie`, {
           withCredentials: true,
         });
         const userId = cookieResponse.data.userId;
@@ -23,7 +23,7 @@ export default function Header() {
         }
     
         // ดึงข้อมูลผู้ใช้จาก API
-        const response = await axios.get(`http://localhost:3001/users/${userId}`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/${userId}`, {
           headers: {
             "Content-Type": "application/json",
           },

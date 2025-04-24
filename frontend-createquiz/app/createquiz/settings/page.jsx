@@ -32,7 +32,7 @@ export default function SettingsForm() {
     if (!form_id) return;
 
     try {
-      const response = await axios.get(`http://localhost:3001/form/${form_id}`);
+      const response = await axios.get(`${process.env.API_BASE_URL}/form/${form_id}`);
       const formData = response.data.form;
 
       setEmailIncluded(!!formData.email_require);
@@ -105,7 +105,7 @@ export default function SettingsForm() {
     console.log(`🛠 [Debug] ${key} ส่งค่าไป API:`, updateValue);
 
     axios
-      .patch(`http://localhost:3001/form/${form_id}`, { [key]: updateValue })
+      .patch(`${process.env.API_BASE_URL}/form/${form_id}`, { [key]: updateValue })
       .then(() => console.log(`${key} updated successfully.`))
       .catch((error) => console.error(`❌ Error updating ${key}:`, error));
   };

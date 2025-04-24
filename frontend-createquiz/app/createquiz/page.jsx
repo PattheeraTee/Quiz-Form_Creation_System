@@ -19,7 +19,7 @@ export default function CreateQuiz() {
   useEffect(() => {
     const fetchQuizData = async () => {
       try {
-        const res = await axios.get(`http://localhost:3001/form/${formId}`);
+        const res = await axios.get(`${process.env.API_BASE_URL}/form/${formId}`);
         setQuizData(res.data);
       } catch (error) {
         console.error("Error fetching quiz data:", error);

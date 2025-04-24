@@ -19,7 +19,7 @@ export default function GenerateQuizForm() {
     const fetchData = async () => {
       try {
         // ✅ ดึงข้อมูลภาษา
-        const langResponse = await fetch("http://localhost:3001/languages");
+        const langResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/languages`);
         if (langResponse.ok) {
           const langData = await langResponse.json();
           setLanguages(langData);
@@ -28,7 +28,7 @@ export default function GenerateQuizForm() {
 
         // ✅ ดึงข้อมูลระดับการศึกษา
         const eduResponse = await fetch(
-          "http://localhost:3001/education-levels"
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/education-levels`
         );
         if (eduResponse.ok) {
           const eduData = await eduResponse.json();
@@ -78,7 +78,7 @@ export default function GenerateQuizForm() {
     try {
       // ✅ 1. ดึง `user_id` จาก Cookie
       const cookieResponse = await fetch(
-        "http://localhost:3000/api/getCookie",
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/getCookie`,
         {
           credentials: "include",
         }
@@ -108,7 +108,7 @@ export default function GenerateQuizForm() {
       images.forEach((img) => formData.append("images", img.file));
   
       // ✅ 4. ส่ง `POST` ไปยัง `/generate-quiz`
-      const response = await fetch("http://localhost:3001/generate-quiz", {
+      const response = await fetch(`${process.env.API_BASE_URL}/generate-quiz`, {
         method: "POST",
         body: formData, // ✅ ใช้ FormData แทน JSON
       });

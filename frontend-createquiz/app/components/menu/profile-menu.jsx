@@ -9,7 +9,7 @@ export default function ProfileMenu() {
   const handleLogout = async () => {
     try {
       // เรียก API เพื่อ remove cookie
-      await axios.get("http://localhost:3000/api/removeCookie", {
+      await axios.get(`${process.env.NEXT_PUBLIC_BASE_URL}/api/removeCookie`, {
         withCredentials: true, // เพื่อส่ง cookie ไปด้วย
       });
 
